@@ -258,6 +258,84 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   .admin-strip{grid-template-columns:auto minmax(0,1fr)}
   .admin-strip .btn{grid-column:1/-1}
 }
+/* ── админ-панель ── */
+.home-admin{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;border-color:#e9b94955;background:linear-gradient(90deg,#e9b94914,var(--panel) 60%)}
+.home-admin b{font-weight:800}
+.home-admin p{margin:0;color:var(--mute);font-size:13px}
+.home-admin em{font-style:normal;color:var(--gold);font-weight:800}
+.adm-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px 20px;border-color:#e9b94955;background:linear-gradient(90deg,#e9b94914,var(--panel) 55%)}
+.adm-head h1{margin:0;font-size:22px;font-weight:800}
+.adm-head p{margin:0;color:var(--mute);font-size:13px}
+.adm{display:grid;grid-template-columns:270px minmax(0,1fr);gap:16px;align-items:start}
+.adm-nav{padding:8px;display:flex;flex-direction:column;gap:2px;position:sticky;top:96px}
+.adm-nav button{display:flex;align-items:center;gap:10px;background:none;border:0;border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;color:var(--mute);font-weight:600;font-size:14px}
+.adm-nav button:hover{color:var(--text);background:#ffffff06}
+.adm-nav button[aria-current="true"]{color:var(--text);background:var(--gold-soft)}
+.adm-nav button[aria-current="true"] svg{color:var(--gold)}
+.adm-nav em{margin-left:auto;font-style:normal;font-size:11px;font-weight:800;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--gold-metal);color:#1a1204;display:grid;place-items:center}
+.adm-body{position:relative;min-width:0}
+.adm-sec{padding:18px 20px 20px}
+.seg{display:flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.seg button{background:none;border:0;padding:7px 12px;font-size:13px;cursor:pointer;color:var(--mute)}
+.seg button[aria-pressed="true"]{background:var(--gold-soft);color:var(--gold)}
+.search,.adm select,.adm input[type=text],.adm input[type=number],.adm textarea,.adm-sec select{background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:9px 11px;font-size:14px}
+.adm textarea{width:100%;resize:vertical;margin-bottom:12px;line-height:1.5}
+.adm .detail input[type=text]{width:100%;margin-bottom:12px}
+.search{min-width:220px}
+.adm select:focus,.adm input:focus,.adm textarea:focus{outline:none;border-color:var(--gold)}
+.adm label{display:block;font-size:13px;color:var(--mute);margin:4px 0 6px}
+.split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);cursor:pointer}
+.list li:hover{border-color:var(--line2)}
+.list li.sel{border-color:var(--gold-dim);background:#e9b9490d}
+.list b{font-size:14px;font-weight:700;line-height:1.35}
+.list span:not(.tag){grid-column:1;font-size:12px;color:var(--mute)}
+.list .tag{grid-column:2;grid-row:1;align-self:start}
+.detail{border:1px solid var(--line);border-radius:14px;padding:18px;background:var(--panel2);min-width:0}
+.detail h3{margin:0 0 4px;font-size:18px;font-weight:800}
+.who{margin:0 0 12px;color:var(--mute);font-size:13px}
+.msg-b{border-left:2px solid var(--gold-dim);padding:10px 14px;background:var(--bg);border-radius:0 10px 10px 0;margin-bottom:14px;font-size:14px}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 16px;margin:10px 0 14px;font-size:14px}
+.kv dt{color:var(--mute)}.kv dd{margin:0;display:flex;align-items:center;gap:8px}
+.sw{width:14px;height:14px;border-radius:4px;display:inline-block}
+.grp{border-top:1px solid var(--line);padding:14px 0 4px}
+.grp:first-of-type{border-top:0;padding-top:6px}
+.grp h4{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:6px 0}
+.row span{display:flex;flex-direction:column;font-size:14px}
+.row b{color:var(--gold);font-variant-numeric:tabular-nums}
+.row small{color:var(--faint);font-size:12px}
+.give{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.give input[type=number]{width:110px}
+.give input[type=text]{flex:1;min-width:160px;margin:0!important;width:auto!important}
+.btn.danger{color:#ffb3a8;border-color:#5a2a24}
+.btn.danger:hover{border-color:#a14a3e;background:#2a0f0c}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.danger-zone h4{color:#d98c80}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.adm table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+.adm th{text-align:left;font-weight:700;font-size:12px;color:var(--mute);padding:10px 12px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.adm td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle;font-variant-numeric:tabular-nums}
+.adm tr:last-child td{border-bottom:0}
+.adm td small{display:block;color:var(--faint);font-size:12px}
+.adm tr.flag td{background:#e9b9490a}
+.lvl{width:72px}
+.hint{margin:12px 0 0;font-size:13px;color:var(--faint)}
+.preview{margin-bottom:14px;min-height:150px}
+.tree{display:flex;flex-direction:column;gap:2px}
+.tree b{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:10px 8px 4px}
+.tree b:first-child{margin-top:0}
+.tree button{background:none;border:0;text-align:left;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--mute);font-size:14px}
+.tree button:hover{color:var(--text);background:#ffffff06}
+.tree button.sel{color:var(--gold);background:var(--gold-soft)}
+.test-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.test-grid .grp{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel2)}
+.confirm{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:40;padding:16px 18px;width:min(460px,calc(100vw - 32px));border-color:#a14a3e;box-shadow:0 20px 50px #000}
+.confirm p{margin:0 0 12px;font-weight:600}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:41;background:var(--gold-metal);color:#1a1204;font-weight:700;padding:11px 18px;border-radius:12px;box-shadow:0 12px 30px #000a}
+@media (max-width:1100px){.adm{grid-template-columns:1fr}.adm-nav{position:static;flex-direction:row;overflow-x:auto}.adm-nav button{white-space:nowrap}.split{grid-template-columns:1fr}}
+@media (max-width:760px){.adm-head,.home-admin{grid-template-columns:auto minmax(0,1fr)}.adm-head .btn,.home-admin .btn{grid-column:1/-1}.test-grid{grid-template-columns:1fr}.search{min-width:0;width:100%}}
 @media (max-width:1100px){
   .nav a span,.nav .dd span{display:none}
   .nav a,.nav .dd{padding:10px}
@@ -314,6 +392,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M7 4h11v13a3 3 0 01-3 3H6a2 2 0 01-2-2v-2h11v2a2 2 0 002 2M7 4a2 2 0 00-2 2v10M10 8h5M10 12h5"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-7l-4 3v-3H5a1 1 0 01-1-1V6a1 1 0 011-1zM9 11h.01M15 11h.01"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 4.5a3.5 3.5 0 010 7M21 20c0-3-1.6-5.3-4-5.8"/></symbol>
   <symbol id="i-guide" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11M9 8h6"/></symbol>
   <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></symbol>
   <symbol id="i-stat" viewBox="0 0 24 24"><path d="M5 20V10M10 20V4M15 20v-7M20 20V8"/></symbol>
@@ -422,6 +501,11 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
     </div>
   </section>
 
+  <section class="panel home-admin" id="home-admin" hidden aria-label="Админ-панель">
+    <span class="m-ic"><svg class="i"><use href="#i-shield"/></svg></span>
+    <div><b>Админ-панель</b><p>Тикеты <em>2</em> · заявки <em>2</em> · новости на одобрение <em>2</em> · мультиаккаунты <em>1</em></p></div>
+    <button type="button" class="btn gold sm" id="open-admin">Открыть</button>
+  </section>
   <div class="cols">
     <section id="vestnik" aria-label="Вестник фракций">
       <div class="sec-h"><h2>Вестник фракций</h2><small>входящие передачи: 131</small><button type="button" class="btn sm" id="open-arch">Архив выпусков</button></div>
@@ -500,11 +584,6 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
       <ul class="chips-res" id="res"></ul>
     </section>
 
-    <section class="panel admin-strip" id="admin-strip" hidden aria-label="Администрация">
-      <span class="m-ic"><svg class="i"><use href="#i-shield"/></svg></span>
-      <div><b>Админ-панель</b><p>Видна только администрации. Формат определим позже.</p></div>
-      <a class="btn gold sm" href="#">Открыть</a>
-    </section>
 
     <div class="cab-cols">
       <div class="groups">
@@ -568,6 +647,191 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
     <p class="note">Кабинет — макет на данных из скриншота. Карта и конструкторы переехали сюда. Биржа и георазведка отложены на переработку.</p>
   </div>
 
+  <div id="view-admin" class="view" hidden>
+    <div class="adm-head panel">
+      <span class="m-ic"><svg class="i"><use href="#i-shield"/></svg></span>
+      <div><h1>Админ-панель</h1><p>Видна только администрации. Все действия записываются в журнал.</p></div>
+      <button type="button" class="btn sm" id="adm-back"><svg class="i"><use href="#i-back"/></svg>На главную</button>
+    </div>
+    <div class="adm">
+      <nav class="adm-nav panel" aria-label="Разделы админ-панели">
+        <button type="button" data-s="tickets" aria-current="true"><svg class="i"><use href="#i-chat"/></svg>Тикеты<em>2</em></button>
+        <button type="button" data-s="apps"><svg class="i"><use href="#i-flag"/></svg>Регистрация фракций<em>2</em></button>
+        <button type="button" data-s="factions"><svg class="i"><use href="#i-crown"/></svg>Управление фракциями</button>
+        <button type="button" data-s="multi"><svg class="i"><use href="#i-eye"/></svg>Аудит мультиаккаунтов<em>1</em></button>
+        <button type="button" data-s="users"><svg class="i"><use href="#i-users"/></svg>Пользователи</button>
+        <button type="button" data-s="news"><svg class="i"><use href="#i-news"/></svg>Новости<em>2</em></button>
+        <button type="button" data-s="pages"><svg class="i"><use href="#i-lore"/></svg>Редакция страниц</button>
+        <button type="button" data-s="tests"><svg class="i"><use href="#i-wrench"/></svg>Тестовые функции</button>
+      </nav>
+
+      <div class="adm-body">
+        <!-- ТИКЕТЫ -->
+        <section class="panel adm-sec" data-sec="tickets">
+          <div class="sec-h"><h2>Тикеты</h2><div class="seg" role="group" aria-label="Статус"><button type="button" aria-pressed="true">Новые</button><button type="button" aria-pressed="false">В работе</button><button type="button" aria-pressed="false">Закрытые</button></div></div>
+          <div class="split">
+            <ol class="list">
+              <li class="sel"><b>#142 Не начислился доход за сутки</b><span>Республика Серениса · 23.10 00:41</span><span class="tag new">новый</span></li>
+              <li><b>#141 Флот завис в полёте</b><span>Республика Новой Либертии · 22.10 19:02</span><span class="tag new">новый</span></li>
+              <li><b>#139 Вопрос по капитуляции</b><span>The Echo of the War · 21.10 13:20</span><span class="tag">в работе</span></li>
+            </ol>
+            <div class="detail">
+              <h3>#142 Не начислился доход за сутки</h3>
+              <p class="who">Республика Серениса · игрок <b>Sera</b></p>
+              <div class="msg-b">После полуночи таймер дохода обнулился, а ГС не пришли. В казне было 1,2 млн, сейчас столько же.</div>
+              <label for="tk-reply">Ответ</label>
+              <textarea id="tk-reply" rows="3" placeholder="Напишите ответ игроку"></textarea>
+              <div class="acts"><button type="button" class="btn gold sm" data-toast="Ответ отправлен">Ответить</button><button type="button" class="btn sm" data-toast="Тикет взят в работу">Взять в работу</button><button type="button" class="btn sm" data-toast="Тикет закрыт">Закрыть тикет</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- РЕГИСТРАЦИЯ ФРАКЦИЙ -->
+        <section class="panel adm-sec" data-sec="apps" hidden>
+          <div class="sec-h"><h2>Регистрация фракций</h2><small>заявок на рассмотрении: 2</small></div>
+          <div class="split">
+            <ol class="list">
+              <li class="sel"><b>Аквилонский Домен</b><span>подана 22.10 · игрок Orrin</span><span class="tag new">ждёт</span></li>
+              <li><b>Кочевники Тар-Эна</b><span>подана 21.10 · игрок Vesk</span><span class="tag new">ждёт</span></li>
+            </ol>
+            <div class="detail">
+              <h3>Аквилонский Домен</h3>
+              <dl class="kv"><dt>Правление</dt><dd>Монархия · Абсолютная</dd><dt>Раса</dt><dd>Гуманоиды</dd><dt>Столица</dt><dd>Аквила Прайм</dd><dt>Цвет</dt><dd><i class="sw" style="background:#3b5bdb"></i>#3b5bdb</dd><dt>Стартовый сектор</dt><dd>свободный, северный рукав</dd></dl>
+              <div class="msg-b">Древний дом, переживший распад старой империи. Держится на флоте и клятвах вассалов…</div>
+              <label for="app-reason">Причина отказа (если отклоняете)</label>
+              <input id="app-reason" type="text" placeholder="Например: не заполнена история державы">
+              <div class="acts"><button type="button" class="btn gold sm" data-toast="Заявка одобрена, держава создана">Одобрить и создать державу</button><button type="button" class="btn sm" data-toast="Заявка возвращена на доработку">Вернуть на доработку</button><button type="button" class="btn sm danger" data-toast="Заявка отклонена">Отклонить</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- УПРАВЛЕНИЕ ФРАКЦИЯМИ -->
+        <section class="panel adm-sec" data-sec="factions" hidden>
+          <div class="sec-h"><h2>Управление фракциями</h2><input class="search" type="search" id="fac-search" placeholder="Поиск державы" aria-label="Поиск державы"></div>
+          <div class="split">
+            <ol class="list">
+              <li class="sel"><b>Галактическая Федерация Звёзд</b><span>игрок The Classical Man · 41 колония</span></li>
+              <li><b>Республика Серениса</b><span>игрок Sera · 18 колоний</span></li>
+              <li><b>Республика Новой Либертии</b><span>игрок Rony · 23 колонии</span></li>
+              <li><b>The Echo of the War</b><span>игрок The Echo of the War · 12 колоний</span></li>
+            </ol>
+            <div class="detail">
+              <h3>Галактическая Федерация Звёзд</h3>
+              <div class="grp"><h4>Казна</h4>
+                <div class="row"><span>ГС <b>54 875 987</b></span><div class="acts"><button type="button" class="btn sm">−500к</button><button type="button" class="btn sm">+500к</button><button type="button" class="btn sm">+1 млн</button></div></div>
+                <div class="row"><span>ОН <b>1 571</b></span><div class="acts"><button type="button" class="btn sm">−100</button><button type="button" class="btn sm">+100</button><button type="button" class="btn sm">+1к</button></div></div>
+              </div>
+              <div class="grp"><h4>Выдать</h4>
+                <div class="give"><select id="give-kind" aria-label="Что выдать"><option>Ресурс</option><option>Юниты из ростера</option><option>Агента разведки</option><option>Колонию в системе</option></select><select id="give-what" aria-label="Что именно"><option>Титан</option><option>Платина</option><option>Стелларит</option></select><input id="give-n" type="number" value="1000" aria-label="Количество"><button type="button" class="btn gold sm" data-toast="Выдано">Выдать</button></div>
+              </div>
+              <div class="grp"><h4>Карточка державы</h4>
+                <div class="give"><input id="fac-name" type="text" value="Галактическая Федерация Звёзд" aria-label="Название"><input id="fac-capital" type="text" value="Авалон" aria-label="Столица"><button type="button" class="btn sm">Загрузить герб</button><button type="button" class="btn gold sm" data-toast="Карточка сохранена">Сохранить</button></div>
+              </div>
+              <div class="grp danger-zone"><h4>Опасная зона</h4>
+                <div class="row"><span>Снять игрока с державы<small>Держава остаётся целой, но становится бесхозной.</small></span><button type="button" class="btn sm danger" data-confirm="Снять игрока с державы?">Снять игрока</button></div>
+                <div class="row"><span>Удалить державу<small>Колонии, флоты и казна будут удалены без возврата.</small></span><button type="button" class="btn sm danger" data-confirm="Удалить державу «Галактическая Федерация Звёзд» без возврата?">Удалить державу</button></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- МУЛЬТИАККАУНТЫ -->
+        <section class="panel adm-sec" data-sec="multi" hidden>
+          <div class="sec-h"><h2>Аудит мультиаккаунтов</h2><small>подозрительных связок: 1</small></div>
+          <div class="tbl"><table>
+            <thead><tr><th>Игрок</th><th>Регистрация</th><th>Последний вход</th><th>Входов</th><th>Общий IP</th><th>Общее устройство</th><th></th></tr></thead>
+            <tbody>
+              <tr class="flag"><td><b>Vesk</b><small>Кочевники Тар-Эна</small></td><td>21.10</td><td>22.10 23:14</td><td>9</td><td><span class="tag new">с 2 игроками</span></td><td><span class="tag new">с Orrin</span></td><td><button type="button" class="btn sm">Подробнее</button></td></tr>
+              <tr class="flag"><td><b>Orrin</b><small>Аквилонский Домен</small></td><td>22.10</td><td>22.10 23:20</td><td>4</td><td><span class="tag new">с 2 игроками</span></td><td><span class="tag new">с Vesk</span></td><td><button type="button" class="btn sm">Подробнее</button></td></tr>
+              <tr><td><b>Sera</b><small>Республика Серениса</small></td><td>03.06</td><td>23.10 00:39</td><td>212</td><td>—</td><td>—</td><td><button type="button" class="btn sm">Подробнее</button></td></tr>
+              <tr><td><b>Rony</b><small>Республика Новой Либертии</small></td><td>11.06</td><td>22.10 21:05</td><td>187</td><td>—</td><td>—</td><td><button type="button" class="btn sm">Подробнее</button></td></tr>
+            </tbody></table></div>
+        </section>
+
+        <!-- ПОЛЬЗОВАТЕЛИ -->
+        <section class="panel adm-sec" data-sec="users" hidden>
+          <div class="sec-h"><h2>Пользователи</h2><input class="search" type="search" id="usr-search" placeholder="Ник или почта" aria-label="Поиск пользователя"></div>
+          <div class="tbl"><table>
+            <thead><tr><th>Пользователь</th><th>Роль</th><th>Уровень</th><th>Статус</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><b>The Classical Man</b><small>Галактическая Федерация Звёзд</small></td><td><select aria-label="Роль"><option selected>Суперадмин</option><option>Админ</option><option>Редактор</option><option>Игрок</option><option>Гость</option></select></td><td><input type="number" value="15" aria-label="Уровень" class="lvl"></td><td><span class="tag">активен</span></td><td><button type="button" class="btn sm" disabled>Бан</button></td></tr>
+              <tr><td><b>Sera</b><small>Республика Серениса</small></td><td><select aria-label="Роль"><option>Суперадмин</option><option>Админ</option><option>Редактор</option><option selected>Игрок</option><option>Гость</option></select></td><td><input type="number" value="11" aria-label="Уровень" class="lvl"></td><td><span class="tag">активен</span></td><td><button type="button" class="btn sm danger" data-ban>Бан</button></td></tr>
+              <tr><td><b>Vesk</b><small>Кочевники Тар-Эна · заявка</small></td><td><select aria-label="Роль"><option>Суперадмин</option><option>Админ</option><option>Редактор</option><option>Игрок</option><option selected>Гость</option></select></td><td><input type="number" value="1" aria-label="Уровень" class="lvl"></td><td><span class="tag new">проверка</span></td><td><button type="button" class="btn sm danger" data-ban>Бан</button></td></tr>
+            </tbody></table></div>
+          <p class="hint">Изменения роли и уровня сохраняются сразу. Бан снимает доступ к кабинету, держава остаётся.</p>
+        </section>
+
+        <!-- НОВОСТИ -->
+        <section class="panel adm-sec" data-sec="news" hidden>
+          <div class="sec-h"><h2>Новости на одобрение</h2><small>в очереди: 2</small></div>
+          <div class="split">
+            <ol class="list">
+              <li class="sel"><b>Ответ Соридону: границы закрыты</b><span>Республика Серениса · 23.10 00:12</span></li>
+              <li><b>Капитолийские игры: итоги</b><span>Республика Новой Либертии · 22.10 17:40</span></li>
+            </ol>
+            <div class="detail">
+              <p class="who">Предпросмотр, как увидят игроки</p>
+              <article class="card preview" style="--tint:#2a1f0c">
+                <div class="ban"><svg><use href="#e1"/></svg></div>
+                <div class="c-body"><span class="fac"><i></i>Республика Серениса</span><h3>Ответ Соридону: границы закрыты</h3>
+                  <p>Attenzione, cittadini. Совет Республики отклоняет требования Соридона и закрывает пограничные системы для прохода флотов…</p><span class="sd">зв.дата 3000.296 · 00:12</span></div>
+              </article>
+              <label for="news-reason">Причина отклонения</label>
+              <input id="news-reason" type="text" placeholder="Например: нарушение правил РП">
+              <div class="acts"><button type="button" class="btn gold sm" data-toast="Новость опубликована в вестнике">Одобрить</button><button type="button" class="btn sm" data-toast="Открыт полный текст">Открыть полностью</button><button type="button" class="btn sm danger" data-toast="Новость отклонена">Отклонить</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- РЕДАКЦИЯ СТРАНИЦ -->
+        <section class="panel adm-sec" data-sec="pages" hidden>
+          <div class="sec-h"><h2>Редакция страниц</h2><button type="button" class="btn sm">+ Новая страница</button></div>
+          <div class="split">
+            <div class="tree">
+              <b>Лор</b><button type="button" class="sel">Вики фракций · 53</button><button type="button">История · 2</button><button type="button">Персонажи · 20</button>
+              <b>Игрокам</b><button type="button">Гайдбук</button><button type="button">Правила</button><button type="button">Изменения правил и механик</button>
+              <b>Главная</b><button type="button">Посты администрации</button><button type="button">Реплики Классикал-Тян</button>
+              <b>Документы</b><button type="button">Политика конфиденциальности</button><button type="button">Пользовательское соглашение</button>
+            </div>
+            <div class="detail">
+              <label for="pg-title">Заголовок</label>
+              <input id="pg-title" type="text" value="Республика Серениса">
+              <label for="pg-body">Текст</label>
+              <textarea id="pg-body" rows="8">Морская республика торговцев и дипломатов. Совет Республики избирается раз в десять лет…</textarea>
+              <div class="acts"><button type="button" class="btn gold sm" data-toast="Страница опубликована">Опубликовать</button><button type="button" class="btn sm" data-toast="Черновик сохранён">Сохранить черновик</button><button type="button" class="btn sm">Предпросмотр</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ТЕСТОВЫЕ ФУНКЦИИ -->
+        <section class="panel adm-sec" data-sec="tests" hidden>
+          <div class="sec-h"><h2>Тестовые функции</h2><select id="test-fac" aria-label="Держава для теста"><option>Галактическая Федерация Звёзд</option><option>Республика Серениса</option><option>Республика Новой Либертии</option></select></div>
+          <div class="test-grid">
+            <div class="grp"><h4>Создать сражение</h4>
+              <div class="give"><select id="bt-kind" aria-label="Тип"><option>Космическое</option><option>Наземное</option></select><select id="bt-vs" aria-label="Противник"><option>Против бота</option><option>Против державы</option></select><button type="button" class="btn gold sm" data-toast="Тестовое сражение создано">Создать</button></div>
+              <div class="acts"><button type="button" class="btn sm" data-toast="Бот сделал ход">Ход бота</button><button type="button" class="btn sm" data-toast="Тестовые сражения сброшены">Сбросить тестовые бои</button></div>
+            </div>
+            <div class="grp"><h4>Время и экономика</h4>
+              <div class="acts"><button type="button" class="btn sm" data-toast="+1 тик начислен">+1 тик</button><button type="button" class="btn sm" data-toast="Доход начислен">Начислить доход</button><button type="button" class="btn sm" data-toast="Таймер дохода сброшен">Сбросить таймер дохода</button></div>
+            </div>
+            <div class="grp"><h4>Флоты и разведка</h4>
+              <div class="acts"><button type="button" class="btn sm" data-toast="Все флоты прибыли">Пропустить полёт</button><button type="button" class="btn sm" data-toast="Шпионаж завершён">Завершить шпионаж</button></div>
+            </div>
+            <div class="grp danger-zone"><h4>Сброс</h4>
+              <div class="acts"><button type="button" class="btn sm danger" data-confirm="Обнулить казну державы (ГС, ОН, агенты)?">Обнулить казну</button><button type="button" class="btn sm danger" data-confirm="Обнулить все ресурсы державы?">Обнулить ресурсы</button></div>
+            </div>
+          </div>
+        </section>
+
+        <div class="confirm panel" id="confirm" hidden role="alertdialog" aria-labelledby="cf-t">
+          <p id="cf-t"></p>
+          <div class="acts"><button type="button" class="btn sm danger" id="cf-yes">Да, выполнить</button><button type="button" class="btn sm" id="cf-no">Отмена</button></div>
+        </div>
+      </div>
+    </div>
+    <p class="note">Админ-панель — макет: имена заявок, тикетов и мультиаккаунтов придуманы. Кнопки показывают, что произойдёт, но ничего не меняют.</p>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <footer class="panel foot">
     <a class="ds" href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener"><i><svg class="i"><use href="#i-chat"/></svg></i><span>Discord<small>discord.gg/jApCDH2zyM</small></span></a>
     <nav class="docs" aria-label="Документы"><a href="#">Политика конфиденциальности</a><a href="#">Пользовательское соглашение</a><a href="#">Согласие на обработку персональных данных</a></nav>
@@ -584,7 +848,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
     <input id="email" type="email" autocomplete="email" placeholder="you@mail.com">
     <label for="pass">Пароль</label>
     <input id="pass" type="password" autocomplete="current-password">
-    <label class="check" for="as-admin"><input type="checkbox" id="as-admin"> Макет: войти с правами администратора</label>
+    <label class="check" for="as-admin"><input type="checkbox" id="as-admin" checked> Макет: войти с правами администратора</label>
     <button type="submit" class="btn gold">Войти</button>
     <div class="or">или</div>
     <button type="button" class="btn" id="google">Войти через Google</button>
@@ -632,20 +896,35 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   addEventListener("keydown",e=>{if(e.key==="Escape")closeAll()});
   document.querySelectorAll("[data-login]").forEach(b=>b.addEventListener("click",()=>{$("#msg").textContent="";open("#veil-login","#email")}));
   // виды: главная и кабинет
-  function view(v){const cab=v==="cabinet";$("#view-home").hidden=cab;$("#view-cab").hidden=!cab;
-    $("#nav-home").toggleAttribute("aria-current",!cab);scrollTo(0,0);try{history.replaceState(null,"",cab?"#cabinet":"#")}catch(e){}}
+  function view(v){$("#view-home").hidden=v!=="home";$("#view-cab").hidden=v!=="cabinet";$("#view-admin").hidden=v!=="admin";
+    $("#nav-home").toggleAttribute("aria-current",v==="home");scrollTo(0,0);try{history.replaceState(null,"",v==="home"?"#":"#"+v)}catch(e){}}
   let logged=false;
   $("#login").addEventListener("submit",e=>{e.preventDefault();
     if(!$("#email").value.trim()){$("#msg").textContent="Введите почту, чтобы войти.";return}
     logged=true;const adm=$("#as-admin").checked;
-    closeAll();$("#guest").hidden=true;$("#me").hidden=false;$("#admin-btn").hidden=!adm;$("#admin-strip").hidden=!adm;
+    closeAll();$("#guest").hidden=true;$("#me").hidden=false;$("#admin-btn").hidden=!adm;$("#home-admin").hidden=!adm;
     document.querySelectorAll(".hero [data-login]").forEach(b=>b.hidden=true);view("cabinet")});
   $("#cab-chip").addEventListener("click",e=>{e.preventDefault();view("cabinet")});
   $("#to-home").addEventListener("click",()=>view("home"));
   $("#nav-home").addEventListener("click",e=>{e.preventDefault();logged?view("cabinet"):view("home")});
   document.querySelector(".brand").addEventListener("click",e=>{e.preventDefault();view("home")});
   $("#nav-news").addEventListener("click",()=>{if(!$("#view-home").hidden)return;view("home");setTimeout(()=>$("#vestnik").scrollIntoView(),0)});
-  $("#admin-btn").addEventListener("click",()=>$("#admin-strip").scrollIntoView({block:"center"}));
+  $("#admin-btn").addEventListener("click",()=>view("admin"));
+  $("#open-admin").addEventListener("click",()=>view("admin"));
+  $("#adm-back").addEventListener("click",()=>view("home"));
+  const anav=[...document.querySelectorAll(".adm-nav button")];
+  anav.forEach(b=>b.addEventListener("click",()=>{anav.forEach(x=>x.setAttribute("aria-current",String(x===b)));
+    document.querySelectorAll(".adm-sec").forEach(sec=>sec.hidden=sec.dataset.sec!==b.dataset.s)}));
+  document.querySelectorAll(".list").forEach(l=>l.addEventListener("click",e=>{const li=e.target.closest("li");if(!li)return;l.querySelectorAll("li").forEach(x=>x.classList.toggle("sel",x===li))}));
+  document.querySelectorAll(".tree").forEach(t=>t.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;t.querySelectorAll("button").forEach(x=>x.classList.toggle("sel",x===b));$("#pg-title").value=b.textContent.replace(/ · \d+$/,"")}));
+  document.querySelectorAll(".seg").forEach(g=>g.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)))}));
+  let tt=0;function toast(m){const t=$("#toast");t.textContent=m+" (макет)";t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2200)}
+  document.addEventListener("click",e=>{const b=e.target.closest("[data-toast]");if(b)toast(b.dataset.toast)});
+  let pending=null;
+  document.addEventListener("click",e=>{const b=e.target.closest("[data-confirm]");if(!b)return;pending=b;$("#cf-t").textContent=b.dataset.confirm;$("#confirm").hidden=false;$("#cf-no").focus()});
+  $("#cf-no").addEventListener("click",()=>{$("#confirm").hidden=true;pending=null});
+  $("#cf-yes").addEventListener("click",()=>{$("#confirm").hidden=true;if(pending)toast("Выполнено: "+pending.textContent);pending=null});
+  document.querySelectorAll("[data-ban]").forEach(b=>b.addEventListener("click",()=>{const on=b.textContent==="Бан";b.textContent=on?"Разбанить":"Бан";const tag=b.closest("tr").querySelector(".tag");tag.textContent=on?"забанен":"активен";tag.classList.toggle("new",on);toast(on?"Пользователь забанен":"Бан снят")}));
 
   // уведомления
   const bell=$("#bell"),notif=$("#notif");
