@@ -1,0 +1,366 @@
+<title>Классическая эра 1.0 · киберпанк</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=Play:wght@400;700&family=Oswald:wght@400;600;700&family=PT+Mono&family=Russo+One&family=Exo+2:wght@400;600;800&family=Rubik+Glitch&display=swap">
+<style>
+/* Три киберпанк-мира, каждый сознательно в одной тёмной теме. Красного нет: проект уходит от красных тонов.
+   D «Неон» — ночной мегаполис, мокрый асфальт, неоновые вывески; меню — вертикальная вывеска, маскот — голограмма на билборде.
+   E «Корпорация» — тяжёлый терминал мегакорпорации, жёлто-чёрная маркировка; меню — вкладки-допуски, маскот — личное дело.
+   F «Синтвейв» — закат 80-х над сеточным горизонтом; меню — хромовая полоса, маскот встаёт над горизонтом. */
+:root{
+  color-scheme: dark;
+  --sw-bg:#101014; --sw-fg:#c9ccd6; --sw-on:#ffffff; --sw-line:#272a33;
+  /* D */
+  --d-bg:#07060d; --d-wall:#0e0c19; --d-cyan:#3ff0ff; --d-pink:#ff3fd2; --d-violet:#8b5cff; --d-text:#ecebff; --d-mute:#8d88b3; --d-line:#241f3d;
+  --d-display:"Rubik Mono One", "Russo One", system-ui, sans-serif; --d-body:"Play", "Exo 2", system-ui, sans-serif;
+  /* E */
+  --e-bg:#121310; --e-panel:#1b1c18; --e-yellow:#f5d000; --e-ink:#0d0d0b; --e-text:#e9e6d6; --e-mute:#8f8c7a; --e-line:#33342c; --e-cyan:#62e0d8;
+  --e-display:"Oswald", "PT Sans Narrow", system-ui, sans-serif; --e-mono:"PT Mono", ui-monospace, monospace;
+  /* F */
+  --f-sky1:#1a0638; --f-sky2:#5a1a8c; --f-sun1:#ffcf4a; --f-sun2:#ff4fa8; --f-grid:#c45cff; --f-text:#fbefff; --f-mute:#c3a6dd; --f-ground:#0a0218; --f-cyan:#4de8ff;
+  --f-display:"Russo One", "Exo 2", system-ui, sans-serif; --f-body:"Exo 2", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--sw-bg);color:var(--sw-fg);font:15px/1.5 system-ui,sans-serif}
+a,button{font:inherit}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.fill{fill:currentColor}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+.sw{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--sw-bg);border-bottom:1px solid var(--sw-line);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--sw-bg)}
+.sw span{font-size:13px;margin-right:4px}
+.sw button{background:none;border:1px solid var(--sw-line);color:var(--sw-fg);padding:5px 12px;border-radius:999px;cursor:pointer;font-size:13px}
+.sw button[aria-pressed="true"]{background:var(--sw-on);color:var(--sw-bg);border-color:var(--sw-on)}
+
+/* ═════════════ D · НЕОН ═════════════ */
+.vd{background:var(--d-bg);color:var(--d-text);font-family:var(--d-body);min-height:100vh;position:relative;overflow-x:clip;
+  background-image:radial-gradient(120% 60% at 80% 0%,#2a0f4a 0%,transparent 60%),radial-gradient(80% 50% at 0% 100%,#06303a 0%,transparent 60%)}
+.vd-wrap{display:grid;grid-template-columns:200px minmax(0,1fr);gap:clamp(20px,4vw,48px);padding-block:28px 0}
+.vd-sign{border:2px solid var(--d-cyan);border-radius:10px;padding:16px 14px;box-shadow:0 0 12px #3ff0ff66,inset 0 0 12px #3ff0ff33;align-self:start;position:sticky;top:64px;background:#07060dcc}
+.vd-sign b{display:block;font-family:var(--d-display);font-size:15px;line-height:1.15;color:var(--d-pink);text-shadow:0 0 6px var(--d-pink),0 0 18px #ff3fd299;margin-bottom:14px}
+.vd-sign nav{display:flex;flex-direction:column;gap:2px}
+.vd-sign a{color:var(--d-mute);text-decoration:none;padding:7px 8px;border-radius:4px;font-size:15px;letter-spacing:.02em}
+.vd-sign a:hover{color:var(--d-cyan);text-shadow:0 0 8px #3ff0ff}
+.vd-sign a[aria-current]{color:var(--d-bg);background:var(--d-cyan);box-shadow:0 0 14px #3ff0ffaa}
+.vd-sign hr{border:0;border-top:1px solid var(--d-line);margin:8px 0}
+.vd-main{min-width:0;display:flex;flex-direction:column;gap:32px;padding-bottom:40px}
+.vd-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(220px,.85fr);gap:clamp(20px,4vw,40px);align-items:end}
+.vd-kicker{font-size:13px;color:var(--d-cyan);margin:0 0 12px;text-shadow:0 0 8px #3ff0ff99}
+.vd h1{font-family:var(--d-display);font-size:clamp(34px,5.6vw,76px);line-height:1;margin:0 0 18px;font-weight:400;color:var(--d-text);text-wrap:balance}
+.vd h1 .neon{display:block;color:var(--d-pink);text-shadow:0 0 4px #fff,0 0 10px var(--d-pink),0 0 28px var(--d-pink),0 0 60px #ff3fd277;animation:flick 6s infinite}
+@keyframes flick{0%,18%,22%,62%,64%,100%{opacity:1}20%,63%{opacity:.35}}
+.vd-lead{color:var(--d-mute);font-size:16px;max-width:46ch;margin:0 0 24px}
+.vd-btns{display:flex;gap:12px;flex-wrap:wrap}
+.vd-btn{font-family:var(--d-body);font-weight:700;font-size:15px;padding:12px 22px;text-decoration:none;color:var(--d-bg);background:var(--d-cyan);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);box-shadow:0 0 20px #3ff0ff88}
+.vd-btn.alt{background:transparent;color:var(--d-pink);box-shadow:inset 0 0 0 2px var(--d-pink);clip-path:none;border-radius:2px}
+.vd-holo{position:relative;aspect-ratio:3/4;border:1px solid #8b5cff66;background:linear-gradient(180deg,#8b5cff14,#3ff0ff10);overflow:hidden;color:var(--d-cyan)}
+.vd-holo svg{position:absolute;left:10%;right:10%;bottom:0;width:80%;filter:drop-shadow(0 0 10px #3ff0ff) drop-shadow(-3px 0 0 #ff3fd288)}
+.vd-holo::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#3ff0ff14 0 1px,transparent 1px 4px);z-index:1}
+.vd-holo::after{content:"";position:absolute;left:0;right:0;height:30%;background:linear-gradient(transparent,#3ff0ff22,transparent);animation:scan 4s linear infinite;z-index:1}
+@keyframes scan{from{top:-30%}to{top:100%}}
+.vd-holo figcaption{position:absolute;left:10px;right:10px;top:8px;font-size:11px;color:var(--d-mute);z-index:2}
+.vd-tag{position:absolute;right:10px;bottom:10px;z-index:2;font-size:11px;color:var(--d-pink);border:1px solid var(--d-pink);padding:2px 6px;text-shadow:0 0 6px var(--d-pink)}
+.vd-street{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.vd-street div{border-top:2px solid var(--d-violet);padding:12px 2px 0;box-shadow:0 -6px 18px -10px var(--d-violet)}
+.vd-street b{display:block;font-family:var(--d-display);font-weight:400;font-size:26px;color:var(--d-text);font-variant-numeric:tabular-nums}
+.vd-street span{color:var(--d-mute);font-size:13px}
+.vd-ticker{border-block:1px solid var(--d-line);overflow:hidden;white-space:nowrap;font-size:14px;color:var(--d-mute);padding-block:9px}
+.vd-ticker p{display:inline-block;margin:0;padding-left:100%;animation:tick 30s linear infinite}
+.vd-ticker em{font-style:normal;color:var(--d-cyan)}
+@keyframes tick{to{transform:translateX(-100%)}}
+.vd-note{font-size:11px;color:var(--d-mute);margin:-20px 0 0}
+
+/* ═════════════ E · КОРПОРАЦИЯ ═════════════ */
+.ve{background:var(--e-bg);color:var(--e-text);font-family:var(--e-mono);min-height:100vh}
+.ve-hazard{height:10px;background:repeating-linear-gradient(-45deg,var(--e-yellow) 0 12px,var(--e-ink) 12px 24px)}
+.ve-top .in{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;border-bottom:2px solid var(--e-line)}
+.ve-brand{display:flex;align-items:center;gap:12px;padding:12px 20px 12px 0;margin-right:12px;border-right:2px solid var(--e-line);text-decoration:none;color:var(--e-text)}
+.ve-brand i{width:34px;height:34px;background:var(--e-yellow);display:grid;place-items:center;color:var(--e-ink);font:700 15px var(--e-display);font-style:normal}
+.ve-brand b{font-family:var(--e-display);font-weight:700;font-size:20px;letter-spacing:.06em;text-transform:uppercase;line-height:1}
+.ve-brand small{display:block;font-size:10px;color:var(--e-mute);margin-top:3px}
+.ve-tabs{display:flex;flex-wrap:wrap}
+.ve-tabs a{display:flex;flex-direction:column;justify-content:center;padding:8px 14px;text-decoration:none;color:var(--e-mute);border-right:1px solid var(--e-line);font-family:var(--e-display);font-size:15px;font-weight:600;letter-spacing:.03em;min-height:58px}
+.ve-tabs a small{font-family:var(--e-mono);font-size:10px;font-weight:400;color:#6d6b5c;letter-spacing:0}
+.ve-tabs a:hover{color:var(--e-text);background:#ffffff06}
+.ve-tabs a[aria-current]{background:var(--e-yellow);color:var(--e-ink)}
+.ve-tabs a[aria-current] small{color:#3d3a10}
+.ve-grid .in{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;padding-block:28px 40px}
+.ve h1{font-family:var(--e-display);font-weight:700;font-size:clamp(40px,6.4vw,92px);line-height:.92;text-transform:uppercase;margin:0 0 18px;letter-spacing:.01em;text-wrap:balance}
+.ve-lead{color:var(--e-mute);font-size:14px;max-width:56ch;margin:0 0 22px;line-height:1.65}
+.ve-btns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+.ve-btn{font-family:var(--e-display);font-weight:600;font-size:16px;letter-spacing:.04em;padding:12px 22px;text-decoration:none;background:var(--e-yellow);color:var(--e-ink);text-transform:uppercase}
+.ve-btn.alt{background:transparent;color:var(--e-yellow);box-shadow:inset 0 0 0 2px var(--e-yellow)}
+.ve-readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:2px solid var(--e-line);background:var(--e-panel)}
+.ve-readout div{padding:12px 14px;border-right:2px solid var(--e-line)}
+.ve-readout div:last-child{border-right:0}
+.ve-readout b{display:block;font-family:var(--e-display);font-weight:600;font-size:32px;color:var(--e-cyan);font-variant-numeric:tabular-nums;line-height:1.1}
+.ve-readout span{font-size:11px;color:var(--e-mute)}
+.ve-file{background:var(--e-panel);border:2px solid var(--e-line);align-self:start}
+.ve-file header{background:var(--e-yellow);color:var(--e-ink);padding:6px 12px;font:700 13px var(--e-display);letter-spacing:.08em;display:flex;justify-content:space-between}
+.ve-photo{margin:12px;aspect-ratio:1;border:1px solid var(--e-line);background:#0d0e0b;position:relative;overflow:hidden;color:#b7b39a}
+.ve-photo svg{position:absolute;left:12%;right:12%;bottom:0;width:76%;filter:grayscale(1) contrast(1.1)}
+.ve-photo em{position:absolute;inset:auto 8px 8px auto;font:11px var(--e-mono);font-style:normal;color:var(--e-yellow);background:var(--e-ink);padding:2px 6px}
+.ve-file dl{margin:0 12px 12px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;font-size:12px}
+.ve-file dt{color:var(--e-mute)}
+.ve-file dd{margin:0}
+.ve-file p{margin:0;border-top:2px solid var(--e-line);padding:10px 12px;font-size:12px;color:var(--e-text)}
+.ve-feed{margin-top:28px}
+.ve-feed h2{font-family:var(--e-display);font-weight:600;font-size:16px;letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px;color:var(--e-yellow)}
+.ve-feed ol{list-style:none;margin:0;padding:0}
+.ve-feed li{display:grid;grid-template-columns:118px minmax(0,1fr);gap:14px;padding:8px 0;border-top:1px dashed var(--e-line);font-size:13px}
+.ve-feed time{color:var(--e-mute);white-space:nowrap}
+.ve-note{font-size:11px;color:var(--e-mute);margin-top:10px}
+
+/* ═════════════ F · СИНТВЕЙВ ═════════════ */
+.vf{background:var(--f-ground);color:var(--f-text);font-family:var(--f-body);min-height:100vh;overflow-x:clip}
+.vf-top{background:#0a0218e6;border-bottom:1px solid #c45cff55;position:relative;z-index:2}
+.vf-top .in{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-block:10px}
+.vf-logo{font-family:var(--f-display);font-size:19px;text-decoration:none;background:linear-gradient(180deg,#fff 0%,#c8f6ff 45%,#6a3fb0 50%,#f5c6ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 6px #c45cff88)}
+.vf-nav{display:flex;flex-wrap:wrap;gap:4px;margin-left:auto}
+.vf-nav a{color:var(--f-mute);text-decoration:none;padding:6px 12px;border-radius:3px;font-weight:600;font-size:14px}
+.vf-nav a:hover{color:var(--f-text);background:#c45cff22}
+.vf-nav a[aria-current]{color:var(--f-ground);background:linear-gradient(90deg,var(--f-sun1),var(--f-sun2))}
+.vf-scene{position:relative;background:linear-gradient(180deg,var(--f-sky1) 0%,var(--f-sky2) 58%,#c03d9a 66%,var(--f-ground) 66.2%);overflow:hidden}
+.vf-sun{position:absolute;left:50%;top:18%;width:min(34vw,360px);aspect-ratio:1;transform:translateX(-50%);border-radius:50%;
+  background:linear-gradient(180deg,var(--f-sun1),var(--f-sun2));
+  -webkit-mask:linear-gradient(#000 52%,transparent 52% 56%,#000 56% 63%,transparent 63% 67%,#000 67% 73%,transparent 73% 78%,#000 78% 83%,transparent 83% 89%,#000 89%);
+          mask:linear-gradient(#000 52%,transparent 52% 56%,#000 56% 63%,transparent 63% 67%,#000 67% 73%,transparent 73% 78%,#000 78% 83%,transparent 83% 89%,#000 89%);opacity:.9}
+.vf-grid{position:absolute;left:-50%;right:-50%;bottom:0;height:34%;perspective:300px;overflow:hidden}
+.vf-grid div{position:absolute;inset:0 0 -100% 0;transform:rotateX(62deg);transform-origin:top;
+  background-image:linear-gradient(var(--f-grid) 2px,transparent 2px),linear-gradient(90deg,var(--f-grid) 2px,transparent 2px);background-size:60px 60px;animation:roll 2.4s linear infinite;opacity:.7}
+@keyframes roll{to{background-position:0 60px}}
+.vf-hero{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(200px,320px) minmax(0,.75fr);gap:24px;align-items:end;padding-block:56px 0;min-height:560px}
+.vf-copy{align-self:center;padding-bottom:120px}
+.vf h1{font-family:var(--f-display);font-weight:400;font-size:clamp(34px,4.6vw,64px);line-height:.95;margin:0 0 16px;text-wrap:balance;
+  background:linear-gradient(180deg,#fff 0%,#d4fbff 46%,#7b3fc4 50%,#ffd9ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 #1a0638) drop-shadow(0 0 14px #c45cff66)}
+.vf-lead{font-size:16px;color:var(--f-mute);max-width:36ch;margin:0 0 22px}
+.vf-btns{display:flex;gap:10px;flex-wrap:wrap}
+.vf-btn{font-family:var(--f-display);font-size:15px;padding:12px 20px;text-decoration:none;color:var(--f-ground);background:linear-gradient(90deg,var(--f-sun1),var(--f-sun2));border-radius:3px;box-shadow:0 0 18px #ff4fa877}
+.vf-btn.alt{background:transparent;color:var(--f-cyan);box-shadow:inset 0 0 0 2px var(--f-cyan)}
+.vf-tyan{color:#2a0b4d;align-self:end;position:relative}
+.vf-tyan svg{display:block;width:100%;filter:drop-shadow(0 0 2px var(--f-cyan)) drop-shadow(0 0 16px #4de8ff66)}
+.vf-tyan small{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:11px;color:var(--f-mute)}
+.vf-side{align-self:center;padding-bottom:120px;display:flex;flex-direction:column;gap:14px}
+.vf-side div{border-left:2px solid var(--f-cyan);padding-left:12px}
+.vf-side b{display:block;font-family:var(--f-display);font-weight:400;font-size:30px;font-variant-numeric:tabular-nums;color:var(--f-text)}
+.vf-side span{color:var(--f-mute);font-size:13px}
+.vf-copy,.vf-side{text-shadow:0 2px 10px #1a0638}
+.vf-bottom .in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding-block:28px 40px}
+.vf-bottom h2{font-family:var(--f-display);font-weight:400;font-size:17px;margin:0 0 6px;color:var(--f-cyan)}
+.vf-bottom p{margin:0;font-size:14px;color:var(--f-mute);max-width:36ch}
+.vf-glitch{font-family:"Rubik Glitch",var(--f-display);color:var(--f-sun2)}
+
+@media (max-width:860px){
+  .vd-wrap{grid-template-columns:1fr}
+  .vd-sign{position:static}
+  .vd-sign nav{flex-direction:row;flex-wrap:wrap}
+  .vd-sign hr{display:none}
+  .vd-hero{grid-template-columns:1fr}
+  .vd-holo{max-width:280px}
+  .vd-street{grid-template-columns:1fr}
+  .ve-brand{border-right:0;width:100%;border-bottom:2px solid var(--e-line)}
+  .ve-tabs a{min-height:46px}
+  .ve-grid .in{grid-template-columns:1fr}
+  .ve-readout{grid-template-columns:1fr}
+  .ve-readout div{border-right:0;border-bottom:2px solid var(--e-line)}
+  .ve-readout div:last-child{border-bottom:0}
+  .ve-feed li{grid-template-columns:1fr;gap:2px}
+  .vf-nav{margin-left:0}
+  .vf-hero{grid-template-columns:1fr;min-height:0;padding-block:32px 0}
+  .vf-copy,.vf-side{padding-bottom:0}
+  .vf-side{flex-direction:row;flex-wrap:wrap;gap:16px}
+  .vf-tyan{max-width:240px;justify-self:center;order:3}
+  .vf-sun{top:auto;bottom:24%;width:72vw;opacity:.5}
+  .vf-bottom .in{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}.vd-ticker p{padding-left:0}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="tyan" viewBox="0 0 200 240">
+    <path class="fill" d="M100 22c-38 0-62 28-62 66 0 22 6 40 4 58-2 14-12 26-16 36 18-4 30-14 36-26 6 10 20 16 38 16s32-6 38-16c6 12 18 22 36 26-4-10-14-22-16-36-2-18 4-36 4-58 0-38-24-66-62-66z" opacity=".35"/>
+    <ellipse class="fill" cx="100" cy="96" rx="38" ry="44" opacity=".6"/>
+    <path class="fill" d="M58 86c4-30 22-48 42-48s38 18 42 48c-12-14-26-20-42-20s-30 6-42 20z" opacity=".85"/>
+    <path class="fill" d="M24 240c4-44 34-72 76-72s72 28 76 72z" opacity=".6"/>
+    <rect class="fill" x="88" y="136" width="24" height="34" opacity=".5"/>
+  </symbol>
+</svg>
+
+<nav class="sw" aria-label="Варианты дизайна">
+  <span>Вариант:</span>
+  <button type="button" id="sw-neon" data-v="neon" aria-pressed="true">D · Неон</button>
+  <button type="button" id="sw-corp" data-v="corp" aria-pressed="false">E · Корпорация</button>
+  <button type="button" id="sw-synth" data-v="synth" aria-pressed="false">F · Синтвейв</button>
+</nav>
+
+<!-- ═════════════ D · НЕОН ═════════════ -->
+<div class="vd" id="v-neon">
+  <div class="vd-wrap gutter">
+    <aside class="vd-sign">
+      <b>Классическая эра</b>
+      <nav aria-label="Главное меню">
+        <a href="#neon" aria-current="page">Обзор</a>
+        <a href="#neon">Держава</a>
+        <a href="#neon">Галактика</a>
+        <a href="#neon">Флот</a>
+        <a href="#neon">Война</a>
+        <a href="#neon">Дипломатия</a>
+        <a href="#neon">Разведка</a>
+        <a href="#neon">Рынок</a>
+        <hr>
+        <a href="#neon">Хроника</a>
+        <a href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener">Discord</a>
+      </nav>
+    </aside>
+    <main class="vd-main">
+      <section class="vd-hero">
+        <div>
+          <p class="vd-kicker">Сектор 7 · ночная смена · канал открыт</p>
+          <h1>Галактика не спит. <span class="neon">Твой ход.</span></h1>
+          <p class="vd-lead">Браузерная стратегия о звёздных державах: колонии, флоты, тайные операции, союзы и войны за системы.</p>
+          <div class="vd-btns">
+            <a class="vd-btn" href="#neon">Войти в игру</a>
+            <a class="vd-btn alt" href="#neon">Основать державу</a>
+          </div>
+        </div>
+        <figure class="vd-holo" style="margin:0">
+          <figcaption>Голограмма · место для арта Классикал-Тян</figcaption>
+          <svg viewBox="0 0 200 240" role="img" aria-label="Место для арта Классикал-Тян"><use href="#tyan"/></svg>
+          <span class="vd-tag">Классикал-Тян</span>
+        </figure>
+      </section>
+      <section class="vd-street" aria-label="Сводка по галактике">
+        <div><b>24</b><span>державы в игре</span></div>
+        <div><b>1 645</b><span>колоний</span></div>
+        <div><b>146</b><span>сражений проведено</span></div>
+      </section>
+      <div class="vd-ticker" aria-label="Лента хроники"><p><em>22.10 21:40</em> Объявлена война за пограничную систему &nbsp;·&nbsp; <em>22.10 18:05</em> Рынок: редкие металлы дорожают &nbsp;·&nbsp; <em>21.10 23:12</em> Новая держава заняла свободный сектор</p></div>
+      <p class="vd-note">Лента хроники — пример для макета. Цифры сводки из базы на 23 октября.</p>
+    </main>
+  </div>
+</div>
+
+<!-- ═════════════ E · КОРПОРАЦИЯ ═════════════ -->
+<div class="ve" id="v-corp" hidden>
+  <div class="ve-hazard"></div>
+  <header class="ve-top">
+    <div class="in gutter">
+      <a class="ve-brand" href="#corp"><i>КЭ</i><span><b>Классическая эра</b><small>Терминал правителя · доступ 1.0</small></span></a>
+      <nav class="ve-tabs" aria-label="Главное меню">
+        <a href="#corp" aria-current="page">Обзор<small>00</small></a>
+        <a href="#corp">Держава<small>01</small></a>
+        <a href="#corp">Галактика<small>02</small></a>
+        <a href="#corp">Флот<small>03</small></a>
+        <a href="#corp">Война<small>04</small></a>
+        <a href="#corp">Дипломатия<small>05</small></a>
+        <a href="#corp">Разведка<small>06</small></a>
+        <a href="#corp">Рынок<small>07</small></a>
+      </nav>
+    </div>
+  </header>
+  <section class="ve-grid">
+    <div class="in gutter">
+      <div>
+        <h1>Управляй державой. Не дай ей управлять тобой.</h1>
+        <p class="ve-lead">Браузерная стратегия о звёздных державах. Экономика колоний, производство флотов, сражения на тактической арене, шпионаж, биржа, союзы и войны.</p>
+        <div class="ve-btns">
+          <a class="ve-btn" href="#corp">Войти в терминал</a>
+          <a class="ve-btn alt" href="#corp">Основать державу</a>
+        </div>
+        <div class="ve-readout" aria-label="Сводка по галактике">
+          <div><b>24</b><span>державы в игре</span></div>
+          <div><b>1 645</b><span>колоний</span></div>
+          <div><b>146</b><span>сражений проведено</span></div>
+        </div>
+        <div class="ve-feed">
+          <h2>Сводка событий</h2>
+          <ol>
+            <li><time>22.10 21:40</time><span>Объявлена война: два союза оспаривают пограничную систему.</span></li>
+            <li><time>22.10 18:05</time><span>Рынок: редкие металлы дорожают после перекрытия торгового пути.</span></li>
+            <li><time>21.10 23:12</time><span>Новая держава вошла в галактику и заняла свободный сектор.</span></li>
+          </ol>
+          <p class="ve-note">Сводка событий — пример для макета. Цифры из базы на 23 октября.</p>
+        </div>
+      </div>
+      <aside class="ve-file" aria-label="Личное дело советника">
+        <header><span>Личное дело</span><span>№ 001</span></header>
+        <div class="ve-photo"><svg viewBox="0 0 200 240" role="img" aria-label="Место для арта Классикал-Тян"><use href="#tyan"/></svg><em>фото: новый арт</em></div>
+        <dl>
+          <dt>Имя</dt><dd>Классикал-Тян</dd>
+          <dt>Должность</dt><dd>Советник правителя</dd>
+          <dt>Допуск</dt><dd>Высший</dd>
+        </dl>
+        <p>«Три флота у границы. Оборона в норме, но я бы проверила разведку».</p>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<!-- ═════════════ F · СИНТВЕЙВ ═════════════ -->
+<div class="vf" id="v-synth" hidden>
+  <header class="vf-top">
+    <div class="in gutter">
+      <a class="vf-logo" href="#synth">Классическая эра</a>
+      <nav class="vf-nav" aria-label="Главное меню">
+        <a href="#synth" aria-current="page">Обзор</a>
+        <a href="#synth">Держава</a>
+        <a href="#synth">Галактика</a>
+        <a href="#synth">Флот</a>
+        <a href="#synth">Война</a>
+        <a href="#synth">Дипломатия</a>
+        <a href="#synth">Разведка</a>
+        <a href="#synth">Рынок</a>
+      </nav>
+    </div>
+  </header>
+  <section class="vf-scene">
+    <div class="vf-sun"></div>
+    <div class="vf-grid"><div></div></div>
+    <div class="vf-hero gutter">
+      <div class="vf-copy">
+        <h1>Классическая эра</h1>
+        <p class="vf-lead">Звёздные державы, флоты и войны за системы. Браузерная стратегия, где каждый ход меняет карту.</p>
+        <div class="vf-btns">
+          <a class="vf-btn" href="#synth">Войти в игру</a>
+          <a class="vf-btn alt" href="#synth">Основать державу</a>
+        </div>
+      </div>
+      <figure class="vf-tyan" style="margin:0">
+        <svg viewBox="0 0 200 240" role="img" aria-label="Место для арта Классикал-Тян"><use href="#tyan"/></svg>
+        <small>Место для арта Классикал-Тян</small>
+      </figure>
+      <div class="vf-side" aria-label="Сводка по галактике">
+        <div><b>24</b><span>державы в игре</span></div>
+        <div><b>1 645</b><span>колоний</span></div>
+        <div><b>146</b><span>сражений проведено</span></div>
+      </div>
+    </div>
+  </section>
+  <section class="vf-bottom">
+    <div class="in gutter">
+      <div><h2>Впервые здесь</h2><p>Пройдите короткое обучение: от первой колонии до первого флота.</p></div>
+      <div><h2>Хроника</h2><p>Объявлена война за пограничную систему. <span style="opacity:.6">(пример)</span></p></div>
+      <div><h2>Сообщество</h2><p>Правила, обсуждения и анонсы в <a href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener" style="color:var(--f-text)">Discord</a>.</p></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  const ids={neon:"v-neon",corp:"v-corp",synth:"v-synth"};
+  const btns=[...document.querySelectorAll(".sw button")];
+  function show(v){
+    if(!ids[v]) v="neon";
+    for(const k in ids) document.getElementById(ids[k]).hidden=(k!==v);
+    btns.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===v)));
+  }
+  btns.forEach(b=>b.addEventListener("click",()=>{show(b.dataset.v);try{history.replaceState(null,"","#"+b.dataset.v)}catch(e){}}));
+  let start="neon";try{const h=location.hash.slice(1);if(ids[h])start=h}catch(e){}
+  show(start);
+})();
+</script>
