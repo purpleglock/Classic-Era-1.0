@@ -1,0 +1,331 @@
+<title>Классическая эра 1.0 · вариант H</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+/* H «Монолит»: только чёрный и золото. Всё собрано в плавающие панели на чёрном фоне с тонкой сеткой.
+   Сверху капсула-шапка (онлайн, меню с иконками, уведомления, кабинет), под ней полоса обновлений, затем баннер-карусель с голограммой. */
+:root{
+  color-scheme: dark;
+  --bg:#070706; --panel:#111110; --panel2:#171715; --line:#24221e; --line2:#33302a;
+  --gold:#d4a64a; --gold-hi:#f0c870; --gold-dim:#7d6331; --gold-soft:#d4a64a17;
+  --text:#ece6d8; --mute:#8b8578; --faint:#57534b;
+  --font:"Manrope", "Golos Text", system-ui, sans-serif;
+  --r:16px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;color:var(--text);font:15px/1.55 var(--font);background:var(--bg);
+  background-image:linear-gradient(#ffffff05 1px,transparent 1px),linear-gradient(90deg,#ffffff05 1px,transparent 1px);background-size:40px 40px}
+a,button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.page{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 48px;display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+
+/* ── шапка-капсула ── */
+.top{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:10;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 14px;background:#111110ee;backdrop-filter:blur(10px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:var(--bg)}
+.mark{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--gold);color:#120e05;font-weight:800;font-size:14px;letter-spacing:.02em;text-decoration:none;flex:none}
+.online{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line2);border-radius:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.online i{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+.online small{font-weight:500;color:var(--mute);font-size:13px}
+.nav{display:flex;gap:2px;margin:0 auto;list-style:none;padding:0}
+.nav a{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;text-decoration:none;color:var(--mute);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.nav a:hover{color:var(--text);background:#ffffff06}
+.nav a[aria-current]{color:var(--gold)}
+.tools{display:flex;gap:8px;align-items:center}
+.ib{position:relative;width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--line2);border-radius:12px;background:var(--panel2);cursor:pointer;color:var(--text)}
+.ib:hover{border-color:var(--gold-dim)}
+.badge{position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--gold);color:#120e05;font-size:11px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 3px var(--panel)}
+.cab{display:flex;align-items:center;gap:10px;padding:5px 12px 5px 5px;border:1px solid var(--line2);border-radius:12px;background:var(--panel2);text-decoration:none}
+.cab i{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--gold-hi),var(--gold-dim));display:grid;place-items:center;color:#120e05;font-style:normal;font-weight:800;font-size:13px}
+.cab span{display:flex;flex-direction:column;line-height:1.2}
+.cab small{font-size:11px;color:var(--mute)}
+.cab b{font-size:13px;color:var(--gold);font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;border:1px solid var(--line2);background:var(--panel2);font-weight:700;font-size:15px;text-decoration:none;cursor:pointer;color:var(--text)}
+.btn:hover{border-color:var(--gold-dim)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#120e05}
+.btn.gold:hover{background:var(--gold-hi)}
+.btn.sm{padding:10px 16px;font-size:14px}
+.burger{display:none}
+
+/* ── полоса обновления ── */
+.upd{padding:18px 20px}
+.upd-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:16px;align-items:center}
+.upd-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--gold);background:var(--gold-soft);border:1px solid #d4a64a33}
+.upd-meta{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:12px}
+.upd-meta b{color:var(--gold);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
+.upd-meta time{color:var(--mute)}
+.upd h2{margin:2px 0 2px;font-size:18px;font-weight:700}
+.upd p{margin:0;color:var(--mute);font-size:14px}
+.more{background:none;border:0;color:var(--mute);display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;padding:8px}
+.more:hover{color:var(--text)}
+.more svg{transition:transform .2s}
+.more[aria-expanded="true"] svg{transform:rotate(180deg)}
+.upd ul{margin:16px 0 0 60px;padding:14px 0 0;border-top:1px solid var(--line);color:var(--text);font-size:14px;display:grid;gap:6px}
+.upd li::marker{color:var(--gold)}
+
+/* ── баннер-карусель ── */
+.hero{position:relative;overflow:hidden;min-height:400px}
+.slide{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,400px);gap:24px;align-items:center;padding:40px clamp(20px,5vw,56px);opacity:0;visibility:hidden;transition:opacity .5s}
+.slide.on{opacity:1;visibility:visible;position:relative}
+.slide::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(60% 90% at 78% 70%,#d4a64a26,transparent 65%)}
+.slide>*{position:relative;z-index:1}
+.hero h1,.hero h2.big{margin:0 0 14px;font-size:clamp(28px,3.6vw,44px);line-height:1.1;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.hero .sub{margin:0 0 26px;color:var(--mute);font-size:16px;max-width:48ch}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+.speech{border-left:2px solid var(--gold);padding:2px 0 2px 14px;margin:0 0 22px;max-width:52ch}
+.speech b{display:block;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.speech span{font-size:17px}
+.holo{position:relative;height:340px;color:var(--gold);justify-self:center;width:100%;max-width:300px}
+.holo svg{position:absolute;left:6%;right:6%;bottom:26px;width:88%;
+  filter:drop-shadow(0 0 1px #fff3cf) drop-shadow(0 0 16px #d4a64a88);
+  -webkit-mask:repeating-linear-gradient(0deg,#000 0 2px,#0009 2px 4px);mask:repeating-linear-gradient(0deg,#000 0 2px,#0009 2px 4px);animation:float 6s ease-in-out infinite,flick 8s steps(1) infinite}
+.holo .cone{position:absolute;left:50%;bottom:16px;width:76%;height:80%;transform:translateX(-50%);background:linear-gradient(0deg,#d4a64a2e,transparent 80%);clip-path:polygon(42% 100%,58% 100%,100% 0,0 0)}
+.holo .base{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:66%;height:24px;border-radius:50%;border:1px solid var(--gold);box-shadow:0 0 18px #d4a64a77,inset 0 0 10px #d4a64a55;background:radial-gradient(#d4a64a33,transparent 70%)}
+.holo small{position:absolute;left:0;right:0;bottom:-16px;text-align:center;font-size:11px;color:var(--faint)}
+@keyframes float{50%{transform:translateY(-6px)}}
+@keyframes flick{0%,100%{opacity:.95}41%{opacity:.6}42%{opacity:.95}}
+.big-stat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:100%}
+.big-stat div{border:1px solid var(--line2);border-radius:12px;padding:16px;background:var(--panel2)}
+.big-stat b{display:block;font-size:30px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1.1}
+.big-stat span{font-size:13px;color:var(--mute)}
+.ds-card{justify-self:center;width:min(320px,100%);aspect-ratio:1.55;border-radius:14px;border:1px solid var(--gold-dim);background:linear-gradient(135deg,#1d1a12,#0e0d0b);padding:20px;display:flex;flex-direction:column;justify-content:space-between;transform:rotate(-6deg);box-shadow:0 20px 40px #0008}
+.ds-card b{font-size:22px;font-weight:800;color:var(--gold);line-height:1.1}
+.ds-card span{font-size:13px;color:var(--mute)}
+.dots{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:8px;z-index:2}
+.dots button{width:10px;height:6px;border-radius:999px;border:0;background:var(--line2);cursor:pointer;padding:0;transition:width .3s}
+.dots button[aria-current="true"]{width:28px;background:var(--gold)}
+
+/* ── нижние панели ── */
+.cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+.cols .panel{padding:18px 20px}
+.cols header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.cols h3{margin:0;font-size:16px;font-weight:800;margin-right:auto}
+.cols header a{font-size:13px;color:var(--mute);text-decoration:none}
+.cols header a:hover{color:var(--gold)}
+.feed{list-style:none;margin:0;padding:0}
+.feed li{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;padding:12px 0;border-top:1px solid var(--line);font-size:14px}
+.feed li:first-child{border-top:0}
+.feed time{color:var(--faint);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.feed b{color:var(--gold);font-weight:700}
+.hot{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.hot li{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);font-size:14px}
+.hot li span{margin-right:auto}
+.hot em{font-style:normal;font-size:12px;font-weight:700;color:var(--gold);border:1px solid #d4a64a44;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.note{font-size:12px;color:var(--faint);margin:0}
+
+/* ── вход ── */
+.veil{position:fixed;inset:0;z-index:30;background:#000000b3;backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+.login{width:min(420px,100%);padding:26px;position:relative;background:var(--panel)}
+.login h2{margin:0 0 4px;font-size:22px;font-weight:800}
+.login>p{margin:0 0 20px;color:var(--mute);font-size:14px}
+.login label{display:block;font-size:13px;color:var(--mute);margin-bottom:6px}
+.login input{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:12px;margin-bottom:14px}
+.login input:focus{outline:none;border-color:var(--gold)}
+.login .btn{width:100%}
+.or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:12px;margin:14px 0}
+.or::before,.or::after{content:"";flex:1;border-top:1px solid var(--line)}
+.x{position:absolute;right:16px;top:16px}
+.msg{min-height:1.4em;margin:12px 0 0;font-size:13px;color:var(--gold)}
+
+@media (max-width:1100px){
+  .nav a span{display:none}
+  .nav a{padding:10px}
+}
+@media (max-width:760px){
+  .nav{display:none}
+  .online small{display:none}
+  .tools{margin-left:auto}
+  .cab span{display:none}
+  .cab{padding:5px}
+  .burger{display:grid}
+  .nav.open{display:flex;flex-direction:column;position:absolute;left:0;right:0;top:calc(100% + 8px);background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:8px}
+  .nav.open a span{display:inline}
+  .upd-head{grid-template-columns:40px minmax(0,1fr)}
+  .upd-head .more{grid-column:1/-1;justify-self:start;padding-left:0}
+  .upd ul{margin-left:18px}
+  .slide{grid-template-columns:1fr;padding:28px 20px 48px}
+  .holo{height:260px;max-width:220px;order:-1}
+  .holo small{display:none}
+  .big-stat{grid-template-columns:1fr}
+  .ds-card{display:none}
+  .cols{grid-template-columns:1fr}
+  .feed li{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0c6" stop-opacity=".95"/><stop offset=".7" stop-color="#d4a64a" stop-opacity=".8"/><stop offset="1" stop-color="#d4a64a" stop-opacity=".1"/></linearGradient></defs>
+  <symbol id="tyan" viewBox="0 0 200 260"><g fill="url(#hg)">
+    <path d="M100 22c-38 0-62 28-62 66 0 22 6 40 4 58-2 14-12 26-16 36 18-4 30-14 36-26 6 10 20 16 38 16s32-6 38-16c6 12 18 22 36 26-4-10-14-22-16-36-2-18 4-36 4-58 0-38-24-66-62-66z" opacity=".45"/>
+    <ellipse cx="100" cy="96" rx="38" ry="44" opacity=".75"/>
+    <path d="M58 86c4-30 22-48 42-48s38 18 42 48c-12-14-26-20-42-20s-30 6-42 20z" opacity=".95"/>
+    <rect x="88" y="136" width="24" height="34" opacity=".6"/>
+    <path d="M24 260c2-56 34-90 76-90s74 34 76 90z" opacity=".7"/></g></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(-20 12 12)"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 012 2v12a2 2 0 00-2-2H4zM20 5h-6a2 2 0 00-2 2v12a2 2 0 012-2h6z"/></symbol>
+  <symbol id="i-news" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9h8M8 13h8M8 16h5"/></symbol>
+  <symbol id="i-rules" viewBox="0 0 24 24"><path d="M12 3v18M5 7h14M5 7l-2 6h4zM19 7l-2 6h4zM8 21h8"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 015 0c0 1.7-2.5 2-2.5 4M12 17h.01"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4zM10 20a2 2 0 004 0"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-upd" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0114-5l2 2M20 12a8 8 0 01-14 5l-2-2M20 4v5h-5M4 20v-5h5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 4.5a3.5 3.5 0 010 7M21 20c0-3-1.6-5.3-4-5.8"/></symbol>
+</svg>
+
+<div class="page">
+  <header class="panel top">
+    <a class="mark" href="#" aria-label="Классическая эра, главная">КЭ</a>
+    <div class="online" title="Игроков в сети"><i></i><span id="online">38</span><small>в сети</small></div>
+    <ul class="nav" id="nav" aria-label="Главное меню">
+      <li><a href="#" aria-current="page"><svg class="i"><use href="#i-play"/></svg><span>Начать игру</span></a></li>
+      <li><a href="#"><svg class="i"><use href="#i-map"/></svg><span>Карта</span></a></li>
+      <li><a href="#"><svg class="i"><use href="#i-book"/></svg><span>Вики фракций</span></a></li>
+      <li><a href="#"><svg class="i"><use href="#i-news"/></svg><span>Вестник</span></a></li>
+      <li><a href="#"><svg class="i"><use href="#i-rules"/></svg><span>Правила</span></a></li>
+      <li><a href="#"><svg class="i"><use href="#i-help"/></svg><span>Помощь</span></a></li>
+    </ul>
+    <div class="tools">
+      <button type="button" class="ib burger" id="burger" aria-label="Меню" aria-expanded="false" aria-controls="nav"><svg class="i"><use href="#i-menu"/></svg></button>
+      <div id="guest"><button type="button" class="btn gold sm" data-login>Войти</button></div>
+      <div id="me" hidden style="display:flex;gap:8px;align-items:center">
+        <button type="button" class="ib" aria-label="Уведомления: 2 новых"><svg class="i"><use href="#i-bell"/></svg><span class="badge">2</span></button>
+        <a class="cab" href="#"><i>ТС</i><span><small>Кабинет</small><b>12 400 кр.</b></span></a>
+      </div>
+    </div>
+  </header>
+
+  <section class="panel upd" aria-label="Обновление проекта">
+    <div class="upd-head">
+      <div class="upd-ic"><svg class="i"><use href="#i-upd"/></svg></div>
+      <div>
+        <div class="upd-meta"><b>Обновление проекта</b><time>22 октября 2026</time></div>
+        <h2>Наземная война: высадка и захват колоний</h2>
+        <p>Превосходство на орбите, пошаговые бои на арене, оккупация и передача колоний.</p>
+      </div>
+      <button type="button" class="more" id="more" aria-expanded="false" aria-controls="upd-list">Подробнее <svg class="i"><use href="#i-down"/></svg></button>
+    </div>
+    <ul id="upd-list" hidden>
+      <li>Высадка возможна только при превосходстве на орбите системы.</li>
+      <li>Беззащитные колонии обороняет ополчение и постройки.</li>
+      <li>После трёх дней оккупации колония переходит захватчику.</li>
+    </ul>
+  </section>
+
+  <section class="panel hero" aria-roledescription="карусель" aria-label="Главное">
+    <div class="slide on" id="s0" aria-label="1 из 3">
+      <div>
+        <div class="speech"><b>Классикал-Тян</b><span>Улыбнись. Галактика ждёт твоего хода.</span></div>
+        <h1>Звёздные державы, флоты и войны за системы</h1>
+        <p class="sub">Браузерная стратегия: колонии и экономика, сражения на тактической арене, дипломатия, разведка и союзы.</p>
+        <div class="acts"><a class="btn gold" href="#">Основать державу</a><button type="button" class="btn" data-login>Войти</button></div>
+      </div>
+      <figure class="holo" style="margin:0" aria-label="Голограмма Классикал-Тян, место для нового арта">
+        <small>место для нового арта</small>
+        <div class="cone"></div>
+        <svg viewBox="0 0 200 260" aria-hidden="true"><use href="#tyan"/></svg>
+        <div class="base"></div>
+      </figure>
+    </div>
+    <div class="slide" id="s1" aria-label="2 из 3">
+      <div>
+        <h2 class="big">Сообщество в Discord</h2>
+        <p class="sub">Анонсы обновлений, обсуждение правил, дипломатия держав и общение игроков.</p>
+        <div class="acts"><a class="btn gold" href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener">Перейти в Discord</a></div>
+      </div>
+      <div class="ds-card" aria-hidden="true"><b>Классическая<br>эра</b><span>Пропуск в сообщество</span></div>
+    </div>
+    <div class="slide" id="s2" aria-label="3 из 3">
+      <div>
+        <h2 class="big">Галактика сегодня</h2>
+        <p class="sub">Свободные секторы ещё есть. Самое время занять своё место на карте.</p>
+        <div class="acts"><a class="btn gold" href="#">Открыть карту</a></div>
+      </div>
+      <div class="big-stat">
+        <div><b>24</b><span>державы</span></div>
+        <div><b>1 645</b><span>колоний</span></div>
+        <div><b>146</b><span>сражений</span></div>
+      </div>
+    </div>
+    <div class="dots" role="group" aria-label="Слайды">
+      <button type="button" aria-label="Слайд 1" aria-current="true"></button>
+      <button type="button" aria-label="Слайд 2" aria-current="false"></button>
+      <button type="button" aria-label="Слайд 3" aria-current="false"></button>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section class="panel">
+      <header><h3>Вестник фракций</h3><a href="#">Архив</a></header>
+      <ol class="feed">
+        <li><time>22.10 21:40</time><span><b>Пограничье.</b> Объявлена война: два союза оспаривают пограничную систему.</span></li>
+        <li><time>22.10 18:05</time><span><b>Биржа.</b> Редкие металлы дорожают после перекрытия торгового пути.</span></li>
+        <li><time>21.10 23:12</time><span><b>Новая держава</b> вошла в галактику и заняла свободный сектор.</span></li>
+      </ol>
+    </section>
+    <section class="panel">
+      <header><h3>Горячие точки</h3><a href="#">Все</a></header>
+      <ul class="hot">
+        <li><span>Пограничная система</span><em>идёт бой</em></li>
+        <li><span>Торговый путь в центре</span><em>перекрыт</em></li>
+        <li><span>Колония на окраине</span><em>оккупация</em></li>
+      </ul>
+    </section>
+  </div>
+  <p class="note">Онлайн, вестник, горячие точки и данные кабинета — примеры для макета. Цифры галактики из базы на 23 октября. Нажмите «Войти» и войдите, чтобы увидеть шапку игрока.</p>
+</div>
+
+<div class="veil" id="veil" hidden>
+  <form class="panel login" id="login" aria-labelledby="lt" novalidate>
+    <button type="button" class="ib x" id="close" aria-label="Закрыть">×</button>
+    <h2 id="lt">Вход</h2>
+    <p>Войдите, чтобы управлять своей державой.</p>
+    <label for="email">Почта</label>
+    <input id="email" type="email" autocomplete="email" placeholder="you@mail.com">
+    <label for="pass">Пароль</label>
+    <input id="pass" type="password" autocomplete="current-password">
+    <button type="submit" class="btn gold">Войти</button>
+    <div class="or">или</div>
+    <button type="button" class="btn" id="google">Войти через Google</button>
+    <p class="msg" id="msg" aria-live="polite"></p>
+  </form>
+</div>
+
+<script>
+(function(){
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // обновление: раскрыть подробности
+  const more=document.getElementById("more"),list=document.getElementById("upd-list");
+  more.addEventListener("click",()=>{const o=list.hidden;list.hidden=!o;more.setAttribute("aria-expanded",String(o))});
+  // меню на телефоне
+  const nav=document.getElementById("nav"),bur=document.getElementById("burger");
+  bur.addEventListener("click",()=>{const o=!nav.classList.contains("open");nav.classList.toggle("open",o);bur.setAttribute("aria-expanded",String(o))});
+  // карусель
+  const slides=[...document.querySelectorAll(".slide")],dots=[...document.querySelectorAll(".dots button")];let cur=0,t=0;
+  function go(n){cur=(n+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle("on",k===cur));dots.forEach((d,k)=>d.setAttribute("aria-current",String(k===cur)))}
+  dots.forEach((d,k)=>d.addEventListener("click",()=>{go(k);restart()}));
+  function restart(){clearInterval(t);if(!reduce)t=setInterval(()=>go(cur+1),9000)}
+  const hero=document.querySelector(".hero");hero.addEventListener("mouseenter",()=>clearInterval(t));hero.addEventListener("mouseleave",restart);
+  restart();
+  // онлайн-счётчик (пример)
+  const on=document.getElementById("online");if(!reduce)setInterval(()=>{on.textContent=String(34+Math.round(Math.random()*8))},5000);
+  // вход (макет)
+  const veil=document.getElementById("veil"),msg=document.getElementById("msg");
+  document.querySelectorAll("[data-login]").forEach(b=>b.addEventListener("click",()=>{veil.hidden=false;msg.textContent="";document.getElementById("email").focus()}));
+  function close(){veil.hidden=true}
+  document.getElementById("close").addEventListener("click",close);
+  veil.addEventListener("click",e=>{if(e.target===veil)close()});
+  addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+  document.getElementById("login").addEventListener("submit",e=>{e.preventDefault();
+    if(!document.getElementById("email").value.trim()){msg.textContent="Введите почту, чтобы войти.";return}
+    close();document.getElementById("guest").hidden=true;document.getElementById("me").hidden=false;document.querySelectorAll(".hero [data-login]").forEach(b=>b.hidden=true)});
+  document.getElementById("google").addEventListener("click",()=>{msg.textContent="Вход через Google подключим к Supabase на следующем шаге."});
+})();
+</script>
