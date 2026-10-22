@@ -23,6 +23,7 @@
   --c-display:"Jura", "Exo 2", system-ui, sans-serif; --c-mono:"JetBrains Mono", "PT Mono", ui-monospace, monospace;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{min-height:100%}
 body{margin:0;background:var(--sw-bg);color:var(--sw-fg);font:15px/1.5 system-ui,sans-serif}
 button,a{font:inherit}
@@ -41,7 +42,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 
 /* общий портрет-заглушка маскота */
 .mascot{display:block;width:100%;height:auto}
-.mascot .fill{fill:currentColor}
+.fill{fill:currentColor}
 
 /* ═════════════ A · ПУЛЬТ ═════════════ */
 .va{background:var(--a-bg);color:var(--a-text);font-family:var(--a-mono);min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}
@@ -80,8 +81,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .va-gauges span{font-size:12px;color:var(--a-mute)}
 .va-log h2{font-family:var(--a-display);font-weight:600;font-size:18px;margin:0 0 10px;color:var(--a-text)}
 .va-log ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--a-line)}
-.va-log li{display:grid;grid-template-columns:92px minmax(0,1fr);gap:14px;padding:10px 0;border-bottom:1px solid var(--a-line);font-size:14px}
-.va-log time{color:var(--a-amber-dim);font-variant-numeric:tabular-nums}
+.va-log li{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;padding:10px 0;border-bottom:1px solid var(--a-line);font-size:14px}
+.va-log time{white-space:nowrap;color:var(--a-amber-dim);font-variant-numeric:tabular-nums}
 .va-note{font-size:11px;color:var(--a-mute)}
 
 /* ═════════════ B · ПЛАКАТ ═════════════ */
@@ -95,6 +96,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .vb-nav a:hover{background:#ffffff1a}
 .vb-nav a[aria-current]{background:var(--b-mustard);color:var(--b-ink)}
 .vb-enter{background:var(--b-paper);color:var(--b-cobalt);padding:7px 14px;border-radius:4px;font-weight:600;text-decoration:none;font-size:14px}
+.vb-hero{overflow-x:clip}
 .vb-hero .in{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(220px,.9fr);gap:clamp(20px,4vw,56px);align-items:center;padding-block:clamp(32px,6vw,72px)}
 .vb h1{font-family:var(--b-display);font-weight:900;font-size:clamp(40px,7.4vw,104px);line-height:.9;margin:0;letter-spacing:-.01em;text-wrap:balance}
 .vb h1 span{display:block;color:var(--b-cobalt)}
