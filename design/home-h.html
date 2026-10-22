@@ -2,40 +2,49 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* H «Монолит»: только чёрный и золото. Всё собрано в плавающие панели на чёрном фоне с тонкой сеткой.
-   Сверху капсула-шапка (онлайн, меню с иконками, уведомления, кабинет), под ней полоса обновлений, затем баннер-карусель с голограммой. */
+/* H «Монолит»: только чёрный и золото, ровный чёрный фон без сетки. Всё в плавающих панелях.
+   Шапка-капсула → полоса изменений правил и механик → баннер с голограммой → вестник фракций слева, посты администрации справа → подвал. */
 :root{
   color-scheme: dark;
   --bg:#070706; --panel:#111110; --panel2:#171715; --line:#24221e; --line2:#33302a;
   --gold:#d4a64a; --gold-hi:#f0c870; --gold-dim:#7d6331; --gold-soft:#d4a64a17;
   --text:#ece6d8; --mute:#8b8578; --faint:#57534b;
   --font:"Manrope", "Golos Text", system-ui, sans-serif;
+  --mono:"JetBrains Mono", "PT Mono", ui-monospace, monospace;
   --r:16px;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{min-height:100%}
-body{margin:0;color:var(--text);font:15px/1.55 var(--font);background:var(--bg);
-  background-image:linear-gradient(#ffffff05 1px,transparent 1px),linear-gradient(90deg,#ffffff05 1px,transparent 1px);background-size:40px 40px}
+body{margin:0;color:var(--text);font:15px/1.55 var(--font);background:var(--bg)}
 a,button,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.page{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 48px;display:flex;flex-direction:column;gap:16px}
+.page{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 32px;display:flex;flex-direction:column;gap:16px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.sec-h{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.sec-h h2{margin:0;font-size:17px;font-weight:800;margin-right:auto}
+.sec-h small{font:12px var(--mono);color:var(--faint)}
 
-/* ── шапка-капсула ── */
-.top{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:10;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 14px;background:#111110ee;backdrop-filter:blur(10px)}
+/* ── шапка ── */
+.top{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:10;display:flex;align-items:center;gap:12px;padding:10px 12px;background:#111110f0;backdrop-filter:blur(10px)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:var(--bg)}
-.mark{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--gold);color:#120e05;font-weight:800;font-size:14px;letter-spacing:.02em;text-decoration:none;flex:none}
-.online{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line2);border-radius:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-.online i{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
-.online small{font-weight:500;color:var(--mute);font-size:13px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;flex:none}
+.mark{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--gold);color:#120e05;font-weight:800;font-size:14px}
+.brand b{font-weight:800;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
 .nav{display:flex;gap:2px;margin:0 auto;list-style:none;padding:0}
-.nav a{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;text-decoration:none;color:var(--mute);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
-.nav a:hover{color:var(--text);background:#ffffff06}
+.nav>li{position:relative}
+.nav a,.nav .dd{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;text-decoration:none;color:var(--mute);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;background:none;border:0;cursor:pointer}
+.nav a:hover,.nav .dd:hover{color:var(--text);background:#ffffff06}
 .nav a[aria-current]{color:var(--gold)}
+.nav .dd svg:last-child{width:14px;height:14px;transition:transform .2s}
+.nav .dd[aria-expanded="true"]{color:var(--text)}
+.nav .dd[aria-expanded="true"] svg:last-child{transform:rotate(180deg)}
+.menu{position:absolute;top:calc(100% + 10px);left:0;min-width:240px;background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:6px;list-style:none;margin:0;box-shadow:0 16px 40px #000a}
+.menu a{display:flex;justify-content:space-between;gap:16px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;color:var(--text);padding:10px 12px}
+.menu a small{color:var(--faint);font:12px var(--mono)}
 .tools{display:flex;gap:8px;align-items:center}
 .ib{position:relative;width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--line2);border-radius:12px;background:var(--panel2);cursor:pointer;color:var(--text)}
 .ib:hover{border-color:var(--gold-dim)}
@@ -49,38 +58,44 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .btn:hover{border-color:var(--gold-dim)}
 .btn.gold{background:var(--gold);border-color:var(--gold);color:#120e05}
 .btn.gold:hover{background:var(--gold-hi)}
-.btn.sm{padding:10px 16px;font-size:14px}
+.btn.sm{padding:9px 14px;font-size:13px;border-radius:10px}
 .burger{display:none}
 
-/* ── полоса обновления ── */
+/* ── изменения правил и механик ── */
 .upd{padding:18px 20px}
 .upd-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:16px;align-items:center}
 .upd-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--gold);background:var(--gold-soft);border:1px solid #d4a64a33}
-.upd-meta{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:12px}
-.upd-meta b{color:var(--gold);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
-.upd-meta time{color:var(--mute)}
-.upd h2{margin:2px 0 2px;font-size:18px;font-weight:700}
+.meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px}
+.meta b{color:var(--gold);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
+.meta time{color:var(--mute)}
+.tag{font-size:11px;font-weight:700;color:var(--gold);border:1px solid #d4a64a44;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.tag.new{background:var(--gold);color:#120e05;border-color:var(--gold)}
+.upd h3{margin:3px 0 2px;font-size:18px;font-weight:700}
 .upd p{margin:0;color:var(--mute);font-size:14px}
-.more{background:none;border:0;color:var(--mute);display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;padding:8px}
+.more{background:none;border:0;color:var(--mute);display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;padding:8px;white-space:nowrap}
 .more:hover{color:var(--text)}
 .more svg{transition:transform .2s}
 .more[aria-expanded="true"] svg{transform:rotate(180deg)}
-.upd ul{margin:16px 0 0 60px;padding:14px 0 0;border-top:1px solid var(--line);color:var(--text);font-size:14px;display:grid;gap:6px}
-.upd li::marker{color:var(--gold)}
+.upd ol{list-style:none;margin:16px 0 0;padding:0;border-top:1px solid var(--line)}
+.upd ol li{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0 12px 60px;border-bottom:1px solid var(--line);font-size:14px}
+.upd ol li:last-child{border-bottom:0}
+.upd ol time{color:var(--faint);font:12px var(--mono)}
+.upd ol a{color:var(--text);text-decoration:none;font-weight:600}
+.upd ol a:hover{color:var(--gold)}
 
-/* ── баннер-карусель ── */
-.hero{position:relative;overflow:hidden;min-height:400px}
-.slide{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,400px);gap:24px;align-items:center;padding:40px clamp(20px,5vw,56px);opacity:0;visibility:hidden;transition:opacity .5s}
+/* ── баннер ── */
+.hero{position:relative;overflow:hidden;min-height:380px}
+.slide{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,380px);gap:24px;align-items:center;padding:36px clamp(20px,5vw,56px) 44px;opacity:0;visibility:hidden;transition:opacity .5s}
 .slide.on{opacity:1;visibility:visible;position:relative}
-.slide::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(60% 90% at 78% 70%,#d4a64a26,transparent 65%)}
+.slide::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(60% 90% at 78% 70%,#d4a64a24,transparent 65%)}
 .slide>*{position:relative;z-index:1}
-.hero h1,.hero h2.big{margin:0 0 14px;font-size:clamp(28px,3.6vw,44px);line-height:1.1;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.hero .t{margin:0 0 14px;font-size:clamp(28px,3.6vw,44px);line-height:1.1;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
 .hero .sub{margin:0 0 26px;color:var(--mute);font-size:16px;max-width:48ch}
 .acts{display:flex;gap:10px;flex-wrap:wrap}
 .speech{border-left:2px solid var(--gold);padding:2px 0 2px 14px;margin:0 0 22px;max-width:52ch}
 .speech b{display:block;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
 .speech span{font-size:17px}
-.holo{position:relative;height:340px;color:var(--gold);justify-self:center;width:100%;max-width:300px}
+.holo{position:relative;height:320px;color:var(--gold);justify-self:center;width:100%;max-width:290px}
 .holo svg{position:absolute;left:6%;right:6%;bottom:26px;width:88%;
   filter:drop-shadow(0 0 1px #fff3cf) drop-shadow(0 0 16px #d4a64a88);
   -webkit-mask:repeating-linear-gradient(0deg,#000 0 2px,#0009 2px 4px);mask:repeating-linear-gradient(0deg,#000 0 2px,#0009 2px 4px);animation:float 6s ease-in-out infinite,flick 8s steps(1) infinite}
@@ -93,68 +108,98 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .big-stat div{border:1px solid var(--line2);border-radius:12px;padding:16px;background:var(--panel2)}
 .big-stat b{display:block;font-size:30px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1.1}
 .big-stat span{font-size:13px;color:var(--mute)}
-.ds-card{justify-self:center;width:min(320px,100%);aspect-ratio:1.55;border-radius:14px;border:1px solid var(--gold-dim);background:linear-gradient(135deg,#1d1a12,#0e0d0b);padding:20px;display:flex;flex-direction:column;justify-content:space-between;transform:rotate(-6deg);box-shadow:0 20px 40px #0008}
-.ds-card b{font-size:22px;font-weight:800;color:var(--gold);line-height:1.1}
-.ds-card span{font-size:13px;color:var(--mute)}
 .dots{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:8px;z-index:2}
 .dots button{width:10px;height:6px;border-radius:999px;border:0;background:var(--line2);cursor:pointer;padding:0;transition:width .3s}
 .dots button[aria-current="true"]{width:28px;background:var(--gold)}
 
-/* ── нижние панели ── */
-.cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
-.cols .panel{padding:18px 20px}
-.cols header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.cols h3{margin:0;font-size:16px;font-weight:800;margin-right:auto}
-.cols header a{font-size:13px;color:var(--mute);text-decoration:none}
-.cols header a:hover{color:var(--gold)}
-.feed{list-style:none;margin:0;padding:0}
-.feed li{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;padding:12px 0;border-top:1px solid var(--line);font-size:14px}
-.feed li:first-child{border-top:0}
-.feed time{color:var(--faint);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.feed b{color:var(--gold);font-weight:700}
-.hot{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.hot li{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);font-size:14px}
-.hot li span{margin-right:auto}
-.hot em{font-style:normal;font-size:12px;font-weight:700;color:var(--gold);border:1px solid #d4a64a44;border-radius:999px;padding:2px 9px;white-space:nowrap}
+/* ── вестник и посты администрации ── */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+.news{display:flex;flex-direction:column;gap:12px}
+.card{display:grid;grid-template-columns:200px minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;min-height:176px;position:relative}
+.card:hover{border-color:var(--line2)}
+.card::after{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--gold)}
+.ban{position:relative;background:var(--tint,#2a2418);display:grid;place-items:center;color:var(--gold)}
+.ban::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 45%,var(--panel))}
+.ban svg{width:96px;height:96px;opacity:.9;position:relative;z-index:1}
+.c-body{padding:16px 20px 14px 18px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.fac{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.fac i{width:8px;height:8px;background:var(--gold);border-radius:2px}
+.card h3{margin:0;font-size:17px;font-weight:800;line-height:1.3}
+.card p{margin:0;color:var(--mute);font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sd{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);font:12px var(--mono);color:var(--faint)}
+.admin{padding:18px 18px 8px;position:sticky;top:96px}
+.admin ol{list-style:none;margin:0;padding:0}
+.admin li{padding:14px 0;border-top:1px solid var(--line)}
+.admin li:first-child{border-top:0;padding-top:4px}
+.admin h3{margin:6px 0 4px;font-size:15px;font-weight:700;line-height:1.35}
+.admin p{margin:0;font-size:13px;color:var(--mute)}
+.admin a{text-decoration:none;color:inherit;display:block}
+.admin a:hover h3{color:var(--gold)}
 .note{font-size:12px;color:var(--faint);margin:0}
 
-/* ── вход ── */
+/* ── подвал ── */
+.foot{display:flex;align-items:center;gap:16px 24px;flex-wrap:wrap;padding:16px 20px}
+.ds{display:flex;align-items:center;gap:12px;text-decoration:none;padding:8px 14px 8px 8px;border:1px solid var(--line2);border-radius:12px;background:var(--panel2)}
+.ds i{width:34px;height:34px;border-radius:9px;background:var(--gold-soft);display:grid;place-items:center;color:var(--gold)}
+.ds span{display:flex;flex-direction:column;line-height:1.25;font-weight:700;font-size:14px}
+.ds small{font:12px var(--mono);color:var(--faint);font-weight:400}
+.docs{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px}
+.docs a{color:var(--mute);text-decoration:none}
+.docs a:hover{color:var(--text)}
+.copy{margin-left:auto;font-size:12px;color:var(--faint)}
+
+/* ── окна ── */
 .veil{position:fixed;inset:0;z-index:30;background:#000000b3;backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
-.login{width:min(420px,100%);padding:26px;position:relative;background:var(--panel)}
-.login h2{margin:0 0 4px;font-size:22px;font-weight:800}
-.login>p{margin:0 0 20px;color:var(--mute);font-size:14px}
-.login label{display:block;font-size:13px;color:var(--mute);margin-bottom:6px}
-.login input{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:12px;margin-bottom:14px}
-.login input:focus{outline:none;border-color:var(--gold)}
+.modal{width:min(420px,100%);padding:24px;position:relative;background:var(--panel);max-height:calc(100vh - 32px);overflow:auto}
+.modal.wide{width:min(760px,100%)}
+.modal h2{margin:0 0 4px;font-size:22px;font-weight:800}
+.modal>p{margin:0 0 18px;color:var(--mute);font-size:14px}
+.modal label{display:block;font-size:13px;color:var(--mute);margin-bottom:6px}
+.modal input{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:12px;margin-bottom:14px}
+.modal input:focus{outline:none;border-color:var(--gold)}
 .login .btn{width:100%}
 .or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:12px;margin:14px 0}
 .or::before,.or::after{content:"";flex:1;border-top:1px solid var(--line)}
 .x{position:absolute;right:16px;top:16px}
 .msg{min-height:1.4em;margin:12px 0 0;font-size:13px;color:var(--gold)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chips button{background:var(--panel2);border:1px solid var(--line2);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--mute)}
+.chips button[aria-pressed="true"]{background:var(--gold);color:#120e05;border-color:var(--gold)}
+.arch{list-style:none;margin:0;padding:0}
+.arch li{display:grid;grid-template-columns:180px minmax(0,1fr);gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.arch time{font:12px var(--mono);color:var(--faint);padding-top:3px;white-space:nowrap}
+.arch b{display:block;font-size:12px;color:var(--gold);letter-spacing:.06em;text-transform:uppercase}
+.arch span{font-weight:600}
 
 @media (max-width:1100px){
-  .nav a span{display:none}
-  .nav a{padding:10px}
+  .nav a span,.nav .dd span{display:none}
+  .nav a,.nav .dd{padding:10px}
+  .brand b{display:none}
+  .cols{grid-template-columns:1fr}
+  .admin{position:static}
 }
 @media (max-width:760px){
   .nav{display:none}
-  .online small{display:none}
   .tools{margin-left:auto}
   .cab span{display:none}
   .cab{padding:5px}
   .burger{display:grid}
   .nav.open{display:flex;flex-direction:column;position:absolute;left:0;right:0;top:calc(100% + 8px);background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:8px}
-  .nav.open a span{display:inline}
+  .nav.open a span,.nav.open .dd span{display:inline}
+  .nav.open .menu{position:static;box-shadow:none;border:0;padding-left:20px}
   .upd-head{grid-template-columns:40px minmax(0,1fr)}
   .upd-head .more{grid-column:1/-1;justify-self:start;padding-left:0}
-  .upd ul{margin-left:18px}
+  .upd ol li{grid-template-columns:1fr;gap:2px;padding-left:0}
   .slide{grid-template-columns:1fr;padding:28px 20px 48px}
-  .holo{height:260px;max-width:220px;order:-1}
+  .holo{height:250px;max-width:210px;order:-1}
   .holo small{display:none}
   .big-stat{grid-template-columns:1fr}
-  .ds-card{display:none}
-  .cols{grid-template-columns:1fr}
-  .feed li{grid-template-columns:1fr;gap:2px}
+  .card{grid-template-columns:1fr}
+  .ban{height:96px}
+  .ban::after{background:linear-gradient(180deg,transparent 30%,var(--panel))}
+  .ban svg{width:64px;height:64px}
+  .arch li{grid-template-columns:1fr;gap:2px}
+  .copy{margin-left:0}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -167,28 +212,39 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
     <path d="M58 86c4-30 22-48 42-48s38 18 42 48c-12-14-26-20-42-20s-30 6-42 20z" opacity=".95"/>
     <rect x="88" y="136" width="24" height="34" opacity=".6"/>
     <path d="M24 260c2-56 34-90 76-90s74 34 76 90z" opacity=".7"/></g></symbol>
+  <symbol id="e1" viewBox="0 0 100 100"><path d="M50 8l34 12v28c0 22-15 36-34 44C31 84 16 70 16 48V20z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M30 44l20 14 20-14M50 26v32" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+  <symbol id="e2" viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="none" stroke="currentColor" stroke-width="3"/><path d="M50 26l6 17h18l-14 11 5 18-15-11-15 11 5-18-14-11h18z" fill="currentColor"/></symbol>
+  <symbol id="e3" viewBox="0 0 100 100"><path d="M22 22l56 56M78 22L22 78" stroke="currentColor" stroke-width="5"/><circle cx="50" cy="50" r="12" fill="#070706" stroke="currentColor" stroke-width="3"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></symbol>
   <symbol id="i-map" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(-20 12 12)"/></symbol>
-  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 012 2v12a2 2 0 00-2-2H4zM20 5h-6a2 2 0 00-2 2v12a2 2 0 012-2h6z"/></symbol>
+  <symbol id="i-lore" viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 012 2v12a2 2 0 00-2-2H4zM20 5h-6a2 2 0 00-2 2v12a2 2 0 012-2h6z"/></symbol>
   <symbol id="i-news" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9h8M8 13h8M8 16h5"/></symbol>
   <symbol id="i-rules" viewBox="0 0 24 24"><path d="M12 3v18M5 7h14M5 7l-2 6h4zM19 7l-2 6h4zM8 21h8"/></symbol>
   <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 015 0c0 1.7-2.5 2-2.5 4M12 17h.01"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4zM10 20a2 2 0 004 0"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
-  <symbol id="i-upd" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0114-5l2 2M20 12a8 8 0 01-14 5l-2-2M20 4v5h-5M4 20v-5h5"/></symbol>
-  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 4.5a3.5 3.5 0 010 7M21 20c0-3-1.6-5.3-4-5.8"/></symbol>
+  <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M7 4h11v13a3 3 0 01-3 3H6a2 2 0 01-2-2v-2h11v2a2 2 0 002 2M7 4a2 2 0 00-2 2v10M10 8h5M10 12h5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-7l-4 3v-3H5a1 1 0 01-1-1V6a1 1 0 011-1zM9 11h.01M15 11h.01"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
 </svg>
 
 <div class="page">
   <header class="panel top">
-    <a class="mark" href="#" aria-label="Классическая эра, главная">КЭ</a>
-    <div class="online" title="Игроков в сети"><i></i><span id="online">38</span><small>в сети</small></div>
+    <a class="brand" href="#" aria-label="Классическая эра, главная"><span class="mark">КЭ</span><b>Классическая эра</b></a>
     <ul class="nav" id="nav" aria-label="Главное меню">
       <li><a href="#" aria-current="page"><svg class="i"><use href="#i-play"/></svg><span>Начать игру</span></a></li>
       <li><a href="#"><svg class="i"><use href="#i-map"/></svg><span>Карта</span></a></li>
-      <li><a href="#"><svg class="i"><use href="#i-book"/></svg><span>Вики фракций</span></a></li>
-      <li><a href="#"><svg class="i"><use href="#i-news"/></svg><span>Вестник</span></a></li>
+      <li>
+        <button type="button" class="dd" id="lore-btn" aria-expanded="false" aria-controls="lore-menu"><svg class="i"><use href="#i-lore"/></svg><span>Лор</span><svg class="i"><use href="#i-down"/></svg></button>
+        <ul class="menu" id="lore-menu" hidden>
+          <li><a href="#">Вики фракций <small>53</small></a></li>
+          <li><a href="#">История <small>2</small></a></li>
+          <li><a href="#">Персонажи <small>20</small></a></li>
+          <li><a href="#">Локации</a></li>
+        </ul>
+      </li>
+      <li><a href="#vestnik"><svg class="i"><use href="#i-news"/></svg><span>Вестник</span></a></li>
       <li><a href="#"><svg class="i"><use href="#i-rules"/></svg><span>Правила</span></a></li>
       <li><a href="#"><svg class="i"><use href="#i-help"/></svg><span>Помощь</span></a></li>
     </ul>
@@ -197,33 +253,34 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
       <div id="guest"><button type="button" class="btn gold sm" data-login>Войти</button></div>
       <div id="me" hidden style="display:flex;gap:8px;align-items:center">
         <button type="button" class="ib" aria-label="Уведомления: 2 новых"><svg class="i"><use href="#i-bell"/></svg><span class="badge">2</span></button>
-        <a class="cab" href="#"><i>ТС</i><span><small>Кабинет</small><b>12 400 кр.</b></span></a>
+        <a class="cab" href="#"><i>ГФ</i><span><small>Кабинет</small><b>12 400 ГС</b></span></a>
       </div>
     </div>
   </header>
 
-  <section class="panel upd" aria-label="Обновление проекта">
+  <section class="panel upd" aria-label="Изменения правил и механик">
     <div class="upd-head">
-      <div class="upd-ic"><svg class="i"><use href="#i-upd"/></svg></div>
+      <div class="upd-ic"><svg class="i"><use href="#i-scroll"/></svg></div>
       <div>
-        <div class="upd-meta"><b>Обновление проекта</b><time>22 октября 2026</time></div>
-        <h2>Наземная война: высадка и захват колоний</h2>
-        <p>Превосходство на орбите, пошаговые бои на арене, оккупация и передача колоний.</p>
+        <div class="meta"><b>Изменения правил и механик</b><span class="tag new">новое</span><span class="tag">Наземная армия</span><time>19 октября 2026</time></div>
+        <h3>Обновление «Бравый Солдат» (Бета 0.6)</h3>
+        <p>Новые дипломатические механики во время войны: капитуляция при захвате 80% систем врага, переходной период оккупации.</p>
       </div>
-      <button type="button" class="more" id="more" aria-expanded="false" aria-controls="upd-list">Подробнее <svg class="i"><use href="#i-down"/></svg></button>
+      <button type="button" class="more" id="more" aria-expanded="false" aria-controls="upd-list">Все изменения <svg class="i"><use href="#i-down"/></svg></button>
     </div>
-    <ul id="upd-list" hidden>
-      <li>Высадка возможна только при превосходстве на орбите системы.</li>
-      <li>Беззащитные колонии обороняет ополчение и постройки.</li>
-      <li>После трёх дней оккупации колония переходит захватчику.</li>
-    </ul>
+    <ol id="upd-list" hidden>
+      <li><time>02.09.2026</time><a href="#">Персональные данные: что о вас хранится и что изменится при входе</a><span class="tag">Приватность</span></li>
+      <li><time>28.08.2026</time><a href="#">Природа мира: класс планеты теперь считается</a><span class="tag">Колонии</span></li>
+      <li><time>28.08.2026</time><a href="#">Идеальные миры</a><span class="tag">Колонии</span></li>
+      <li><time>28.08.2026</time><a href="#">Кризис «Престол» ушёл к Храму мироздания</a><span class="tag">Кризис</span></li>
+    </ol>
   </section>
 
   <section class="panel hero" aria-roledescription="карусель" aria-label="Главное">
-    <div class="slide on" id="s0" aria-label="1 из 3">
+    <div class="slide on" aria-label="1 из 2">
       <div>
         <div class="speech"><b>Классикал-Тян</b><span>Улыбнись. Галактика ждёт твоего хода.</span></div>
-        <h1>Звёздные державы, флоты и войны за системы</h1>
+        <h1 class="t">Звёздные державы, флоты и войны за системы</h1>
         <p class="sub">Браузерная стратегия: колонии и экономика, сражения на тактической арене, дипломатия, разведка и союзы.</p>
         <div class="acts"><a class="btn gold" href="#">Основать державу</a><button type="button" class="btn" data-login>Войти</button></div>
       </div>
@@ -234,57 +291,79 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
         <div class="base"></div>
       </figure>
     </div>
-    <div class="slide" id="s1" aria-label="2 из 3">
+    <div class="slide" aria-label="2 из 2">
       <div>
-        <h2 class="big">Сообщество в Discord</h2>
-        <p class="sub">Анонсы обновлений, обсуждение правил, дипломатия держав и общение игроков.</p>
-        <div class="acts"><a class="btn gold" href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener">Перейти в Discord</a></div>
-      </div>
-      <div class="ds-card" aria-hidden="true"><b>Классическая<br>эра</b><span>Пропуск в сообщество</span></div>
-    </div>
-    <div class="slide" id="s2" aria-label="3 из 3">
-      <div>
-        <h2 class="big">Галактика сегодня</h2>
+        <h2 class="t">Галактика сегодня</h2>
         <p class="sub">Свободные секторы ещё есть. Самое время занять своё место на карте.</p>
         <div class="acts"><a class="btn gold" href="#">Открыть карту</a></div>
       </div>
-      <div class="big-stat">
-        <div><b>24</b><span>державы</span></div>
-        <div><b>1 645</b><span>колоний</span></div>
-        <div><b>146</b><span>сражений</span></div>
-      </div>
+      <div class="big-stat"><div><b>24</b><span>державы</span></div><div><b>1 645</b><span>колоний</span></div><div><b>146</b><span>сражений</span></div></div>
     </div>
     <div class="dots" role="group" aria-label="Слайды">
       <button type="button" aria-label="Слайд 1" aria-current="true"></button>
       <button type="button" aria-label="Слайд 2" aria-current="false"></button>
-      <button type="button" aria-label="Слайд 3" aria-current="false"></button>
     </div>
   </section>
 
   <div class="cols">
-    <section class="panel">
-      <header><h3>Вестник фракций</h3><a href="#">Архив</a></header>
-      <ol class="feed">
-        <li><time>22.10 21:40</time><span><b>Пограничье.</b> Объявлена война: два союза оспаривают пограничную систему.</span></li>
-        <li><time>22.10 18:05</time><span><b>Биржа.</b> Редкие металлы дорожают после перекрытия торгового пути.</span></li>
-        <li><time>21.10 23:12</time><span><b>Новая держава</b> вошла в галактику и заняла свободный сектор.</span></li>
+    <section id="vestnik" aria-label="Вестник фракций">
+      <div class="sec-h"><h2>Вестник фракций</h2><small>входящие передачи: 131</small><button type="button" class="btn sm" id="open-arch">Архив выпусков</button></div>
+      <div class="news">
+        <a class="card" href="#" style="--tint:#3a2e22">
+          <div class="ban"><svg><use href="#e1"/></svg></div>
+          <div class="c-body"><span class="fac"><i></i>Республика Серениса</span>
+            <h3>Начало антипиратской операции «Sestante», требование к Соридону об отводе войск с границы</h3>
+            <p>Attenzione, cittadini, messaggio di rete urgente. Силы космической обороны Серенисы начинают антипиратскую операцию «Sestante». Операция подразумевает зачистку сектора…</p>
+            <span class="sd">зв.дата 3000.291 · 16:57</span></div>
+        </a>
+        <a class="card" href="#" style="--tint:#16222e">
+          <div class="ban"><svg><use href="#e2"/></svg></div>
+          <div class="c-body"><span class="fac"><i></i>Республика Новой Либертии</span>
+            <h3>Pax Res’publica</h3>
+            <p>Капитолийские Игры. Унмару Кэлхуну выпала честь быть консулом как раз в период, когда Республика отмечает очередной век своего существования…</p>
+            <span class="sd">зв.дата 3000.280 · 12:52</span></div>
+        </a>
+        <a class="card" href="#" style="--tint:#3a2e22">
+          <div class="ban"><svg><use href="#e1"/></svg></div>
+          <div class="c-body"><span class="fac"><i></i>Республика Серениса</span>
+            <h3>Прокламация о безопасности сектора</h3>
+            <p>Attenzione, cittadini, messaggio di rete alto priorità. В связи с началом новой войны Республика Серениса всячески осуждает вторжение…</p>
+            <span class="sd">зв.дата 3000.280 · 01:18</span></div>
+        </a>
+        <a class="card" href="#" style="--tint:#2a1c14">
+          <div class="ban"><svg><use href="#e3"/></svg></div>
+          <div class="c-body"><span class="fac"><i></i>The Echo of the War</span>
+            <h3>Война есть и будет</h3>
+            <p>Какая разница, что думают о войне люди. Война есть и будет. С таким же успехом можно спросить, что люди думают о камне…</p>
+            <span class="sd">зв.дата 3000.279 · 23:24</span></div>
+        </a>
+      </div>
+    </section>
+
+    <aside class="panel admin" aria-label="От администрации">
+      <div class="sec-h"><h2>От администрации</h2></div>
+      <ol>
+        <li><a href="#"><div class="meta"><span class="tag new">ивент</span><time>23 октября</time></div>
+          <h3>Пролог: тишина у Фракты</h3><p>Перед новой главой сектора. Что известно о вспышке на окраине и кто первым её заметил.</p></a></li>
+        <li><a href="#"><div class="meta"><span class="tag">лор</span><time>20 октября</time></div>
+          <h3>Хроника эпохи: вступление к Эре войны</h3><p>Краткое введение в события, которые предшествуют нынешним конфликтам.</p></a></li>
+        <li><a href="#"><div class="meta"><span class="tag">объявление</span><time>15 октября</time></div>
+          <h3>Неделя дипломатии</h3><p>Особые условия для союзов и переговоров на семь дней.</p></a></li>
       </ol>
-    </section>
-    <section class="panel">
-      <header><h3>Горячие точки</h3><a href="#">Все</a></header>
-      <ul class="hot">
-        <li><span>Пограничная система</span><em>идёт бой</em></li>
-        <li><span>Торговый путь в центре</span><em>перекрыт</em></li>
-        <li><span>Колония на окраине</span><em>оккупация</em></li>
-      </ul>
-    </section>
+    </aside>
   </div>
-  <p class="note">Онлайн, вестник, горячие точки и данные кабинета — примеры для макета. Цифры галактики из базы на 23 октября. Нажмите «Войти» и войдите, чтобы увидеть шапку игрока.</p>
+  <p class="note">Вестник и изменения правил взяты из вашей базы (гербы — заглушки, на сайте будут баннеры держав). Посты администрации и данные кабинета — примеры.</p>
+
+  <footer class="panel foot">
+    <a class="ds" href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener"><i><svg class="i"><use href="#i-chat"/></svg></i><span>Discord<small>discord.gg/jApCDH2zyM</small></span></a>
+    <nav class="docs" aria-label="Документы"><a href="#">Политика конфиденциальности</a><a href="#">Пользовательское соглашение</a><a href="#">Согласие на обработку персональных данных</a></nav>
+    <span class="copy">© 2025–2026 Классическая эра</span>
+  </footer>
 </div>
 
-<div class="veil" id="veil" hidden>
-  <form class="panel login" id="login" aria-labelledby="lt" novalidate>
-    <button type="button" class="ib x" id="close" aria-label="Закрыть">×</button>
+<div class="veil" id="veil-login" hidden>
+  <form class="panel modal login" id="login" aria-labelledby="lt" novalidate>
+    <button type="button" class="ib x" data-close aria-label="Закрыть"><svg class="i"><use href="#i-x"/></svg></button>
     <h2 id="lt">Вход</h2>
     <p>Войдите, чтобы управлять своей державой.</p>
     <label for="email">Почта</label>
@@ -298,34 +377,64 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   </form>
 </div>
 
+<div class="veil" id="veil-arch" hidden>
+  <div class="panel modal wide" role="dialog" aria-labelledby="at">
+    <button type="button" class="ib x" data-close aria-label="Закрыть"><svg class="i"><use href="#i-x"/></svg></button>
+    <h2 id="at">Архив выпусков</h2>
+    <p>Все передачи держав, от новых к старым.</p>
+    <div class="chips" id="chips" role="group" aria-label="Фильтр по державе">
+      <button type="button" id="f-all" data-f="" aria-pressed="true">Все</button>
+      <button type="button" id="f-ser" data-f="Республика Серениса" aria-pressed="false">Серениса</button>
+      <button type="button" id="f-lib" data-f="Республика Новой Либертии" aria-pressed="false">Новая Либертия</button>
+      <button type="button" id="f-echo" data-f="The Echo of the War" aria-pressed="false">The Echo of the War</button>
+    </div>
+    <ol class="arch" id="arch"></ol>
+  </div>
+</div>
+
 <script>
 (function(){
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // обновление: раскрыть подробности
-  const more=document.getElementById("more"),list=document.getElementById("upd-list");
-  more.addEventListener("click",()=>{const o=list.hidden;list.hidden=!o;more.setAttribute("aria-expanded",String(o))});
-  // меню на телефоне
-  const nav=document.getElementById("nav"),bur=document.getElementById("burger");
+  const $=s=>document.querySelector(s);
+
+  $("#more").addEventListener("click",e=>{const l=$("#upd-list"),o=l.hidden;l.hidden=!o;e.currentTarget.setAttribute("aria-expanded",String(o))});
+  const lb=$("#lore-btn"),lm=$("#lore-menu");
+  lb.addEventListener("click",e=>{e.stopPropagation();const o=lm.hidden;lm.hidden=!o;lb.setAttribute("aria-expanded",String(o))});
+  document.addEventListener("click",e=>{if(!lm.hidden&&!lm.contains(e.target)){lm.hidden=true;lb.setAttribute("aria-expanded","false")}});
+  const nav=$("#nav"),bur=$("#burger");
   bur.addEventListener("click",()=>{const o=!nav.classList.contains("open");nav.classList.toggle("open",o);bur.setAttribute("aria-expanded",String(o))});
-  // карусель
+
   const slides=[...document.querySelectorAll(".slide")],dots=[...document.querySelectorAll(".dots button")];let cur=0,t=0;
   function go(n){cur=(n+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle("on",k===cur));dots.forEach((d,k)=>d.setAttribute("aria-current",String(k===cur)))}
   dots.forEach((d,k)=>d.addEventListener("click",()=>{go(k);restart()}));
   function restart(){clearInterval(t);if(!reduce)t=setInterval(()=>go(cur+1),9000)}
-  const hero=document.querySelector(".hero");hero.addEventListener("mouseenter",()=>clearInterval(t));hero.addEventListener("mouseleave",restart);
-  restart();
-  // онлайн-счётчик (пример)
-  const on=document.getElementById("online");if(!reduce)setInterval(()=>{on.textContent=String(34+Math.round(Math.random()*8))},5000);
-  // вход (макет)
-  const veil=document.getElementById("veil"),msg=document.getElementById("msg");
-  document.querySelectorAll("[data-login]").forEach(b=>b.addEventListener("click",()=>{veil.hidden=false;msg.textContent="";document.getElementById("email").focus()}));
-  function close(){veil.hidden=true}
-  document.getElementById("close").addEventListener("click",close);
-  veil.addEventListener("click",e=>{if(e.target===veil)close()});
-  addEventListener("keydown",e=>{if(e.key==="Escape")close()});
-  document.getElementById("login").addEventListener("submit",e=>{e.preventDefault();
-    if(!document.getElementById("email").value.trim()){msg.textContent="Введите почту, чтобы войти.";return}
-    close();document.getElementById("guest").hidden=true;document.getElementById("me").hidden=false;document.querySelectorAll(".hero [data-login]").forEach(b=>b.hidden=true)});
-  document.getElementById("google").addEventListener("click",()=>{msg.textContent="Вход через Google подключим к Supabase на следующем шаге."});
+  const hero=$(".hero");hero.addEventListener("mouseenter",()=>clearInterval(t));hero.addEventListener("mouseleave",restart);restart();
+
+  function open(id,focus){$(id).hidden=false;if(focus)$(focus).focus()}
+  function closeAll(){document.querySelectorAll(".veil").forEach(v=>v.hidden=true)}
+  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",closeAll));
+  document.querySelectorAll(".veil").forEach(v=>v.addEventListener("click",e=>{if(e.target===v)closeAll()}));
+  addEventListener("keydown",e=>{if(e.key==="Escape")closeAll()});
+  document.querySelectorAll("[data-login]").forEach(b=>b.addEventListener("click",()=>{$("#msg").textContent="";open("#veil-login","#email")}));
+  $("#login").addEventListener("submit",e=>{e.preventDefault();
+    if(!$("#email").value.trim()){$("#msg").textContent="Введите почту, чтобы войти.";return}
+    closeAll();$("#guest").hidden=true;$("#me").hidden=false;document.querySelectorAll(".hero [data-login]").forEach(b=>b.hidden=true)});
+  $("#google").addEventListener("click",()=>{$("#msg").textContent="Вход через Google подключим к Supabase на следующем шаге."});
+
+  const ARCH=[
+    ["3000.291 · 16:57","Республика Серениса","Начало антипиратской операции «Sestante», требование к Соридону об отводе войск с границы"],
+    ["3000.280 · 12:52","Республика Новой Либертии","Pax Res’publica"],
+    ["3000.280 · 01:18","Республика Серениса","Прокламация о безопасности сектора"],
+    ["3000.279 · 23:24","The Echo of the War","Война есть и будет"],
+    ["3000.278 · 16:37","Республика Новой Либертии","Экспедиция в пустоту"],
+    ["3000.277 · 19:14","Республика Новой Либертии","Звёзды без страха"],
+    ["3000.273 · 22:17","Республика Новой Либертии","Соглашения на борту RNS «Лаффатур»"],
+    ["3000.273 · 17:42","Республика Серениса","Предложение о запрете распространения МЗА, новый состав Совета Республики"]];
+  const arch=$("#arch"),chips=[...document.querySelectorAll("#chips button")];
+  function renderArch(f){arch.innerHTML="";ARCH.filter(r=>!f||r[1]===f).forEach(([d,fac,ti])=>{const li=document.createElement("li");
+    li.innerHTML=`<time>зв.дата ${d}</time><div><b></b><span></span></div>`;li.querySelector("b").textContent=fac;li.querySelector("span").textContent=ti;arch.appendChild(li)})}
+  chips.forEach(c=>c.addEventListener("click",()=>{chips.forEach(x=>x.setAttribute("aria-pressed",String(x===c)));renderArch(c.dataset.f)}));
+  renderArch("");
+  $("#open-arch").addEventListener("click",()=>open("#veil-arch"));
 })();
 </script>
