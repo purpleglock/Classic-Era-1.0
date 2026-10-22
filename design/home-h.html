@@ -158,6 +158,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .modal input{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:12px;margin-bottom:14px}
 .modal input:focus{outline:none;border-color:var(--gold)}
 .login .btn{width:100%}
+.check{display:flex!important;gap:8px;align-items:center;margin:0 0 14px!important}
+.check input{width:auto!important;margin:0!important;accent-color:var(--gold)}
 .or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:12px;margin:14px 0}
 .or::before,.or::after{content:"";flex:1;border-top:1px solid var(--line)}
 .x{position:absolute;right:16px;top:16px}
@@ -171,6 +173,85 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .arch b{display:block;font-size:12px;color:var(--gold);letter-spacing:.06em;text-transform:uppercase}
 .arch span{font-weight:600}
 
+
+/* ── вид, уведомления ── */
+.view{display:flex;flex-direction:column;gap:16px}
+.bell-wrap{position:relative}
+.notif{position:absolute;right:0;top:calc(100% + 10px);width:min(340px,calc(100vw - 32px));padding:8px;box-shadow:0 16px 40px #000a;z-index:12}
+.notif-h{display:flex;align-items:center;justify-content:space-between;padding:6px 8px}
+.notif-h b{font-size:14px}
+.notif-h .more{font-size:12px;padding:4px}
+.notif ol{list-style:none;margin:0;padding:0}
+.notif li{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:start;padding:10px 8px;border-top:1px solid var(--line);font-size:13px}
+.notif li p{margin:0;color:var(--mute)}
+.notif li.unread p{color:var(--text)}
+.notif time{font:11px var(--mono);color:var(--faint)}
+.admin-btn{color:var(--gold);border-color:#d4a64a55}
+
+/* ── кабинет ── */
+.state{padding:20px}
+.state-head{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:16px;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.crest{width:64px;height:64px;border-radius:14px;background:#2a2418;display:grid;place-items:center;color:var(--gold);border:1px solid #d4a64a33}
+.crest svg{width:42px;height:42px}
+.state-name h1{margin:2px 0;font-size:clamp(22px,2.6vw,30px);font-weight:800;line-height:1.15}
+.state-name p{margin:0;color:var(--mute);font-size:14px}
+.state-acts{display:flex;gap:8px;flex-wrap:wrap}
+.money{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding-top:18px}
+.money>div{display:flex;gap:12px;align-items:flex-start;min-width:0}
+.m-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;color:var(--gold);background:var(--gold-soft);border:1px solid #d4a64a33}
+.money span{display:flex;flex-direction:column;min-width:0}
+.money small{font-size:12px;color:var(--mute)}
+.money b{font-size:20px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1.3}
+.tick{margin-top:8px;gap:5px}
+.tick i{display:block;width:160px;max-width:100%;height:4px;border-radius:2px;background:linear-gradient(90deg,var(--gold) 22%,var(--line) 22%)}
+.tick em{font-style:normal;font:12px var(--mono);color:var(--mute)}
+.res{padding:16px 20px}
+.res .sec-h{margin-bottom:10px}
+.res .more{font-size:13px;padding:4px}
+.chips-res{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.chips-res li{display:flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);font-size:13px;color:var(--mute);white-space:nowrap}
+.chips-res b{color:var(--text);font-variant-numeric:tabular-nums}
+.chips-res i{width:7px;height:7px;transform:rotate(45deg);background:var(--gold-dim)}
+.chips-res li.rare i{background:var(--gold)}
+.admin-strip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;border-color:#d4a64a55;background:linear-gradient(90deg,#d4a64a12,var(--panel) 60%)}
+.admin-strip b{font-weight:800}
+.admin-strip p{margin:0;color:var(--mute);font-size:13px}
+.cab-cols{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+.groups{display:flex;flex-direction:column;gap:20px}
+.g-h{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);display:flex;align-items:center;gap:12px}
+.g-h::after{content:"";flex:1;border-top:1px solid var(--line)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.tile{display:flex;gap:14px;align-items:flex-start;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:14px;text-decoration:none;color:inherit;min-height:84px}
+.tile:hover{border-color:var(--gold-dim);background:var(--panel2)}
+.tile svg.i{width:24px;height:24px;color:var(--gold);margin-top:2px}
+.tile span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.tile b{font-size:15px;font-weight:700;line-height:1.3}
+.tile small{font-size:13px;color:var(--mute);line-height:1.4}
+.tile.off{opacity:.5;border-style:dashed}
+.tile.off svg.i{color:var(--mute)}
+.feedbox{padding:8px 16px 12px;position:sticky;top:96px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 -16px 4px;padding:0 12px}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:12px 10px 10px;cursor:pointer;color:var(--mute);font-weight:700;font-size:14px}
+.tabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--gold)}
+.ev{list-style:none;margin:0;padding:0}
+.ev li{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:11px 0;border-top:1px solid var(--line);font-size:14px}
+.ev li:first-child{border-top:0}
+.ev p{margin:0}
+.ev time{font:12px var(--mono);color:var(--faint)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--faint);transform:translateY(-2px)}
+.dot.gold{background:var(--gold)}
+.ev-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 12px;color:var(--mute);font-size:14px}
+.ev-empty svg.i{width:28px;height:28px;color:var(--gold-dim)}
+.ev-empty p{margin:0;max-width:30ch}
+@media (max-width:1100px){.cab-cols{grid-template-columns:1fr}.feedbox{position:static}}
+@media (max-width:760px){
+  .state-head{grid-template-columns:48px minmax(0,1fr)}
+  .crest{width:48px;height:48px}
+  .state-acts{grid-column:1/-1}
+  .money{grid-template-columns:1fr}
+  .admin-strip{grid-template-columns:auto minmax(0,1fr)}
+  .admin-strip .btn{grid-column:1/-1}
+}
 @media (max-width:1100px){
   .nav a span,.nav .dd span{display:none}
   .nav a,.nav .dd{padding:10px}
@@ -227,37 +308,67 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M7 4h11v13a3 3 0 01-3 3H6a2 2 0 01-2-2v-2h11v2a2 2 0 002 2M7 4a2 2 0 00-2 2v10M10 8h5M10 12h5"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-7l-4 3v-3H5a1 1 0 01-1-1V6a1 1 0 011-1zM9 11h.01M15 11h.01"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-guide" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11M9 8h6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-stat" viewBox="0 0 24 24"><path d="M5 20V10M10 20V4M15 20v-7M20 20V8"/></symbol>
+  <symbol id="i-crown" viewBox="0 0 24 24"><path d="M4 17l-1-10 5 4 4-6 4 6 5-4-1 10zM4 20h16"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-planet" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M3 15c3 2 15-3 18-8"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-pick" viewBox="0 0 24 24"><path d="M14 4c3 0 6 2 7 5-3-1-6-1-9 1M14 4c-3 0-6 2-7 5 3-1 6-1 9 1M12 9L4 20"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 6h3l2 10h10l2-7H7M9 20h.01M17 20h.01"/></symbol>
+  <symbol id="i-ship" viewBox="0 0 24 24"><path d="M12 3l4 9-4 9-4-9zM4 14l4-2M20 14l-4-2"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M15 4a4 4 0 00-5 5L4 15l3 3 6-6a4 4 0 005-5l-2 2-2-1-1-2z"/></symbol>
+  <symbol id="i-sword" viewBox="0 0 24 24"><path d="M14 4h6v6L9 21l-6-6zM6 14l4 4M4 20l2-2"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-arena" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="5"/><path d="M3 12v4c0 3 4 5 9 5s9-2 9-5v-4M9 12l6 0"/></symbol>
+  <symbol id="i-glass" viewBox="0 0 24 24"><path d="M6 3h12l-1 6a5 5 0 01-10 0zM12 14v7M8 21h8"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3 3 7 3s7-1.3 7-3v-5"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3M7 15h10"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
 </svg>
 
 <div class="page">
   <header class="panel top">
     <a class="brand" href="#" aria-label="Классическая эра, главная"><span class="mark">КЭ</span><b>Классическая эра</b></a>
     <ul class="nav" id="nav" aria-label="Главное меню">
-      <li><a href="#" aria-current="page"><svg class="i"><use href="#i-play"/></svg><span>Начать игру</span></a></li>
-      <li><a href="#"><svg class="i"><use href="#i-map"/></svg><span>Карта</span></a></li>
+      <li><a href="#" id="nav-home" aria-current="page"><svg class="i"><use href="#i-play"/></svg><span>Начать игру</span></a></li>
       <li>
         <button type="button" class="dd" id="lore-btn" aria-expanded="false" aria-controls="lore-menu"><svg class="i"><use href="#i-lore"/></svg><span>Лор</span><svg class="i"><use href="#i-down"/></svg></button>
         <ul class="menu" id="lore-menu" hidden>
           <li><a href="#">Вики фракций <small>53</small></a></li>
           <li><a href="#">История <small>2</small></a></li>
           <li><a href="#">Персонажи <small>20</small></a></li>
-          <li><a href="#">Локации</a></li>
         </ul>
       </li>
-      <li><a href="#vestnik"><svg class="i"><use href="#i-news"/></svg><span>Вестник</span></a></li>
+      <li><a href="#vestnik" id="nav-news"><svg class="i"><use href="#i-news"/></svg><span>Вестник</span></a></li>
+      <li><a href="#"><svg class="i"><use href="#i-guide"/></svg><span>Гайдбук</span></a></li>
       <li><a href="#"><svg class="i"><use href="#i-rules"/></svg><span>Правила</span></a></li>
       <li><a href="#"><svg class="i"><use href="#i-help"/></svg><span>Помощь</span></a></li>
     </ul>
     <div class="tools">
       <button type="button" class="ib burger" id="burger" aria-label="Меню" aria-expanded="false" aria-controls="nav"><svg class="i"><use href="#i-menu"/></svg></button>
+      <div class="bell-wrap">
+        <button type="button" class="ib" id="bell" aria-label="Уведомления: 2 новых" aria-expanded="false" aria-controls="notif"><svg class="i"><use href="#i-bell"/></svg><span class="badge">2</span></button>
+        <div class="notif panel" id="notif" hidden>
+          <div class="notif-h"><b>Уведомления</b><button type="button" class="more" id="read-all">Прочитать все</button></div>
+          <ol>
+            <li class="unread"><span class="tag new">правила</span><p>Обновление «Бравый Солдат» (Бета 0.6): капитуляция и оккупация.</p><time>19.10</time></li>
+            <li class="unread"><span class="tag">война</span><p>Нота о войне ждёт ответа. Осталось 2 дня.</p><time>22.10</time></li>
+            <li><span class="tag">вестник</span><p>О вас пишут: капитуляция ALLMIND Corporation.</p><time>21.10</time></li>
+          </ol>
+        </div>
+      </div>
       <div id="guest"><button type="button" class="btn gold sm" data-login>Войти</button></div>
       <div id="me" hidden style="display:flex;gap:8px;align-items:center">
-        <button type="button" class="ib" aria-label="Уведомления: 2 новых"><svg class="i"><use href="#i-bell"/></svg><span class="badge">2</span></button>
-        <a class="cab" href="#"><i>ГФ</i><span><small>Кабинет</small><b>12 400 ГС</b></span></a>
+        <button type="button" class="ib admin-btn" id="admin-btn" hidden aria-label="Админ-панель" title="Админ-панель"><svg class="i"><use href="#i-shield"/></svg></button>
+        <a class="cab" href="#cabinet" id="cab-chip"><i>ГФ</i><span><small>Кабинет</small><b>54,9 млн ГС</b></span></a>
       </div>
     </div>
   </header>
 
+  <div id="view-home" class="view">
   <section class="panel upd" aria-label="Изменения правил и механик">
     <div class="upd-head">
       <div class="upd-ic"><svg class="i"><use href="#i-scroll"/></svg></div>
@@ -352,7 +463,102 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
       </ol>
     </aside>
   </div>
-  <p class="note">Вестник и изменения правил взяты из вашей базы (гербы — заглушки, на сайте будут баннеры держав). Посты администрации и данные кабинета — примеры.</p>
+  <p class="note">Вестник и изменения правил взяты из вашей базы (гербы — заглушки, на сайте будут баннеры держав). Посты администрации — примеры. Нажмите «Войти» — откроется кабинет державы.</p>
+  </div>
+  <div id="view-cab" class="view" hidden>
+    <section class="panel state">
+      <div class="state-head">
+        <div class="crest" aria-hidden="true"><svg><use href="#e1"/></svg></div>
+        <div class="state-name">
+          <span class="fac"><i></i>Кабинет правителя</span>
+          <h1>Галактическая Федерация Звёзд</h1>
+          <p>Олигархия · столица Авалон · гуманоиды</p>
+        </div>
+        <div class="state-acts">
+          <a class="btn sm" href="#"><svg class="i"><use href="#i-guide"/></svg>Как играть</a>
+          <button type="button" class="btn sm" id="to-home"><svg class="i"><use href="#i-back"/></svg>На главную</button>
+        </div>
+      </div>
+      <div class="money">
+        <div><span class="m-ic"><svg class="i"><use href="#i-coin"/></svg></span><span><small>Галактический стандарт</small><b>54 875 987 ГС</b></span></div>
+        <div><span class="m-ic"><svg class="i"><use href="#i-flask"/></svg></span><span><small>Очки науки</small><b>1 571 ОН</b></span></div>
+        <div><span class="m-ic"><svg class="i"><use href="#i-trend"/></svg></span><span><small>Доход за сутки</small><b>+263 746 ГС · +171 ОН</b>
+          <span class="tick"><i></i><em>до начисления 18 ч 36 мин</em></span></span></div>
+      </div>
+    </section>
+
+    <section class="panel res" aria-label="Ресурсы планет">
+      <div class="sec-h"><h2>Ресурсы планет</h2><small>25 видов</small><button type="button" class="more" id="res-more" aria-expanded="false">Показать все <svg class="i"><use href="#i-down"/></svg></button></div>
+      <ul class="chips-res" id="res"></ul>
+    </section>
+
+    <section class="panel admin-strip" id="admin-strip" hidden aria-label="Администрация">
+      <span class="m-ic"><svg class="i"><use href="#i-shield"/></svg></span>
+      <div><b>Админ-панель</b><p>Видна только администрации. Формат определим позже.</p></div>
+      <a class="btn gold sm" href="#">Открыть</a>
+    </section>
+
+    <div class="cab-cols">
+      <div class="groups">
+        <section aria-labelledby="g1"><h2 class="g-h" id="g1">Земля и власть</h2>
+          <div class="tiles">
+            <a class="tile" href="#"><svg class="i"><use href="#i-stat"/></svg><span><b>Статистика державы</b><small>Доходы, расходы и достижения</small></span></a>
+            <a class="tile" href="#"><svg class="i"><use href="#i-crown"/></svg><span><b>Внутренняя политика</b><small>Двор, благополучие, курс, вера</small></span></a>
+            <a class="tile" href="#"><svg class="i"><use href="#i-flag"/></svg><span><b>Внешняя политика</b><small>Границы, союзы, войны, кредиты</small></span></a>
+            <a class="tile" href="#"><svg class="i"><use href="#i-planet"/></svg><span><b>Колонизация</b><small>Захват систем и заселение планет</small></span></a>
+            <a class="tile" href="#"><svg class="i"><use href="#i-grid"/></svg><span><b>Управление колониями</b><small>Застройка планет, ячейки и слоты</small></span></a>
+          </div></section>
+        <section aria-labelledby="g2"><h2 class="g-h" id="g2">Флот и война</h2>
+          <div class="tiles">
+            <a class="tile" href="#"><svg class="i"><use href="#i-map"/></svg><span><b>Карта галактики</b><small>Системы, границы и маршруты</small></span></a>
+            <a class="tile" href="#"><svg class="i"><use href="#i-ship"/></svg><span><b>Флот и войска</b><small>Флоты, армии и производство</small></span></a>
+            <a class="tile" href="#"><svg class="i"><use href="#i-wrench"/></svg><span><b>Конструкторы</b><small>Проекты кораблей и техники</small></span></a>
+            <a class="tile" href="#"><svg class="i"><use href="#i-sword"/></svg><span><b>Война</b><small>Ноты, сражения, оккупация</small></span></a>
+            <a class="tile" href="#"><svg class="i"><use href="#i-eye"/></svg><span><b>Разведка</b><small>Агенты и тайные операции</small></span></a>
+          </div></section>
+        <section aria-labelledby="g3"><h2 class="g-h" id="g3">Достаток</h2>
+          <div class="tiles">
+            <a class="tile" href="#"><svg class="i"><use href="#i-pick"/></svg><span><b>Добыча ресурсов</b><small>Залежи, рабочие, концессии</small></span></a>
+            <a class="tile" href="#"><svg class="i"><use href="#i-cart"/></svg><span><b>Торговля</b><small>Караваны, рынок, обмен</small></span></a>
+          </div></section>
+        <section aria-labelledby="g4"><h2 class="g-h" id="g4">Досуг</h2>
+          <div class="tiles">
+            <a class="tile" href="#"><svg class="i"><use href="#i-arena"/></svg><span><b>Арена</b><small>Космические и наземные поединки</small></span></a>
+            <a class="tile" href="#"><svg class="i"><use href="#i-glass"/></svg><span><b>Ресторан-бар «Классикал»</b><small>Встречи, игры на удачу и слухи сектора</small></span></a>
+          </div></section>
+        <section aria-labelledby="g5"><h2 class="g-h" id="g5">Скоро</h2>
+          <div class="tiles">
+            <div class="tile off"><svg class="i"><use href="#i-trend"/></svg><span><b>Биржа</b><small>На переработке, вернётся в патче</small></span></div>
+            <div class="tile off"><svg class="i"><use href="#i-planet"/></svg><span><b>Георазведка</b><small>На переработке</small></span></div>
+          </div></section>
+      </div>
+
+      <aside class="panel feedbox" aria-label="Лента событий">
+        <div class="tabs" role="tablist" aria-label="Лента">
+          <button type="button" role="tab" id="t-sec" aria-selected="true" aria-controls="p-sec">Сектор</button>
+          <button type="button" role="tab" id="t-you" aria-selected="false" aria-controls="p-you">О вас</button>
+          <button type="button" role="tab" id="t-ach" aria-selected="false" aria-controls="p-ach">Достижения</button>
+        </div>
+        <ol class="ev" id="p-sec" role="tabpanel" aria-labelledby="t-sec">
+          <li><span class="dot"></span><p>Арена: жребий брошен. Республика Серениса против «Пустотных рейдеров».</p><time>23.10</time></li>
+          <li><span class="dot"></span><p>Новое государство: Фрактийский машинный разум.</p><time>22.10</time></li>
+          <li><span class="dot"></span><p>Экспансия: одна из держав заняла систему Фракта.</p><time>22.10</time></li>
+          <li><span class="dot"></span><p>Арена: вердикт поединка.</p><time>22.10</time></li>
+          <li><span class="dot"></span><p>Экспансия: Просвещение Аяли — система Мемориан.</p><time>22.10</time></li>
+        </ol>
+        <ol class="ev" id="p-you" role="tabpanel" aria-labelledby="t-you" hidden>
+          <li><span class="dot gold"></span><p>Капитуляция: ALLMIND Corporation перешла под вашу власть.</p><time>21.10</time></li>
+          <li><span class="dot"></span><p>Сражение окончено: Невусес.</p><time>21.10</time></li>
+          <li><span class="dot"></span><p>Получено достижение державы.</p><time>21.10</time></li>
+        </ol>
+        <div class="ev-empty" id="p-ach" role="tabpanel" aria-labelledby="t-ach" hidden>
+          <svg class="i"><use href="#i-crown"/></svg>
+          <p>Сегодня никто ещё не отличился. Первое достижение дня появится здесь.</p>
+        </div>
+      </aside>
+    </div>
+    <p class="note">Кабинет — макет на данных из скриншота. Карта и конструкторы переехали сюда. Биржа и георазведка отложены на переработку.</p>
+  </div>
 
   <footer class="panel foot">
     <a class="ds" href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener"><i><svg class="i"><use href="#i-chat"/></svg></i><span>Discord<small>discord.gg/jApCDH2zyM</small></span></a>
@@ -370,6 +576,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
     <input id="email" type="email" autocomplete="email" placeholder="you@mail.com">
     <label for="pass">Пароль</label>
     <input id="pass" type="password" autocomplete="current-password">
+    <label class="check" for="as-admin"><input type="checkbox" id="as-admin"> Макет: войти с правами администратора</label>
     <button type="submit" class="btn gold">Войти</button>
     <div class="or">или</div>
     <button type="button" class="btn" id="google">Войти через Google</button>
@@ -416,9 +623,38 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   document.querySelectorAll(".veil").forEach(v=>v.addEventListener("click",e=>{if(e.target===v)closeAll()}));
   addEventListener("keydown",e=>{if(e.key==="Escape")closeAll()});
   document.querySelectorAll("[data-login]").forEach(b=>b.addEventListener("click",()=>{$("#msg").textContent="";open("#veil-login","#email")}));
+  // виды: главная и кабинет
+  function view(v){const cab=v==="cabinet";$("#view-home").hidden=cab;$("#view-cab").hidden=!cab;
+    $("#nav-home").toggleAttribute("aria-current",!cab);scrollTo(0,0);try{history.replaceState(null,"",cab?"#cabinet":"#")}catch(e){}}
+  let logged=false;
   $("#login").addEventListener("submit",e=>{e.preventDefault();
     if(!$("#email").value.trim()){$("#msg").textContent="Введите почту, чтобы войти.";return}
-    closeAll();$("#guest").hidden=true;$("#me").hidden=false;document.querySelectorAll(".hero [data-login]").forEach(b=>b.hidden=true)});
+    logged=true;const adm=$("#as-admin").checked;
+    closeAll();$("#guest").hidden=true;$("#me").hidden=false;$("#admin-btn").hidden=!adm;$("#admin-strip").hidden=!adm;
+    document.querySelectorAll(".hero [data-login]").forEach(b=>b.hidden=true);view("cabinet")});
+  $("#cab-chip").addEventListener("click",e=>{e.preventDefault();view("cabinet")});
+  $("#to-home").addEventListener("click",()=>view("home"));
+  $("#nav-home").addEventListener("click",e=>{e.preventDefault();logged?view("cabinet"):view("home")});
+  document.querySelector(".brand").addEventListener("click",e=>{e.preventDefault();view("home")});
+  $("#nav-news").addEventListener("click",()=>{if(!$("#view-home").hidden)return;view("home");setTimeout(()=>$("#vestnik").scrollIntoView(),0)});
+  $("#admin-btn").addEventListener("click",()=>$("#admin-strip").scrollIntoView({block:"center"}));
+
+  // уведомления
+  const bell=$("#bell"),notif=$("#notif");
+  bell.addEventListener("click",e=>{e.stopPropagation();const o=notif.hidden;notif.hidden=!o;bell.setAttribute("aria-expanded",String(o))});
+  document.addEventListener("click",e=>{if(!notif.hidden&&!notif.contains(e.target)){notif.hidden=true;bell.setAttribute("aria-expanded","false")}});
+  $("#read-all").addEventListener("click",()=>{notif.querySelectorAll(".unread").forEach(li=>li.classList.remove("unread"));const b=bell.querySelector(".badge");if(b)b.remove();bell.setAttribute("aria-label","Уведомления")});
+
+  // ресурсы
+  const RES=[["Железо",81371],["Силикаты",65536],["Лёд",52700],["Углерод",44557],["Метан",43786],["Сера",21548],["Титан",20653],["Медь",18203],["Старвис",10583,1],["Дейтерий",8330],["Редкоземельные руды",7566],["Платина",7313],["Гелий-3",4940],["Изотопы",4913],["Реликтовое дерево",2920,1],["Аммиачный лёд",2794],["Жидкая вода",1424],["Стелларит",1087,1],["Хтонит",896,1],["Ионит",637,1],["Гравиядро",595,1],["Рагенод",531,1],["Ихор",200,1],["Программируемая материя",10,1],["Странный фрагмент",1,1]];
+  const resEl=$("#res"),fmt=n=>n.toLocaleString("ru-RU");let all=false;
+  function drawRes(){resEl.innerHTML="";(all?RES:RES.slice(0,12)).forEach(([n,v,r])=>{const li=document.createElement("li");if(r)li.className="rare";li.innerHTML="<i></i><b></b><span></span>";li.querySelector("b").textContent=fmt(v);li.querySelector("span").textContent=n;resEl.appendChild(li)})}
+  drawRes();
+  $("#res-more").addEventListener("click",e=>{all=!all;drawRes();e.currentTarget.setAttribute("aria-expanded",String(all));e.currentTarget.firstChild.textContent=all?"Свернуть ":"Показать все "});
+
+  // лента: вкладки
+  const tabs=[...document.querySelectorAll(".tabs [role=tab]")];
+  tabs.forEach(t=>t.addEventListener("click",()=>{tabs.forEach(x=>{const on=x===t;x.setAttribute("aria-selected",String(on));$("#"+x.getAttribute("aria-controls")).hidden=!on})}));
   $("#google").addEventListener("click",()=>{$("#msg").textContent="Вход через Google подключим к Supabase на следующем шаге."});
 
   const ARCH=[
