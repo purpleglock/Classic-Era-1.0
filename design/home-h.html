@@ -8,9 +8,10 @@
    Шапка-капсула → полоса изменений правил и механик → баннер с голограммой → вестник фракций слева, посты администрации справа → подвал. */
 :root{
   color-scheme: dark;
-  --bg:#070706; --panel:#111110; --panel2:#171715; --line:#24221e; --line2:#33302a;
-  --gold:#d4a64a; --gold-hi:#f0c870; --gold-dim:#7d6331; --gold-soft:#d4a64a17;
-  --text:#ece6d8; --mute:#8b8578; --faint:#57534b;
+  --bg:#000000; --panel:#0a0a0a; --panel2:#111111; --line:#1e1c18; --line2:#2c2820;
+  --gold:#e9b949; --gold-hi:#ffd97a; --gold-dim:#94702a; --gold-soft:#e9b9491a;
+  --gold-metal:linear-gradient(180deg,#ffe08a 0%,#e9b949 48%,#c08d2c 100%);
+  --text:#f3ecdc; --mute:#948c7c; --faint:#5c564b;
   --font:"Manrope", "Golos Text", system-ui, sans-serif;
   --mono:"JetBrains Mono", "PT Mono", ui-monospace, monospace;
   --r:16px;
@@ -29,11 +30,11 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stro
 .sec-h small{font:12px var(--mono);color:var(--faint)}
 
 /* ── шапка ── */
-.top{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:10;display:flex;align-items:center;gap:12px;padding:10px 12px;background:#111110f0;backdrop-filter:blur(10px)}
+.top{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:10;display:flex;align-items:center;gap:12px;padding:10px 12px;background:#0a0a0af0;backdrop-filter:blur(10px)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:var(--bg)}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none;flex:none}
-.mark{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--gold);color:#120e05;font-weight:800;font-size:14px}
-.brand b{font-weight:800;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
+.mark{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--gold-metal);color:#120e05;font-weight:800;font-size:14px}
+.brand b{font-weight:800;font-size:14px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;background:var(--gold-metal);-webkit-background-clip:text;background-clip:text;color:transparent}
 .nav{display:flex;gap:2px;margin:0 auto;list-style:none;padding:0}
 .nav>li{position:relative}
 .nav a,.nav .dd{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;text-decoration:none;color:var(--mute);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;background:none;border:0;cursor:pointer}
@@ -56,19 +57,19 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .cab b{font-size:13px;color:var(--gold);font-variant-numeric:tabular-nums}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;border:1px solid var(--line2);background:var(--panel2);font-weight:700;font-size:15px;text-decoration:none;cursor:pointer;color:var(--text)}
 .btn:hover{border-color:var(--gold-dim)}
-.btn.gold{background:var(--gold);border-color:var(--gold);color:#120e05}
-.btn.gold:hover{background:var(--gold-hi)}
+.btn.gold{background:var(--gold-metal);border-color:#c08d2c;color:#1a1204;text-shadow:0 1px 0 #ffffff40}
+.btn.gold:hover{filter:brightness(1.08)}
 .btn.sm{padding:9px 14px;font-size:13px;border-radius:10px}
 .burger{display:none}
 
 /* ── изменения правил и механик ── */
 .upd{padding:18px 20px}
 .upd-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:16px;align-items:center}
-.upd-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--gold);background:var(--gold-soft);border:1px solid #d4a64a33}
+.upd-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--gold);background:var(--gold-soft);border:1px solid #e9b94933}
 .meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px}
 .meta b{color:var(--gold);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
 .meta time{color:var(--mute)}
-.tag{font-size:11px;font-weight:700;color:var(--gold);border:1px solid #d4a64a44;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.tag{font-size:11px;font-weight:700;color:var(--gold);border:1px solid #e9b94944;border-radius:999px;padding:1px 8px;white-space:nowrap}
 .tag.new{background:var(--gold);color:#120e05;border-color:var(--gold)}
 .upd h3{margin:3px 0 2px;font-size:18px;font-weight:700}
 .upd p{margin:0;color:var(--mute);font-size:14px}
@@ -87,7 +88,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .hero{position:relative;overflow:hidden;min-height:380px}
 .slide{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,380px);gap:24px;align-items:center;padding:36px clamp(20px,5vw,56px) 44px;opacity:0;visibility:hidden;transition:opacity .5s}
 .slide.on{opacity:1;visibility:visible;position:relative}
-.slide::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(60% 90% at 78% 70%,#d4a64a24,transparent 65%)}
+.slide::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(60% 90% at 78% 70%,#e9b94924,transparent 65%)}
 .slide>*{position:relative;z-index:1}
 .hero .t{margin:0 0 14px;font-size:clamp(28px,3.6vw,44px);line-height:1.1;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
 .hero .sub{margin:0 0 26px;color:var(--mute);font-size:16px;max-width:48ch}
@@ -97,10 +98,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .speech span{font-size:17px}
 .holo{position:relative;height:320px;color:var(--gold);justify-self:center;width:100%;max-width:290px}
 .holo svg{position:absolute;left:6%;right:6%;bottom:26px;width:88%;
-  filter:drop-shadow(0 0 1px #fff3cf) drop-shadow(0 0 16px #d4a64a88);
+  filter:drop-shadow(0 0 1px #fff3cf) drop-shadow(0 0 16px #e9b94988);
   -webkit-mask:repeating-linear-gradient(0deg,#000 0 2px,#0009 2px 4px);mask:repeating-linear-gradient(0deg,#000 0 2px,#0009 2px 4px);animation:float 6s ease-in-out infinite,flick 8s steps(1) infinite}
-.holo .cone{position:absolute;left:50%;bottom:16px;width:76%;height:80%;transform:translateX(-50%);background:linear-gradient(0deg,#d4a64a2e,transparent 80%);clip-path:polygon(42% 100%,58% 100%,100% 0,0 0)}
-.holo .base{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:66%;height:24px;border-radius:50%;border:1px solid var(--gold);box-shadow:0 0 18px #d4a64a77,inset 0 0 10px #d4a64a55;background:radial-gradient(#d4a64a33,transparent 70%)}
+.holo .cone{position:absolute;left:50%;bottom:16px;width:76%;height:80%;transform:translateX(-50%);background:linear-gradient(0deg,#e9b9492e,transparent 80%);clip-path:polygon(42% 100%,58% 100%,100% 0,0 0)}
+.holo .base{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:66%;height:24px;border-radius:50%;border:1px solid var(--gold);box-shadow:0 0 18px #e9b94977,inset 0 0 10px #e9b94955;background:radial-gradient(#e9b94933,transparent 70%)}
 .holo small{position:absolute;left:0;right:0;bottom:-16px;text-align:center;font-size:11px;color:var(--faint)}
 @keyframes float{50%{transform:translateY(-6px)}}
 @keyframes flick{0%,100%{opacity:.95}41%{opacity:.6}42%{opacity:.95}}
@@ -186,22 +187,26 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .notif li p{margin:0;color:var(--mute)}
 .notif li.unread p{color:var(--text)}
 .notif time{font:11px var(--mono);color:var(--faint)}
-.admin-btn{color:var(--gold);border-color:#d4a64a55}
+.admin-btn{color:var(--gold);border-color:#e9b94955}
 
 /* ── кабинет ── */
-.state{padding:20px}
-.state-head{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:16px;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line)}
-.crest{width:64px;height:64px;border-radius:14px;background:#2a2418;display:grid;place-items:center;color:var(--gold);border:1px solid #d4a64a33}
+.state{padding:20px;position:relative;overflow:hidden;isolation:isolate}
+.state::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(70% 120% at 72% 40%,#e9b9491f,transparent 60%),linear-gradient(90deg,var(--panel) 20%,#0a0a0aa6 50%,#0a0a0a55)}
+.state-bg{position:absolute;z-index:-2;right:6%;top:50%;width:min(520px,70%);aspect-ratio:1;transform:translateY(-50%);color:var(--gold);opacity:.26;filter:drop-shadow(0 0 30px #e9b94966)}
+.state-bg svg{width:100%;height:100%}
+.state-bg img{width:100%;height:100%;object-fit:contain}
+.state-head{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:16px;align-items:center;padding-bottom:18px;border-bottom:1px solid #ffffff12}
+.crest{width:64px;height:64px;border-radius:14px;background:#1a1407;display:grid;place-items:center;color:var(--gold);border:1px solid #e9b94933}
 .crest svg{width:42px;height:42px}
-.state-name h1{margin:2px 0;font-size:clamp(22px,2.6vw,30px);font-weight:800;line-height:1.15}
+.state-name h1{margin:2px 0;font-size:clamp(24px,3vw,36px);font-weight:800;line-height:1.15;text-shadow:0 2px 18px #000}
 .state-name p{margin:0;color:var(--mute);font-size:14px}
 .state-acts{display:flex;gap:8px;flex-wrap:wrap}
 .money{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding-top:18px}
 .money>div{display:flex;gap:12px;align-items:flex-start;min-width:0}
-.m-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;color:var(--gold);background:var(--gold-soft);border:1px solid #d4a64a33}
+.m-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;color:var(--gold);background:var(--gold-soft);border:1px solid #e9b94933}
 .money span{display:flex;flex-direction:column;min-width:0}
 .money small{font-size:12px;color:var(--mute)}
-.money b{font-size:20px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1.3}
+.money b{font-size:20px;font-weight:800;background:var(--gold-metal);-webkit-background-clip:text;background-clip:text;color:transparent;font-variant-numeric:tabular-nums;line-height:1.3}
 .tick{margin-top:8px;gap:5px}
 .tick i{display:block;width:160px;max-width:100%;height:4px;border-radius:2px;background:linear-gradient(90deg,var(--gold) 22%,var(--line) 22%)}
 .tick em{font-style:normal;font:12px var(--mono);color:var(--mute)}
@@ -213,7 +218,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .chips-res b{color:var(--text);font-variant-numeric:tabular-nums}
 .chips-res i{width:7px;height:7px;transform:rotate(45deg);background:var(--gold-dim)}
 .chips-res li.rare i{background:var(--gold)}
-.admin-strip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;border-color:#d4a64a55;background:linear-gradient(90deg,#d4a64a12,var(--panel) 60%)}
+.admin-strip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;border-color:#e9b94955;background:linear-gradient(90deg,#e9b94912,var(--panel) 60%)}
 .admin-strip b{font-weight:800}
 .admin-strip p{margin:0;color:var(--mute);font-size:13px}
 .cab-cols{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
@@ -245,6 +250,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .ev-empty p{margin:0;max-width:30ch}
 @media (max-width:1100px){.cab-cols{grid-template-columns:1fr}.feedbox{position:static}}
 @media (max-width:760px){
+  .state-bg{right:-20%;width:110%;opacity:.12}
   .state-head{grid-template-columns:48px minmax(0,1fr)}
   .crest{width:48px;height:48px}
   .state-acts{grid-column:1/-1}
@@ -286,7 +292,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0c6" stop-opacity=".95"/><stop offset=".7" stop-color="#d4a64a" stop-opacity=".8"/><stop offset="1" stop-color="#d4a64a" stop-opacity=".1"/></linearGradient></defs>
+  <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0c6" stop-opacity=".95"/><stop offset=".7" stop-color="#e9b949" stop-opacity=".85"/><stop offset="1" stop-color="#e9b949" stop-opacity=".1"/></linearGradient></defs>
   <symbol id="tyan" viewBox="0 0 200 260"><g fill="url(#hg)">
     <path d="M100 22c-38 0-62 28-62 66 0 22 6 40 4 58-2 14-12 26-16 36 18-4 30-14 36-26 6 10 20 16 38 16s32-6 38-16c6 12 18 22 36 26-4-10-14-22-16-36-2-18 4-36 4-58 0-38-24-66-62-66z" opacity=".45"/>
     <ellipse cx="100" cy="96" rx="38" ry="44" opacity=".75"/>
@@ -420,28 +426,28 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
     <section id="vestnik" aria-label="Вестник фракций">
       <div class="sec-h"><h2>Вестник фракций</h2><small>входящие передачи: 131</small><button type="button" class="btn sm" id="open-arch">Архив выпусков</button></div>
       <div class="news">
-        <a class="card" href="#" style="--tint:#3a2e22">
+        <a class="card" href="#" style="--tint:#2a1f0c">
           <div class="ban"><svg><use href="#e1"/></svg></div>
           <div class="c-body"><span class="fac"><i></i>Республика Серениса</span>
             <h3>Начало антипиратской операции «Sestante», требование к Соридону об отводе войск с границы</h3>
             <p>Attenzione, cittadini, messaggio di rete urgente. Силы космической обороны Серенисы начинают антипиратскую операцию «Sestante». Операция подразумевает зачистку сектора…</p>
             <span class="sd">зв.дата 3000.291 · 16:57</span></div>
         </a>
-        <a class="card" href="#" style="--tint:#16222e">
+        <a class="card" href="#" style="--tint:#1a1508">
           <div class="ban"><svg><use href="#e2"/></svg></div>
           <div class="c-body"><span class="fac"><i></i>Республика Новой Либертии</span>
             <h3>Pax Res’publica</h3>
             <p>Капитолийские Игры. Унмару Кэлхуну выпала честь быть консулом как раз в период, когда Республика отмечает очередной век своего существования…</p>
             <span class="sd">зв.дата 3000.280 · 12:52</span></div>
         </a>
-        <a class="card" href="#" style="--tint:#3a2e22">
+        <a class="card" href="#" style="--tint:#2a1f0c">
           <div class="ban"><svg><use href="#e1"/></svg></div>
           <div class="c-body"><span class="fac"><i></i>Республика Серениса</span>
             <h3>Прокламация о безопасности сектора</h3>
             <p>Attenzione, cittadini, messaggio di rete alto priorità. В связи с началом новой войны Республика Серениса всячески осуждает вторжение…</p>
             <span class="sd">зв.дата 3000.280 · 01:18</span></div>
         </a>
-        <a class="card" href="#" style="--tint:#2a1c14">
+        <a class="card" href="#" style="--tint:#211709">
           <div class="ban"><svg><use href="#e3"/></svg></div>
           <div class="c-body"><span class="fac"><i></i>The Echo of the War</span>
             <h3>Война есть и будет</h3>
@@ -467,6 +473,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   </div>
   <div id="view-cab" class="view" hidden>
     <section class="panel state">
+      <!-- герб державы: на сайте сюда подставится картинка герба из базы (img), сейчас заглушка -->
+      <div class="state-bg" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#e1"/></svg></div>
       <div class="state-head">
         <div class="crest" aria-hidden="true"><svg><use href="#e1"/></svg></div>
         <div class="state-name">
