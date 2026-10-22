@@ -1,0 +1,389 @@
+<title>Классическая эра 1.0</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tektur:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&family=Unbounded:wght@400;700;900&family=Golos+Text:wght@400;500;600&family=Jura:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Три визуальных мира, каждый сознательно в одной теме.
+   A «Пульт» — панель управления 70-х, янтарный люминофор, боковое меню-тумблеры.
+   B «Плакат» — космическая эмаль 60-х, кобальт и горчица, верхняя полоса меню.
+   C «Вектор» — векторный дисплей радара, бирюзовый люминофор, командная строка меню. */
+:root{
+  color-scheme: dark;
+  /* служебная панель переключения вариантов */
+  --sw-bg:#14161a; --sw-fg:#c9ccd3; --sw-on:#ffffff; --sw-line:#2a2e36;
+  /* A: Пульт */
+  --a-bg:#1a1e19; --a-panel:#232822; --a-line:#3a4236; --a-amber:#f2a93b; --a-amber-dim:#7d6338; --a-text:#e6dcc3; --a-mute:#9a9378; --a-green:#8fd14f;
+  --a-display:"Tektur", "Russo One", system-ui, sans-serif; --a-mono:"IBM Plex Mono", "PT Mono", ui-monospace, monospace;
+  /* B: Плакат */
+  --b-bg:#dde5e7; --b-ink:#0f1e38; --b-cobalt:#2340a8; --b-mustard:#e3a823; --b-teal:#227f80; --b-paper:#eef3f4; --b-mute:#4b5a70;
+  --b-display:"Unbounded", "Days One", system-ui, sans-serif; --b-body:"Golos Text", "PT Sans", system-ui, sans-serif;
+  /* C: Вектор */
+  --c-bg:#040a0c; --c-glow:#5ef2d6; --c-dim:#1c4a44; --c-text:#cffff4; --c-mute:#6fa79d; --c-warn:#ffaa4a;
+  --c-display:"Jura", "Exo 2", system-ui, sans-serif; --c-mono:"JetBrains Mono", "PT Mono", ui-monospace, monospace;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--sw-bg);color:var(--sw-fg);font:15px/1.5 system-ui,sans-serif}
+button,a{font:inherit}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+
+/* ── переключатель вариантов (рабочая панель, не часть дизайна) ── */
+.sw{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--sw-bg);border-bottom:1px solid var(--sw-line);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px;
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--sw-bg)}
+.sw span{font-size:13px;margin-right:4px}
+.sw button{background:none;border:1px solid var(--sw-line);color:var(--sw-fg);padding:5px 12px;border-radius:999px;cursor:pointer;font-size:13px}
+.sw button[aria-pressed="true"]{background:var(--sw-on);color:var(--sw-bg);border-color:var(--sw-on)}
+
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* общий портрет-заглушка маскота */
+.mascot{display:block;width:100%;height:auto}
+.mascot .fill{fill:currentColor}
+
+/* ═════════════ A · ПУЛЬТ ═════════════ */
+.va{background:var(--a-bg);color:var(--a-text);font-family:var(--a-mono);min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}
+.va-side{background:var(--a-panel);border-right:2px solid var(--a-line);padding:24px 18px;display:flex;flex-direction:column;gap:22px}
+.va-plate{border:1px solid var(--a-line);padding:12px 12px 10px;background:linear-gradient(#2b3129,#20251f)}
+.va-plate b{display:block;font-family:var(--a-display);font-weight:800;font-size:21px;line-height:1.05;color:var(--a-amber);letter-spacing:.02em}
+.va-plate small{display:block;color:var(--a-mute);font-size:11px;margin-top:6px}
+.va-nav{display:flex;flex-direction:column;gap:2px}
+.va-nav a{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;padding:9px 8px;color:var(--a-text);text-decoration:none;border:1px solid transparent;font-size:14px}
+.va-nav a i{width:9px;height:9px;border-radius:50%;background:#3b3a30;box-shadow:inset 0 1px 1px #0008}
+.va-nav a kbd{font:11px var(--a-mono);color:var(--a-mute);border:1px solid var(--a-line);padding:0 5px}
+.va-nav a:hover{border-color:var(--a-line);background:#ffffff06}
+.va-nav a[aria-current]{border-color:var(--a-amber-dim);background:#f2a93b10;color:var(--a-amber)}
+.va-nav a[aria-current] i{background:var(--a-amber);box-shadow:0 0 8px var(--a-amber)}
+.va-nav hr{border:0;border-top:1px dashed var(--a-line);margin:8px 0}
+.va-side .va-user{margin-top:auto;font-size:12px;color:var(--a-mute);border-top:1px solid var(--a-line);padding-top:12px}
+.va-user strong{color:var(--a-green);font-weight:500}
+.va-main{padding:28px clamp(16px,4vw,48px) 48px;display:flex;flex-direction:column;gap:28px;min-width:0}
+.va-hero{display:grid;grid-template-columns:minmax(220px,340px) minmax(0,1fr);gap:clamp(20px,4vw,48px);align-items:center}
+.va-crt{background:#0d0f0c;border:10px solid #2e342c;border-radius:22px;box-shadow:inset 0 0 0 2px #000,0 0 0 1px var(--a-line);aspect-ratio:4/5;position:relative;overflow:hidden;color:var(--a-amber)}
+.va-crt svg{position:absolute;inset:8% 10% 0;width:80%;height:auto;opacity:.9}
+.va-crt::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#0000 0 2px,#0006 2px 3px);pointer-events:none;border-radius:12px;box-shadow:inset 0 0 60px #000}
+.va-crt figcaption{position:absolute;left:12px;right:12px;bottom:10px;font-size:11px;color:var(--a-amber-dim);z-index:1}
+.va-tx{font-size:13px;color:var(--a-amber);border-left:2px solid var(--a-amber-dim);padding-left:12px;margin-bottom:18px;max-width:46ch}
+.va-tx em{font-style:normal;color:var(--a-mute)}
+.va h1{font-family:var(--a-display);font-weight:800;font-size:clamp(34px,5.4vw,64px);line-height:.98;margin:0 0 14px;text-wrap:balance;color:var(--a-text)}
+.va-lead{font-size:15px;color:var(--a-mute);max-width:52ch;margin:0 0 22px}
+.va-btns{display:flex;gap:12px;flex-wrap:wrap}
+.va-btn{font-family:var(--a-display);font-weight:600;font-size:15px;padding:12px 20px;border:2px solid var(--a-amber);background:var(--a-amber);color:#1a140a;text-decoration:none;cursor:pointer;box-shadow:0 4px 0 #8a5d17}
+.va-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8a5d17}
+.va-btn.ghost{background:transparent;color:var(--a-amber);box-shadow:0 4px 0 var(--a-amber-dim)}
+.va-gauges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--a-line)}
+.va-gauges div{padding:14px 16px;border-right:1px solid var(--a-line)}
+.va-gauges div:last-child{border-right:0}
+.va-gauges b{display:block;font-family:var(--a-display);font-size:28px;color:var(--a-amber);font-variant-numeric:tabular-nums;font-weight:600}
+.va-gauges span{font-size:12px;color:var(--a-mute)}
+.va-log h2{font-family:var(--a-display);font-weight:600;font-size:18px;margin:0 0 10px;color:var(--a-text)}
+.va-log ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--a-line)}
+.va-log li{display:grid;grid-template-columns:92px minmax(0,1fr);gap:14px;padding:10px 0;border-bottom:1px solid var(--a-line);font-size:14px}
+.va-log time{color:var(--a-amber-dim);font-variant-numeric:tabular-nums}
+.va-note{font-size:11px;color:var(--a-mute)}
+
+/* ═════════════ B · ПЛАКАТ ═════════════ */
+.vb{background:var(--b-bg);color:var(--b-ink);font-family:var(--b-body);min-height:100vh}
+.vb-top{background:var(--b-cobalt);color:var(--b-paper)}
+.vb-top .in{display:flex;align-items:center;gap:20px;min-height:58px;flex-wrap:wrap;padding-block:8px}
+.vb-logo{font-family:var(--b-display);font-weight:900;font-size:15px;letter-spacing:.04em;color:var(--b-paper);text-decoration:none;display:flex;align-items:center;gap:10px}
+.vb-logo svg{width:26px;height:26px}
+.vb-nav{display:flex;gap:2px;flex-wrap:wrap;margin-left:auto}
+.vb-nav a{color:var(--b-paper);text-decoration:none;padding:7px 12px;font-weight:500;font-size:14px;border-radius:4px}
+.vb-nav a:hover{background:#ffffff1a}
+.vb-nav a[aria-current]{background:var(--b-mustard);color:var(--b-ink)}
+.vb-enter{background:var(--b-paper);color:var(--b-cobalt);padding:7px 14px;border-radius:4px;font-weight:600;text-decoration:none;font-size:14px}
+.vb-hero .in{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(220px,.9fr);gap:clamp(20px,4vw,56px);align-items:center;padding-block:clamp(32px,6vw,72px)}
+.vb h1{font-family:var(--b-display);font-weight:900;font-size:clamp(40px,7.4vw,104px);line-height:.9;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.vb h1 span{display:block;color:var(--b-cobalt)}
+.vb-sub{font-size:18px;max-width:40ch;margin:22px 0 28px;color:var(--b-mute);line-height:1.5}
+.vb-btns{display:flex;gap:12px;flex-wrap:wrap}
+.vb-btn{font-family:var(--b-display);font-weight:700;font-size:14px;padding:14px 22px;border-radius:999px;background:var(--b-ink);color:var(--b-paper);text-decoration:none}
+.vb-btn.alt{background:transparent;color:var(--b-ink);box-shadow:inset 0 0 0 2px var(--b-ink)}
+.vb-port{position:relative;aspect-ratio:1;max-width:420px;width:100%;justify-self:end}
+.vb-port .ring{position:absolute;inset:0;border-radius:50%;background:var(--b-mustard)}
+.vb-port .glass{position:absolute;inset:7%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3a5bd0,var(--b-cobalt) 55%,#14286e);overflow:hidden;color:#cfd9ff;box-shadow:inset 0 0 0 6px var(--b-ink)}
+.vb-port .glass svg{position:absolute;left:14%;right:14%;bottom:0;width:72%}
+.vb-port .bolt{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--b-ink)}
+.vb-port small{position:absolute;left:0;right:0;bottom:-28px;text-align:center;font-size:12px;color:var(--b-mute)}
+.vb-orbit{position:absolute;inset:-14%;pointer-events:none;color:var(--b-teal)}
+.vb-band{background:var(--b-ink);color:var(--b-paper)}
+.vb-band .in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding-block:0}
+.vb-band section{padding:28px 24px 30px;border-left:1px solid #ffffff22}
+.vb-band section:first-child{border-left:0;padding-left:0}
+.vb-band h2{font-family:var(--b-display);font-weight:700;font-size:18px;margin:0 0 8px;color:var(--b-mustard)}
+.vb-band p{margin:0 0 12px;color:#c9d3e6;font-size:15px;max-width:34ch}
+.vb-band a{color:var(--b-paper);font-weight:600}
+.vb-foot{padding-block:18px 30px;font-size:12px;color:var(--b-mute)}
+
+/* ═════════════ C · ВЕКТОР ═════════════ */
+.vc{background:var(--c-bg);color:var(--c-text);font-family:var(--c-mono);min-height:100vh;
+  background-image:linear-gradient(#5ef2d608 1px,transparent 1px),linear-gradient(90deg,#5ef2d608 1px,transparent 1px);background-size:32px 32px}
+.vc-top{border-bottom:1px solid var(--c-dim)}
+.vc-top .in{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding-block:12px}
+.vc-logo{font-family:var(--c-display);font-weight:700;font-size:18px;color:var(--c-glow);text-decoration:none;text-shadow:0 0 10px #5ef2d680}
+.vc-nav{display:flex;flex-wrap:wrap;gap:4px 2px;font-size:13px}
+.vc-nav a{color:var(--c-mute);text-decoration:none;padding:4px 8px}
+.vc-nav a::before{content:"["}.vc-nav a::after{content:"]"}
+.vc-nav a::before,.vc-nav a::after{color:var(--c-dim);padding:0 3px}
+.vc-nav a:hover{color:var(--c-text)}
+.vc-nav a[aria-current]{color:var(--c-bg);background:var(--c-glow)}
+.vc-nav a[aria-current]::before,.vc-nav a[aria-current]::after{color:var(--c-bg)}
+.vc-time{margin-left:auto;font-size:12px;color:var(--c-mute);font-variant-numeric:tabular-nums}
+.vc-hero .in{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,440px);gap:clamp(24px,4vw,56px);align-items:center;padding-block:clamp(28px,5vw,64px)}
+.vc h1{font-family:var(--c-display);font-weight:700;font-size:clamp(38px,6vw,78px);line-height:.95;margin:0 0 18px;color:var(--c-text);text-shadow:0 0 18px #5ef2d640;text-wrap:balance}
+.vc-lead{color:var(--c-mute);font-size:14px;max-width:50ch;margin:0 0 24px;line-height:1.65}
+.vc-btns{display:flex;gap:12px;flex-wrap:wrap}
+.vc-btn{font-family:var(--c-display);font-weight:700;font-size:15px;padding:11px 20px;border:1px solid var(--c-glow);color:var(--c-bg);background:var(--c-glow);text-decoration:none;box-shadow:0 0 16px #5ef2d655}
+.vc-btn.ghost{background:transparent;color:var(--c-glow);box-shadow:none}
+.vc-scope{position:relative;aspect-ratio:1;width:100%}
+.vc-scope canvas{position:absolute;inset:0;width:100%;height:100%}
+.vc-officer{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;align-items:end;border:1px solid var(--c-dim);padding:12px;margin-top:28px;max-width:520px;background:#040a0ccc}
+.vc-officer .frame{border:1px solid var(--c-glow);color:var(--c-glow);aspect-ratio:3/4;position:relative;overflow:hidden;background:repeating-linear-gradient(0deg,#5ef2d60d 0 1px,transparent 1px 3px)}
+.vc-officer svg{position:absolute;left:8%;right:8%;bottom:0;width:84%}
+.vc-officer p{margin:0;font-size:13px;color:var(--c-text)}
+.vc-officer small{display:block;color:var(--c-mute);font-size:11px;margin-bottom:6px}
+.vc-rows .in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--c-dim);padding-block:0}
+.vc-rows section{padding:20px 20px 26px 0;min-width:0}
+.vc-rows h2{font-family:var(--c-display);font-size:16px;font-weight:700;color:var(--c-glow);margin:0 0 8px}
+.vc-rows p{margin:0;color:var(--c-mute);font-size:13px}
+.vc-rows b{color:var(--c-text);font-weight:600;font-variant-numeric:tabular-nums}
+.vc-warn{color:var(--c-warn)}
+
+/* ── телефон ── */
+@media (max-width:820px){
+  .va{grid-template-columns:1fr}
+  .va-side{border-right:0;border-bottom:2px solid var(--a-line);padding:16px}
+  .va-nav{flex-direction:row;flex-wrap:wrap;gap:4px}
+  .va-nav a{grid-template-columns:10px auto;padding:7px 10px;border-color:var(--a-line)}
+  .va-nav a kbd,.va-nav hr,.va-side .va-user{display:none}
+  .va-hero{grid-template-columns:1fr}
+  .va-crt{max-width:260px}
+  .va-gauges{grid-template-columns:1fr}
+  .va-gauges div{border-right:0;border-bottom:1px solid var(--a-line)}
+  .va-gauges div:last-child{border-bottom:0}
+  .va-log li{grid-template-columns:1fr;gap:2px}
+  .vb-hero .in,.vc-hero .in{grid-template-columns:1fr}
+  .vb-port{justify-self:center;max-width:300px;margin-bottom:28px}
+  .vb-band .in,.vc-rows .in{grid-template-columns:1fr}
+  .vb-band section{border-left:0;border-top:1px solid #ffffff22;padding-left:0}
+  .vb-band section:first-child{border-top:0}
+  .vc-time{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<!-- заглушка силуэта маскота: общая, вставляется в три места -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="tyan" viewBox="0 0 200 240">
+    <path class="fill" d="M100 22c-38 0-62 28-62 66 0 22 6 40 4 58-2 14-12 26-16 36 18-4 30-14 36-26 6 10 20 16 38 16s32-6 38-16c6 12 18 22 36 26-4-10-14-22-16-36-2-18 4-36 4-58 0-38-24-66-62-66z" opacity=".28"/>
+    <ellipse class="fill" cx="100" cy="96" rx="38" ry="44" opacity=".55"/>
+    <path class="fill" d="M58 86c4-30 22-48 42-48s38 18 42 48c-12-14-26-20-42-20s-30 6-42 20z" opacity=".8"/>
+    <path class="fill" d="M24 240c4-44 34-72 76-72s72 28 76 72z" opacity=".55"/>
+    <rect class="fill" x="88" y="136" width="24" height="34" opacity=".45"/>
+  </symbol>
+</svg>
+
+<nav class="sw" aria-label="Варианты дизайна">
+  <span>Вариант:</span>
+  <button type="button" id="sw-pult" data-v="pult" aria-pressed="true">A · Пульт</button>
+  <button type="button" id="sw-plakat" data-v="plakat" aria-pressed="false">B · Плакат</button>
+  <button type="button" id="sw-vector" data-v="vector" aria-pressed="false">C · Вектор</button>
+</nav>
+
+<!-- ═════════════ A · ПУЛЬТ ═════════════ -->
+<div class="va" id="v-pult">
+  <aside class="va-side">
+    <div class="va-plate"><b>Классическая<br>эра</b><small>Пульт правителя · v1.0</small></div>
+    <nav class="va-nav" aria-label="Главное меню">
+      <a href="#pult" aria-current="page"><i></i>Обзор<kbd>1</kbd></a>
+      <a href="#pult"><i></i>Держава<kbd>2</kbd></a>
+      <a href="#pult"><i></i>Галактика<kbd>3</kbd></a>
+      <a href="#pult"><i></i>Флот и войска<kbd>4</kbd></a>
+      <a href="#pult"><i></i>Война<kbd>5</kbd></a>
+      <a href="#pult"><i></i>Дипломатия<kbd>6</kbd></a>
+      <a href="#pult"><i></i>Разведка<kbd>7</kbd></a>
+      <a href="#pult"><i></i>Рынок<kbd>8</kbd></a>
+      <hr>
+      <a href="#pult"><i></i>Хроника</a>
+      <a href="#pult"><i></i>Справочник</a>
+      <a href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener"><i></i>Discord</a>
+    </nav>
+    <div class="va-user">Канал связи: <strong>устойчив</strong><br>Вход не выполнен</div>
+  </aside>
+  <main class="va-main">
+    <section class="va-hero">
+      <figure class="va-crt" style="margin:0">
+        <svg viewBox="0 0 200 240" role="img" aria-label="Место для арта Классикал-Тян"><use href="#tyan"/></svg>
+        <figcaption>Место для нового арта Классикал-Тян</figcaption>
+      </figure>
+      <div>
+        <p class="va-tx">Классикал-Тян на связи. Сектор спокоен, на границах замечено движение флотов. <em>Жду ваших приказов.</em></p>
+        <h1>Держава ждёт приказов</h1>
+        <p class="va-lead">Браузерная стратегия о звёздных державах: колонии и экономика, флоты и сражения, дипломатия, разведка и войны за системы.</p>
+        <div class="va-btns">
+          <a class="va-btn" href="#pult">Войти в игру</a>
+          <a class="va-btn ghost" href="#pult">Основать державу</a>
+        </div>
+      </div>
+    </section>
+    <section class="va-gauges" aria-label="Сводка по галактике">
+      <div><b>24</b><span>державы в игре</span></div>
+      <div><b>1 645</b><span>колоний</span></div>
+      <div><b>146</b><span>сражений проведено</span></div>
+    </section>
+    <section class="va-log">
+      <h2>Хроника</h2>
+      <ol>
+        <li><time>22.10 · 21:40</time><span>Объявлена война: два союза оспаривают пограничную систему.</span></li>
+        <li><time>22.10 · 18:05</time><span>Рынок: цена на редкие металлы выросла после перекрытия торгового пути.</span></li>
+        <li><time>21.10 · 23:12</time><span>Новая держава вошла в галактику и заняла свободный сектор.</span></li>
+      </ol>
+      <p class="va-note">Записи хроники — примеры для макета. Цифры сводки взяты из базы на 23 октября.</p>
+    </section>
+  </main>
+</div>
+
+<!-- ═════════════ B · ПЛАКАТ ═════════════ -->
+<div class="vb" id="v-plakat" hidden>
+  <header class="vb-top">
+    <div class="in gutter">
+      <a class="vb-logo" href="#plakat"><svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="6" fill="#e3a823"/><ellipse cx="13" cy="13" rx="12" ry="4.5" fill="none" stroke="#eef3f4" stroke-width="1.6" transform="rotate(-24 13 13)"/></svg>Классическая эра</a>
+      <nav class="vb-nav" aria-label="Главное меню">
+        <a href="#plakat" aria-current="page">Обзор</a>
+        <a href="#plakat">Держава</a>
+        <a href="#plakat">Галактика</a>
+        <a href="#plakat">Флот</a>
+        <a href="#plakat">Война</a>
+        <a href="#plakat">Дипломатия</a>
+        <a href="#plakat">Разведка</a>
+        <a href="#plakat">Рынок</a>
+      </nav>
+      <a class="vb-enter" href="#plakat">Войти</a>
+    </div>
+  </header>
+  <section class="vb-hero">
+    <div class="in gutter">
+      <div>
+        <h1>Классическая <span>эра</span></h1>
+        <p class="vb-sub">Стройте колонии, собирайте флоты и ведите свою державу через войны и союзы за звёздные системы.</p>
+        <div class="vb-btns">
+          <a class="vb-btn" href="#plakat">Основать державу</a>
+          <a class="vb-btn alt" href="#plakat">Как устроена игра</a>
+        </div>
+      </div>
+      <figure class="vb-port" style="margin:0">
+        <svg class="vb-orbit" viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="50" rx="49" ry="20" fill="none" stroke="currentColor" stroke-width=".6" transform="rotate(-20 50 50)"/><circle cx="91" cy="35" r="2.2" fill="currentColor"/></svg>
+        <div class="ring"></div>
+        <div class="glass"><svg viewBox="0 0 200 240" role="img" aria-label="Место для арта Классикал-Тян"><use href="#tyan"/></svg></div>
+        <i class="bolt" style="top:50%;left:1.5%"></i><i class="bolt" style="top:50%;right:1.5%"></i><i class="bolt" style="top:1.5%;left:50%"></i><i class="bolt" style="bottom:1.5%;left:50%"></i>
+        <small>Место для нового арта Классикал-Тян</small>
+      </figure>
+    </div>
+  </section>
+  <section class="vb-band">
+    <div class="in gutter">
+      <section><h2>Впервые здесь</h2><p>Короткий путь от первой колонии до первого флота, по шагам.</p><a href="#plakat">Начать обучение</a></section>
+      <section><h2>Хроника</h2><p>Объявлена война: два союза оспаривают пограничную систему.</p><a href="#plakat">Все события</a></section>
+      <section><h2>Сообщество</h2><p>Правила, обсуждения и анонсы обновлений собираются в Discord.</p><a href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener">Открыть Discord</a></section>
+    </div>
+  </section>
+  <p class="vb-foot gutter">Запись в хронике — пример для макета.</p>
+</div>
+
+<!-- ═════════════ C · ВЕКТОР ═════════════ -->
+<div class="vc" id="v-vector" hidden>
+  <header class="vc-top">
+    <div class="in gutter">
+      <a class="vc-logo" href="#vector">КЛАССИЧЕСКАЯ ЭРА</a>
+      <nav class="vc-nav" aria-label="Главное меню">
+        <a href="#vector" aria-current="page">обзор</a>
+        <a href="#vector">держава</a>
+        <a href="#vector">галактика</a>
+        <a href="#vector">флот</a>
+        <a href="#vector">война</a>
+        <a href="#vector">дипломатия</a>
+        <a href="#vector">разведка</a>
+        <a href="#vector">рынок</a>
+        <a href="#vector">хроника</a>
+      </nav>
+      <span class="vc-time" id="vc-clock">--:--:--</span>
+    </div>
+  </header>
+  <section class="vc-hero">
+    <div class="in gutter">
+      <div>
+        <h1>Галактика под наблюдением</h1>
+        <p class="vc-lead">Браузерная стратегия о звёздных державах. Колонии, флоты, сражения на тактической арене, союзы и войны за системы.</p>
+        <div class="vc-btns">
+          <a class="vc-btn" href="#vector">Войти в игру</a>
+          <a class="vc-btn ghost" href="#vector">Основать державу</a>
+        </div>
+        <div class="vc-officer">
+          <div class="frame"><svg viewBox="0 0 200 240" role="img" aria-label="Место для арта Классикал-Тян"><use href="#tyan"/></svg></div>
+          <div><small>Офицер связи · место для арта Классикал-Тян</small><p>На радаре <span class="vc-warn">3 флота</span> у пограничных систем. Рекомендую проверить оборону.</p></div>
+        </div>
+      </div>
+      <div class="vc-scope"><canvas id="vc-radar" aria-label="Радар галактики, декоративный" role="img"></canvas></div>
+    </div>
+  </section>
+  <section class="vc-rows">
+    <div class="in gutter">
+      <section><h2>Державы</h2><p><b>24</b> в игре, свободные секторы есть.</p></section>
+      <section><h2>Колонии</h2><p><b>1 645</b> миров освоено.</p></section>
+      <section><h2>Сражения</h2><p><b>146</b> боёв проведено на арене.</p></section>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  const ids={pult:"v-pult",plakat:"v-plakat",vector:"v-vector"};
+  const btns=[...document.querySelectorAll(".sw button")];
+  function show(v){
+    if(!ids[v]) v="pult";
+    for(const k in ids) document.getElementById(ids[k]).hidden=(k!==v);
+    btns.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===v)));
+    if(v==="vector") radar.start(); else radar.stop();
+  }
+  btns.forEach(b=>b.addEventListener("click",()=>{show(b.dataset.v);try{history.replaceState(null,"","#"+b.dataset.v)}catch(e){}}));
+
+  // радар: одна непрерывная анимация на варианте C
+  const radar=(function(){
+    const cv=document.getElementById("vc-radar"),ctx=cv.getContext("2d");
+    const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const blips=[[.32,.28,1],[.7,.36,0],[.58,.72,1],[.24,.64,0],[.8,.62,0],[.45,.5,0],[.38,.82,1]];
+    let raf=0,t0=performance.now();
+    function size(){const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);return r.width}
+    function draw(now){
+      const w=size(),c=w/2,R=c-6,a=reduce?-0.6:((now-t0)/4000)*Math.PI*2;
+      ctx.clearRect(0,0,w,w);
+      ctx.strokeStyle="#1c4a44";ctx.lineWidth=1;
+      for(let i=1;i<=4;i++){ctx.beginPath();ctx.arc(c,c,R*i/4,0,7);ctx.stroke()}
+      ctx.beginPath();ctx.moveTo(c-R,c);ctx.lineTo(c+R,c);ctx.moveTo(c,c-R);ctx.lineTo(c,c+R);ctx.stroke();
+      const g=ctx.createConicGradient?ctx.createConicGradient(a-0.9,c,c):null;
+      if(g){g.addColorStop(0,"rgba(94,242,214,0)");g.addColorStop(0.14,"rgba(94,242,214,.28)");g.addColorStop(0.1433,"rgba(94,242,214,0)");
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(c,c,R,0,7);ctx.fill()}
+      ctx.strokeStyle="#5ef2d6";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(c,c);ctx.lineTo(c+Math.cos(a)*R,c+Math.sin(a)*R);ctx.stroke();
+      for(const [x,y,hot] of blips){
+        const bx=x*w,by=y*w,ang=Math.atan2(by-c,bx-c),diff=((a-ang)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+        const glow=reduce?.8:Math.max(.15,1-diff/(Math.PI*1.6));
+        ctx.fillStyle=hot?`rgba(255,170,74,${glow})`:`rgba(94,242,214,${glow})`;
+        ctx.beginPath();ctx.arc(bx,by,hot?4:3,0,7);ctx.fill();
+      }
+      if(!reduce) raf=requestAnimationFrame(draw);
+    }
+    return{start(){cancelAnimationFrame(raf);raf=requestAnimationFrame(draw)},stop(){cancelAnimationFrame(raf)}};
+  })();
+
+  const clock=document.getElementById("vc-clock");
+  function tick(){const d=new Date();clock.textContent=d.toLocaleTimeString("ru-RU")}
+  tick();setInterval(tick,1000);
+  addEventListener("resize",()=>{if(!document.getElementById("v-vector").hidden) radar.start()});
+
+  let start="pult";try{const h=location.hash.slice(1);if(ids[h])start=h}catch(e){}
+  show(start);
+})();
+</script>
