@@ -230,7 +230,8 @@ async function startTyan(root) {
     if (calm) line.textContent = text;
     else { let k = 0; line.textContent = ''; timer = setInterval(() => { line.textContent = text.slice(0, ++k); if (k >= text.length) clearInterval(timer); }, 22); }
     const url = spriteFor(cfg, dlg, l);
-    if (url) { if (img.getAttribute('src') !== url) img.src = url; img.hidden = false; sil.hidden = true; } else { img.hidden = true; sil.hidden = false; }
+    // у SVG свойство hidden не работает — ставим атрибут
+    if (url) { if (img.getAttribute('src') !== url) img.src = url; img.hidden = false; sil.setAttribute('hidden', ''); } else { img.hidden = true; sil.removeAttribute('hidden'); }
   };
   btn.onclick = () => {
     if (++i >= dlg.lines.length) { dlg = pickDialogue(cfg, dlg.id); i = 0; }

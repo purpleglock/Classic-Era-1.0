@@ -486,3 +486,9 @@ button.speech:hover span{color:#fff}
 #ty-save,#bd-save{position:sticky;top:90px;z-index:4}
 #ty-save:disabled,#bd-save:disabled{opacity:.6;filter:grayscale(.4)}
 .holo img.plain{filter:drop-shadow(0 0 18px #e9b94955);-webkit-mask:none;mask:none;animation:float 6s ease-in-out infinite}
+/* Классикал-Тян с артом: крупнее, без силуэта */
+.holo:has(img:not([hidden])){height:400px;max-width:360px}
+.holo:has(img:not([hidden])) img{left:0;right:0;width:100%;bottom:22px;max-height:calc(100% - 24px)}
+.holo:has(img:not([hidden])) .cone{width:90%;height:92%}
+.holo:has(img:not([hidden])) .base{width:74%}
+@media (max-width:1100px){.holo:has(img:not([hidden])){height:320px;max-width:280px}}
