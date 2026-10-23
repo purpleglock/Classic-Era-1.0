@@ -1,4 +1,4 @@
-import { html, raw, $, toast, confirmBox } from '../lib/dom.js';
+import { html, raw, icon, $, toast, confirmBox } from '../lib/dom.js';
 import { sb } from '../lib/supabase.js';
 import { act } from '../lib/act.js';
 import { num } from '../lib/format.js';
@@ -90,4 +90,111 @@ export async function battles(sec) {
       location.hash = `/battle?id=${id}`;
     } catch (e) { toast(e.message, 'err'); }
   };
+}
+
+// ═ Лор: летопись и вики фракций ═
+export async function lore(sec, openId = null) {
+  const { BLOCK_LABEL, renderBlocks } = await import('../lib/blocks.js');
+  const { wireRich } = await import('../lib/rich.js');
+  const { loadHeralds } = await import('./home.js');
+  const { pickImage } = await import('./admin-media.js');
+  const { data, error } = await sb.from('v1_lore').select('*').order('kind').order('sort').order('title');
+  if (error) { sec.innerHTML = '<p class="empty warn">Лор ещё не подключён в базе: примените миграцию 20261023_13_lore.sql.</p>'; return; }
+  const H = await loadHeralds().catch(() => ({}));
+  openId ||= new URLSearchParams(location.hash.split('?')[1] || '').get('id');
+  const pages = data || [];
+  const noPage = Object.entries(H).filter(([fid]) => !pages.some((p) => p.faction_id === fid));
+  sec.innerHTML = html`
+    <div class="sec-h"><h2>Лор</h2><small>летопись и вики фракций</small></div>
+    <div class="split lore-split">
+      <div class="tree" id="lr-tree">
+        <b>История</b>${pages.filter((p) => p.kind === 'history').map((p) => raw(html`<button type="button" data-id="${p.id}">${p.published ? '' : '◌ '}${p.title}</button>`))}
+        <button type="button" data-new="history">+ Новая эра</button>
+        <b>Фракции</b>${pages.filter((p) => p.kind === 'faction').map((p) => raw(html`<button type="button" data-id="${p.id}">${p.published ? '' : '◌ '}${p.title}</button>`))}
+        ${noPage.length ? raw(html`<select id="lr-newfac" aria-label="Создать страницу фракции"><option value="">+ Страница фракции…</option>${noPage.map(([fid, h]) => raw(html`<option value="${fid}">${h.name}</option>`))}</select>`) : ''}
+      </div>
+      <div class="detail" id="lr-ed"><p class="empty">Выберите страницу слева.</p></div>
+    </div>`;
+  const ed = $('#lr-ed', sec);
+  const STYLES = { '': 'обычный', 'h-gold': 'золотой', 'h-glitch': 'глитч', 'h-scan': 'сканер' };
+
+  const open = (p) => {
+    sec.querySelectorAll('#lr-tree button').forEach((b) => b.classList.toggle('sel', b.dataset.id === p.id));
+    const blocks = structuredClone(p.blocks || []);
+    const field = (b, i) => {
+      const t = (k, v, ph = '', rows = 4) => html`<textarea data-i="${i}" data-k="${k}" rows="${rows}" placeholder="${ph}">${v || ''}</textarea>`;
+      const inp = (k, v, ph = '') => html`<input type="text" data-i="${i}" data-k="${k}" value="${v || ''}" placeholder="${ph}">`;
+      switch (b.type) {
+        case 'text': return t('content', b.content, 'Текст. Разметка как в новостях: **жирный**, [c:gold]цвет[/c], [center]…[/center], [fac:id|flag]Держава[/fac]', 6);
+        case 'heading': return html`<div class="give">${raw(inp('text', b.text, 'Заголовок'))}<select data-i="${i}" data-k="style">${Object.entries(STYLES).map(([k, v]) => raw(html`<option value="${k}" ${raw((b.style || '') === k ? 'selected' : '')}>${v}</option>`))}</select></div>`;
+        case 'quote': return raw(t('text', b.text, 'Цитата', 2) + inp('author', b.author, 'Автор'));
+        case 'callout': return raw(inp('title', b.title, 'Заголовок врезки') + t('content', b.content, 'Текст'));
+        case 'alert': return raw(inp('title', b.title, 'Заголовок') + t('content', b.content, 'Текст'));
+        case 'divider': case 'toc': return html`<p class="hint">${b.type === 'toc' ? 'Оглавление собирается само из заголовков.' : 'Разделительная линия.'}</p>`;
+        default: { const { id, type, ...rest } = b; return html`<textarea data-i="${i}" data-json rows="8">${JSON.stringify(rest, null, 2)}</textarea><p class="hint">Сложный блок — правится как данные. Сохраняйте структуру.</p>`; }
+      }
+    };
+    const draw = () => {
+      ed.innerHTML = html`
+        <label for="lr-title">Название</label><input id="lr-title" type="text" value="${p.title}">
+        <label>Обложка</label><div class="lr-cover">${p.cover_url ? raw(html`<img src="${p.cover_url}" alt="">`) : raw('<span>нет</span>')}
+          <div class="acts"><button type="button" class="btn sm" id="lr-cov">Выбрать из медиатеки</button>${p.cover_url ? raw('<button type="button" class="btn sm" id="lr-cov-x">Убрать</button>') : ''}</div></div>
+        <div class="row2"><label class="check"><input type="checkbox" id="lr-pub" ${raw(p.published !== false ? 'checked' : '')}> Опубликовано</label>
+          ${p.kind === 'history' ? raw(html`<label>Порядок <input type="number" id="lr-sort" value="${p.sort || 0}" step="10" style="width:90px"></label>`) : ''}</div>
+        <h3 class="sub-h">Блоки</h3>
+        <ol class="lr-blocks">${blocks.map((b, i) => raw(html`<li class="lr-b"><div class="lr-bh"><b>${BLOCK_LABEL[b.type] || b.type}</b>
+          <span><button type="button" class="ib" data-up="${i}" aria-label="Выше">↑</button><button type="button" class="ib" data-down="${i}" aria-label="Ниже">↓</button><button type="button" class="ib" data-del="${i}" aria-label="Удалить блок">${icon('i-x')}</button></span></div>${raw(field(b, i))}</li>`))}</ol>
+        <div class="acts lr-add">${['text', 'heading', 'quote', 'callout', 'alert', 'divider', 'toc'].map((k) => raw(html`<button type="button" class="btn sm" data-add="${k}">+ ${BLOCK_LABEL[k]}</button>`))}</div>
+        <div class="acts"><button type="button" class="btn gold sm" id="lr-save">Сохранить</button><button type="button" class="btn sm" id="lr-prev">Предпросмотр</button>
+          <a class="btn sm" href="${p.kind === 'history' ? `#/history?s=${p.slug || ''}` : `#/wiki?f=${p.faction_id}`}">Открыть на сайте</a></div>
+        <div class="panel lore-page lr-preview" id="lr-pv" hidden></div>`;
+    };
+    draw();
+    ed.oninput = (e) => {
+      const i = e.target.dataset.i; if (i == null) return;
+      if (e.target.dataset.json != null) { try { const v = JSON.parse(e.target.value); blocks[i] = { id: blocks[i].id, type: blocks[i].type, ...v }; e.target.classList.remove('bad'); } catch { e.target.classList.add('bad'); } return; }
+      blocks[i][e.target.dataset.k] = e.target.value;
+    };
+    ed.onchange = (e) => { const i = e.target.dataset.i; if (i != null && e.target.dataset.k) blocks[i][e.target.dataset.k] = e.target.value; };
+    ed.onclick = async (e) => {
+      const t = e.target.closest('button'); if (!t) return;
+      const sync = () => { p.title = $('#lr-title', ed).value; p.published = $('#lr-pub', ed).checked; const so = $('#lr-sort', ed); if (so) p.sort = Number(so.value || 0); };
+      if (t.dataset.add) { sync(); blocks.push({ id: Math.random().toString(36).slice(2, 9), type: t.dataset.add, ...(t.dataset.add === 'divider' ? { style: 'stars' } : {}) }); p.blocks = blocks; draw(); return; }
+      if (t.dataset.del) { sync(); blocks.splice(Number(t.dataset.del), 1); p.blocks = blocks; draw(); return; }
+      if (t.dataset.up || t.dataset.down) {
+        sync(); const i = Number(t.dataset.up ?? t.dataset.down), j = t.dataset.up ? i - 1 : i + 1;
+        if (j >= 0 && j < blocks.length) [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
+        p.blocks = blocks; draw(); return;
+      }
+      if (t.id === 'lr-cov') { sync(); const { data: m } = await sb.from('v1_media').select('url,name,mime').order('created_at', { ascending: false }).limit(300); const u = await pickImage(m || [], 'page'); if (u) { p.cover_url = u; p.blocks = blocks; draw(); } return; }
+      if (t.id === 'lr-cov-x') { sync(); p.cover_url = null; p.blocks = blocks; draw(); return; }
+      if (t.id === 'lr-prev') {
+        const pv = $('#lr-pv', ed); pv.hidden = !pv.hidden;
+        if (!pv.hidden) { pv.innerHTML = `<div class="rich lore-body">${renderBlocks(blocks, { heralds: H }).html}</div>`; wireRich(pv); }
+        return;
+      }
+      if (t.id === 'lr-save') {
+        sync();
+        if (ed.querySelector('textarea.bad')) { toast('В одном из сложных блоков ошибка в данных', 'err'); return; }
+        const r = await act('lore.save', p.id, { kind: p.kind, slug: p.slug, title: p.title, cover_url: p.cover_url || '', blocks, faction_id: p.faction_id || '', sort: p.sort || 0, published: p.published !== false }).catch(() => null);
+        if (r?.status === 'done') lore(sec, p.id);
+      }
+    };
+  };
+
+  $('#lr-tree', sec).onclick = (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.new === 'history') {
+      const slug = `era-${Date.now().toString(36)}`;
+      open({ id: `history/${slug}`, kind: 'history', slug, title: 'Новая эра', blocks: [{ id: 'q1', type: 'quote', text: '', author: '' }, { id: 't1', type: 'text', content: '' }], sort: (pages.filter((p) => p.kind === 'history').at(-1)?.sort || 0) + 10, published: false });
+      return;
+    }
+    const p = pages.find((x) => x.id === b.dataset.id); if (p) open(p);
+  };
+  $('#lr-newfac', sec)?.addEventListener('change', (e) => {
+    const fid = e.target.value; if (!fid) return;
+    open({ id: `faction/${fid}`, kind: 'faction', title: H[fid]?.name || 'Фракция', faction_id: fid, blocks: [{ id: 'ib', type: 'infobox', label: 'Фракция', title: H[fid]?.name || '', sections: [{ name: 'Основное', rows: [{ key: 'Столица', val: '' }] }] }, { id: 'h1', type: 'heading', text: 'История', style: 'h-gold' }, { id: 't1', type: 'text', content: '' }], published: true });
+  });
+  const first = pages.find((p) => p.id === openId);
+  if (first) open(first);
 }

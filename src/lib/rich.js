@@ -9,7 +9,8 @@ import { esc } from './dom.js';
  *   [center]…[/center] [left]…[/left] [right]…[/right]
  *   [c:gold]…[/c]  [bg:cyber]…[/bg]  [fx:glitch]…[/fx]  [font:serif]…[/font]
  *   [img:https://…]  ![подпись](https://…)  [music:https://…]
- *   [fac:fac_id|flag]Название[/fac]  — упоминание державы с гербом
+ *   [fac:fac_id|flag]Название[/fac]  — упоминание державы с гербом (ссылка на её страницу в вики)
+ *   [page:slug|Название]  — ссылка на страницу лора
  *   [spoiler:Заголовок]…[/spoiler]   [lock:пароль|Заголовок]…[/lock]
  *
  * Всё экранируется до разметки: HTML из текста не проходит, ссылки — только http(s).
@@ -104,8 +105,10 @@ export function rich(src = '', opts = {}) {
       const h = H[id] || {};
       const col = /^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\))$/i.test(h.color || '') ? h.color : '';
       const crest = flag && h.herald_url ? `<img src="${esc(h.herald_url)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '';
-      return `<span class="rx-fac" data-fid="${id}"${col ? ` style="--fc:${esc(col)}"` : ''}>${crest}${name}</span>`;
+      return `<a class="rx-fac" href="#/wiki?f=${id}" data-fid="${id}"${col ? ` style="--fc:${esc(col)}"` : ''}>${crest}${name}</a>`;
     });
+    // ссылки на страницы лора со старой вики: [page:era-vojny|ЭРА ВОЙНЫ]
+    x = x.replace(/\[page:([\w-]+)\|([^\]\n]+)\]/g, '<a class="rx-page" href="#/lore?p=$1">$2</a>');
     x = x.replace(/\[c:(\w+)\]([\s\S]*?)\[\/c\]/g, (m0, c, inner) => (COLORS[c] ? `<span style="color:${COLORS[c]}">${inner}</span>` : inner));
     x = x.replace(/\[bg:(\w+)\]([\s\S]*?)\[\/bg\]/g, (m0, c, inner) => `<span class="rx-bg ${BACKS[c] ? `bg-${c}` : 'bg-dark'}">${inner}</span>`);
     x = x.replace(/\[fx:(\w+)\]([\s\S]*?)\[\/fx\]/g, (m0, f, inner) => (FX[f] ? `<span class="rx-fx fx-${f}" data-t="${inner.replace(/<[^>]+>/g, '')}">${inner}</span>` : inner));

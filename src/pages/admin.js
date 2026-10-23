@@ -7,7 +7,7 @@ import { rich, wireRich } from '../lib/rich.js';
 import { act } from '../lib/act.js';
 import { discordBadge } from './account.js';
 import { media, tyan, models, bodies } from './admin-media.js';
-import { achievements, battles } from './admin-game.js';
+import { achievements, battles, lore } from './admin-game.js';
 
 /** Discord-ники пользователей: { user_id: name }. Пусто, если сертификация ещё не подключена. */
 async function discordNames(ids) {
@@ -27,6 +27,7 @@ const SECTIONS = [
   ['users', 'i-users', 'Пользователи'],
   ['news', 'i-news', 'Новости'],
   ['pages', 'i-lore', 'Редакция страниц'],
+  ['lore', 'i-scroll', 'Лор: история и фракции'],
   ['media', 'i-image', 'Медиатека и арты'],
   ['tyan', 'i-spark', 'Классикал-Тян'],
   ['bodies', 'i-planet', 'Небесные тела'],
@@ -92,7 +93,7 @@ function split(sec, title, items, renderItem, renderDetail, extraHead = '') {
 }
 
 const RENDER = {
-  media, tyan, models, bodies, achievements, battles,
+  media, tyan, models, bodies, achievements, battles, lore,
   // Заявки админов
   async requests(sec) {
     const items = await list('requests', 'pending');

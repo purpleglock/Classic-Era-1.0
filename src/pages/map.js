@@ -127,7 +127,7 @@ export async function renderMap(root) {
     side.innerHTML = html`
       <span class="fac"><i style="background:${STAR_COLOR_CSS(s)}"></i>${STAR_NAME[s.star_type] || 'Звезда'}${s.is_giant ? ' · гигант' : ''}</span>
       <h2>${s.name}</h2>
-      <dl class="kv"><dt>Владелец</dt><dd>${owner ? raw(html`<i class="sw" style="background:${solid(owner.color)}"></i>${owner.name}`) : 'ничья'}</dd>
+      <dl class="kv"><dt>Владелец</dt><dd>${owner ? raw(html`<a class="own-link" href="#/wiki?f=${s.faction}"><i class="sw" style="background:${solid(owner.color)}"></i>${owner.name}</a>`) : 'ничья'}</dd>
         <dt>Сектор</dt><dd>${sec?.name || '—'}</dd><dt>Планет</dt><dd>${s.planets.length}</dd>
         <dt>Соседи</dt><dd>${neighbours(s).map((n) => n.name).join(', ') || '—'}</dd></dl>
       ${s.description ? raw(html`<p class="who">${s.description}</p>`) : ''}
