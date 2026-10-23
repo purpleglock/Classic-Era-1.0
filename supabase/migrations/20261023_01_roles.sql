@@ -1,4 +1,3 @@
--- ════════════════════════════════════════════════════════════════════
 -- Классическая эра 1.0 · роли, одобрения, журнал
 --
 -- Роли для игроков:
@@ -11,9 +10,7 @@
 -- и старый сайт не меняются. Все действия админки идут через функции
 -- v1_admin_do / v1_admin_decide: проверка прав и одобрение — на сервере,
 -- обойти их из браузера нельзя.
--- ════════════════════════════════════════════════════════════════════
-
--- ── Команда проекта ─────────────────────────────────────────────────
+-- Команда проекта
 create table if not exists public.v1_staff (
   user_id    uuid primary key references auth.users(id) on delete cascade,
   level      text not null check (level in ('superadmin','admin')),
@@ -22,7 +19,7 @@ create table if not exists public.v1_staff (
   created_at timestamptz not null default now()
 );
 
--- ── Политика действий: что админ делает сам, а что через одобрение ──
+-- Политика действий: что админ делает сам, а что через одобрение
 --   free       — админ выполняет сразу;
 --   approval   — админ создаёт заявку, выполняет суперадмин;
 --   superadmin — только суперадмин.
@@ -34,7 +31,7 @@ create table if not exists public.v1_action_policy (
   updated_at timestamptz not null default now()
 );
 
--- ── Заявки админов на одобрение ─────────────────────────────────────
+-- Заявки админов на одобрение
 create table if not exists public.v1_admin_requests (
   id            uuid primary key default gen_random_uuid(),
   requested_by  uuid not null references auth.users(id),
@@ -51,7 +48,7 @@ create table if not exists public.v1_admin_requests (
 );
 create index if not exists v1_admin_requests_status_idx on public.v1_admin_requests(status, created_at desc);
 
--- ── Журнал всех действий команды ────────────────────────────────────
+-- Журнал всех действий команды
 create table if not exists public.v1_audit_log (
   id         bigint generated always as identity primary key,
   actor      uuid references auth.users(id),
@@ -64,7 +61,7 @@ create table if not exists public.v1_audit_log (
 );
 create index if not exists v1_audit_log_created_idx on public.v1_audit_log(created_at desc);
 
--- ── Посты администрации на главной (ивенты, лор, объявления) ────────
+-- Посты администрации на главной (ивенты, лор, объявления)
 create table if not exists public.v1_posts (
   id         uuid primary key default gen_random_uuid(),
   kind       text not null default 'announce' check (kind in ('event','lore','announce')),
@@ -76,7 +73,7 @@ create table if not exists public.v1_posts (
   updated_at timestamptz not null default now()
 );
 
--- ── Гайдбук и правила: тексты, которые команда правит в админ-панели ──
+-- Гайдбук и правила: тексты, которые команда правит в админ-панели
 create table if not exists public.v1_docs (
   id         text primary key,                 -- 'guide/start', 'rules/main'
   kind       text not null check (kind in ('guide','rules')),
@@ -89,9 +86,7 @@ create table if not exists public.v1_docs (
 );
 create index if not exists v1_docs_kind_idx on public.v1_docs(kind, sort);
 
--- ════════════════════════════════════════════════════════════════════
 -- Проверки ролей
--- ════════════════════════════════════════════════════════════════════
 create or replace function public.v1_is_staff() returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (select 1 from v1_staff where user_id = auth.uid());
@@ -166,9 +161,7 @@ language sql stable security definer set search_path = public as $$
   );
 $$;
 
--- ════════════════════════════════════════════════════════════════════
 -- Исполнитель действий (вызывается только изнутри, не из браузера)
--- ════════════════════════════════════════════════════════════════════
 create or replace function public.v1__exec(p_action text, p_target text, p_payload jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
@@ -291,9 +284,7 @@ begin
   return jsonb_build_object('rows', n);
 end $$;
 
--- ════════════════════════════════════════════════════════════════════
 -- Действия команды и одобрения
--- ════════════════════════════════════════════════════════════════════
 create or replace function public.v1_admin_do(p_action text, p_target text, p_payload jsonb default '{}'::jsonb, p_note text default null)
 returns jsonb
 language plpgsql security definer set search_path = public as $$
@@ -366,10 +357,8 @@ begin
   return jsonb_build_object('status', 'cancelled');
 end $$;
 
--- ════════════════════════════════════════════════════════════════════
 -- Списки для админ-панели (только команда)
 -- Почты и IP видит только суперадмин: админу они не нужны.
--- ════════════════════════════════════════════════════════════════════
 create or replace function public.v1_admin_list(p_kind text, p_q text default null, p_limit integer default 50)
 returns jsonb
 language plpgsql stable security definer set search_path = public as $$
@@ -494,9 +483,7 @@ begin
   return out;
 end $$;
 
--- ════════════════════════════════════════════════════════════════════
 -- Доступ
--- ════════════════════════════════════════════════════════════════════
 alter table public.v1_staff          enable row level security;
 alter table public.v1_action_policy  enable row level security;
 alter table public.v1_admin_requests enable row level security;
@@ -530,9 +517,7 @@ revoke execute on function public.v1_admin_do(text, text, jsonb, text), public.v
 grant execute on function public.v1_admin_do(text, text, jsonb, text), public.v1_admin_decide(uuid, boolean, text),
                           public.v1_admin_cancel(uuid), public.v1_admin_list(text, text, integer) to authenticated;
 
--- ════════════════════════════════════════════════════════════════════
 -- Политика по умолчанию (суперадмин может менять через policy.set)
--- ════════════════════════════════════════════════════════════════════
 insert into public.v1_action_policy(action, label, mode) values
   ('ticket.reply',     'Ответить на тикет',                 'free'),
   ('ticket.close',     'Закрыть тикет',                     'free'),

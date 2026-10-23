@@ -85,7 +85,7 @@ function split(sec, title, items, renderItem, renderDetail, extraHead = '') {
 }
 
 const RENDER = {
-  // ── Заявки админов ─────────────────────────────────────────────
+  // Заявки админов
   async requests(sec) {
     const items = await list('requests', 'pending');
     const done = await list('requests', null, 30);
@@ -123,7 +123,7 @@ const RENDER = {
     };
   },
 
-  // ── Тикеты ──────────────────────────────────────────────────────
+  // Тикеты
   async tickets(sec, status = 'open') {
     const items = await list('tickets', status, 100);
     split(sec, 'Тикеты', items,
@@ -143,7 +143,7 @@ const RENDER = {
     $('.seg', sec).onclick = (e) => { const b = e.target.closest('button'); if (b) RENDER.tickets(sec, b.dataset.st); };
   },
 
-  // ── Регистрация фракций ─────────────────────────────────────────
+  // Регистрация фракций
   async apps(sec) {
     const items = await list('apps');
     split(sec, 'Регистрация фракций', items,
@@ -163,7 +163,7 @@ const RENDER = {
       });
   },
 
-  // ── Управление фракциями ────────────────────────────────────────
+  // Управление фракциями
   async factions(sec, q = '') {
     const items = await list('factions', q || null, 200);
     split(sec, 'Управление фракциями', items,
@@ -188,7 +188,7 @@ const RENDER = {
     inp.onkeydown = (e) => { if (e.key === 'Enter') RENDER.factions(sec, inp.value.trim()); };
   },
 
-  // ── Мультиаккаунты ──────────────────────────────────────────────
+  // Мультиаккаунты
   async multi(sec) {
     const rows = await list('multi', null, 200);
     const flagged = rows.filter((r) => r.ip_shared > 0 || r.fp_shared > 0).length;
@@ -201,7 +201,7 @@ const RENDER = {
       <p class="hint">«Общий IP / устройство» — сколько других аккаунтов входили с того же адреса или устройства. ${isSuperadmin() ? '' : 'Сами адреса видит только суперадмин.'}</p>`;
   },
 
-  // ── Пользователи ────────────────────────────────────────────────
+  // Пользователи
   async users(sec, q = '') {
     const rows = await list('users', q || null, 100);
     sec.innerHTML = html`<div class="sec-h"><h2>Пользователи</h2><input class="search" type="search" id="u-q" placeholder="${isSuperadmin() ? 'Ник или почта' : 'Ник'}" aria-label="Поиск" value="${q}"></div>
@@ -241,7 +241,7 @@ const RENDER = {
     };
   },
 
-  // ── Новости ─────────────────────────────────────────────────────
+  // Новости
   async news(sec) {
     const items = await list('news');
     const H = await loadHeralds().catch(() => ({}));
@@ -260,7 +260,7 @@ const RENDER = {
       });
   },
 
-  // ── Редакция страниц и посты администрации ──────────────────────
+  // Редакция страниц и посты администрации
   async pages(sec, q = '') {
     const [pages, posts, docs] = await Promise.all([
       list('pages', q || null, 200),
@@ -330,7 +330,7 @@ const RENDER = {
     };
   },
 
-  // ── Правила одобрения (суперадмин) ──────────────────────────────
+  // Правила одобрения (суперадмин)
   async policy(sec) {
     const rows = await list('policy');
     sec.innerHTML = html`<div class="sec-h"><h2>Правила одобрения</h2><small>Что админ делает сам, а что только через вас</small></div>
@@ -342,7 +342,7 @@ const RENDER = {
     sec.onchange = (e) => { const tr = e.target.closest('tr[data-a]'); if (tr) act('policy.set', tr.dataset.a, { mode: e.target.value }).catch(() => {}); };
   },
 
-  // ── Журнал ──────────────────────────────────────────────────────
+  // Журнал
   async audit(sec) {
     const rows = await list('audit', null, 200);
     const OUT = { done: 'выполнено', requested: 'запрошено', approved: 'одобрено', rejected: 'отклонено', cancelled: 'отозвано', failed: 'ошибка' };
@@ -352,7 +352,7 @@ const RENDER = {
       </tbody></table></div>`;
   },
 
-  // ── Тестовые функции ────────────────────────────────────────────
+  // Тестовые функции
   async tests(sec) {
     sec.innerHTML = html`<div class="sec-h"><h2>Тестовые функции</h2></div>
       <div class="test-grid">
