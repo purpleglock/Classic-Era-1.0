@@ -140,12 +140,13 @@ export async function tyan(sec) {
     const spriteOpts = (val, none = 'как у диалога') => raw(html`<option value="">${none}</option>${cfg.sprites.map((p) => raw(html`<option value="${p.id}" ${raw(p.id === val ? 'selected' : '')}>${p.name}</option>`))}`);
     const byTime = Object.keys(TIMES).map((t) => [t, cfg.dialogues.filter((d) => (d.time || 'any') === t)]);
     sec.innerHTML = html`
-      <div class="sec-h"><h2>Классикал-Тян</h2><small>арты и реплики на главной</small><button type="button" class="btn gold sm" id="ty-save" ${raw(dirty ? '' : 'disabled')}>Сохранить</button></div>
+      <div class="sec-h"><h2>Классикал-Тян</h2><small>арты и реплики на главной</small><button type="button" class="btn gold sm" id="ty-save" ${raw(dirty ? '' : 'disabled')}>${dirty ? 'Сохранить изменения' : 'Сохранено'}</button></div>
       <div class="grp"><h4>Арты</h4>
         <div class="sprites">${cfg.sprites.map((p) => raw(html`<figure class="sprite ${p.id === cfg.defaultSprite ? 'on' : ''}" data-id="${p.id}">
           <img src="${p.url}" alt=""><input type="text" value="${p.name}" data-sname aria-label="Название арта">
           <span class="acts"><button type="button" class="btn sm" data-def>${p.id === cfg.defaultSprite ? 'Основной' : 'Сделать основным'}</button><button type="button" class="ib" data-sdel aria-label="Убрать арт">${icon('i-x')}</button></span></figure>`))}
           <label class="sprite add"><input type="file" id="ty-file" accept="image/png,image/webp,image/gif" multiple hidden><span>+ Загрузить арты</span><small>PNG с прозрачным фоном, до 1400 px по высоте</small></label></div>
+        <label class="check"><input type="checkbox" id="ty-holo" ${raw(cfg.holo === false ? '' : 'checked')}> Эффект голограммы (золотой тон, строки развёртки, мерцание). Выключите, чтобы показывать арт в родных цветах.</label>
         <p class="hint">Основной арт показывается, если у реплики и диалога свой не выбран. Без артов на главной — силуэт.</p></div>
       ${byTime.map(([t, list]) => raw(html`<div class="grp"><h4>${TIMES[t]} <small>${list.length}</small></h4>
         ${list.map((d) => raw(html`<div class="dlg" data-d="${d.id}">
@@ -160,7 +161,13 @@ export async function tyan(sec) {
       <div class="ty-try" id="ty-try" hidden></div>`;
   };
   draw();
-  const mark = () => { dirty = true; const b = $('#ty-save', sec); if (b) b.disabled = false; };
+  const mark = () => { dirty = true; const b = $('#ty-save', sec); if (b) { b.disabled = false; b.textContent = 'Сохранить изменения'; } };
+  // арты сохраняются сразу — иначе загруженный файл легко «потерять», не нажав «Сохранить»
+  const save = async (quiet = false) => {
+    const clean = { ...cfg, dialogues: cfg.dialogues.map((d) => ({ ...d, lines: d.lines.filter((l) => l.text?.trim()) })).filter((d) => d.lines.length) };
+    const r = await act('settings.save', 'tyan', clean, null, { quiet }).catch(() => null);
+    if (r) { dirty = false; dropSettings(); draw(); if (quiet) toast('Сохранено: Классикал-Тян на главной обновится'); }
+  };
   const dlg = (el) => cfg.dialogues.find((d) => d.id === el.closest('[data-d]')?.dataset.d);
 
   sec.oninput = (e) => {
@@ -170,6 +177,7 @@ export async function tyan(sec) {
   };
   sec.onchange = async (e) => {
     const t = e.target;
+    if (t.id === 'ty-holo') { cfg.holo = t.checked; await save(true); return; }
     if (t.matches('[data-time]')) { dlg(t).time = t.value; mark(); draw(); }
     if (t.matches('[data-dsprite]')) { dlg(t).sprite = t.value || undefined; mark(); }
     if (t.matches('[data-lsprite]')) { dlg(t).lines[t.closest('[data-j]').dataset.j].sprite = t.value || undefined; mark(); }
@@ -178,24 +186,19 @@ export async function tyan(sec) {
         const up = await uploadAll([...t.files], 'tyan', 1400);
         for (const r of up) cfg.sprites.push({ id: uid(), name: r.name.replace(/\.[^.]+$/, ''), url: r.url });
         cfg.defaultSprite ||= cfg.sprites[0]?.id;
-        mark(); draw();
+        await save(true);
       } catch (err) { toast(err.message, 'err'); }
     }
   };
   sec.onclick = async (e) => {
     const t = e.target;
-    if (t.closest('#ty-save')) {
-      const clean = { ...cfg, dialogues: cfg.dialogues.map((d) => ({ ...d, lines: d.lines.filter((l) => l.text?.trim()) })).filter((d) => d.lines.length) };
-      const r = await act('settings.save', 'tyan', clean).catch(() => null);
-      if (r) { dirty = false; dropSettings(); draw(); }
-      return;
-    }
+    if (t.closest('#ty-save')) { await save(); return; }
     if (t.closest('[data-dadd]')) { cfg.dialogues.push({ id: uid(), time: t.closest('[data-dadd]').dataset.dadd, lines: [{ text: '' }] }); mark(); draw(); return; }
     if (t.closest('[data-ladd]')) { dlg(t).lines.push({ text: '' }); mark(); draw(); return; }
     if (t.closest('[data-ldel]')) { dlg(t).lines.splice(t.closest('[data-j]').dataset.j, 1); mark(); draw(); return; }
     if (t.closest('[data-ddel]')) { if (await confirmBox('Удалить диалог целиком?', 'Удалить')) { cfg.dialogues = cfg.dialogues.filter((d) => d !== dlg(t)); mark(); draw(); } return; }
-    if (t.closest('[data-def]')) { cfg.defaultSprite = t.closest('[data-id]').dataset.id; mark(); draw(); return; }
-    if (t.closest('[data-sdel]')) { const id = t.closest('[data-id]').dataset.id; cfg.sprites = cfg.sprites.filter((p) => p.id !== id); if (cfg.defaultSprite === id) cfg.defaultSprite = cfg.sprites[0]?.id; mark(); draw(); return; }
+    if (t.closest('[data-def]')) { cfg.defaultSprite = t.closest('[data-id]').dataset.id; await save(true); return; }
+    if (t.closest('[data-sdel]')) { const id = t.closest('[data-id]').dataset.id; cfg.sprites = cfg.sprites.filter((p) => p.id !== id); if (cfg.defaultSprite === id) cfg.defaultSprite = cfg.sprites[0]?.id; await save(true); return; }
     if (t.closest('[data-try]')) {
       const d = dlg(t), box = $('#ty-try', sec);
       const byId = Object.fromEntries(cfg.sprites.map((p) => [p.id, p.url]));
@@ -307,7 +310,7 @@ export async function bodies(sec) {
   const slotCfg = (k) => (cfg[k] ||= { mode: defMode(k), urls: [], speed: 1 });
   const draw = () => {
     sec.innerHTML = html`
-      <div class="sec-h"><h2>Небесные тела</h2><small>арты для карты и вида системы</small><button type="button" class="btn gold sm" id="bd-save" ${raw(dirty ? '' : 'disabled')}>Сохранить</button></div>
+      <div class="sec-h"><h2>Небесные тела</h2><small>арты для карты и вида системы</small><button type="button" class="btn gold sm" id="bd-save" ${raw(dirty ? '' : 'disabled')}>${dirty ? 'Сохранить изменения' : 'Сохранено'}</button></div>
       <p class="hint">«Поверхность» — карта поверхности планеты (лучше вдвое шире, чем выше, например 2048×1024): она прокручивается внутри круга, и планета вращается вокруг оси. «Картинка» — готовое тело на прозрачном фоне (PNG): оно поворачивается целиком, так лучше для звёзд и астероидов. Несколько артов в одном слоте — варианты: каждой планете достаётся свой, плюс свой оттенок и наклон.</p>
       ${BODY_GROUPS.map(([g, slots]) => raw(html`<h3 class="sub-h">${g}</h3><div class="bodies">${Object.keys(slots).map((k) => {
         const c = cfg[k] || {};
@@ -322,7 +325,12 @@ export async function bodies(sec) {
       })}</div>`))}`;
   };
   draw();
-  const mark = () => { dirty = true; $('#bd-save', sec).disabled = false; };
+  const mark = () => { dirty = true; const b = $('#bd-save', sec); b.disabled = false; b.textContent = 'Сохранить изменения'; };
+  const saveBodies = async (quiet = false) => {
+    const clean = Object.fromEntries(Object.entries(cfg).filter(([k, c]) => c.urls?.length || (c.speed ?? 1) !== 1 || (c.mode && c.mode !== defMode(k))));
+    const r = await act('settings.save', 'bodies', clean, null, { quiet }).catch(() => null);
+    if (r) { dirty = false; dropSettings(); const b = $('#bd-save', sec); if (b) { b.disabled = true; b.textContent = 'Сохранено'; } if (quiet) toast('Арт сохранён'); }
+  };
 
   // живые превью — одна анимация на все видимые слоты
   const t0 = performance.now();
@@ -350,7 +358,7 @@ export async function bodies(sec) {
     if (e.target.type === 'file' && e.target.files.length) {
       try {
         const up = await uploadAll([...e.target.files], 'map', c.mode === 'surface' ? 2048 : 1024);
-        c.urls.push(...up.map((r) => r.url)); mark(); draw();
+        c.urls.push(...up.map((r) => r.url)); draw(); await saveBodies(true);
       } catch (err) { toast(err.message, 'err'); }
     }
   };
@@ -360,11 +368,7 @@ export async function bodies(sec) {
   };
   sec.onclick = async (e) => {
     const rm = e.target.closest('[data-rm]');
-    if (rm) { const k = rm.closest('[data-k]').dataset.k; cfg[k].urls.splice(Number(rm.dataset.rm), 1); mark(); draw(); return; }
-    if (e.target.closest('#bd-save')) {
-      const clean = Object.fromEntries(Object.entries(cfg).filter(([k, c]) => c.urls?.length || (c.speed ?? 1) !== 1 || (c.mode && c.mode !== defMode(k))));
-      const r = await act('settings.save', 'bodies', clean).catch(() => null);
-      if (r) { dirty = false; dropSettings(); $('#bd-save', sec).disabled = true; }
-    }
+    if (rm) { const k = rm.closest('[data-k]').dataset.k; cfg[k].urls.splice(Number(rm.dataset.rm), 1); draw(); await saveBodies(true); return; }
+    if (e.target.closest('#bd-save')) await saveBodies();
   };
 }

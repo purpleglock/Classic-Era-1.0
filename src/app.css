@@ -482,3 +482,7 @@ button.speech:hover span{color:#fff}
 .mn-side time{font:12px var(--mono);color:var(--faint);white-space:nowrap}
 @media (max-width:760px){.mn-item{grid-template-columns:1fr}.mn-side{justify-content:space-between}.mn-main{grid-template-columns:56px minmax(0,1fr)}.mn-thumb{width:56px;height:44px}}
 .cab b{white-space:nowrap;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+/* кнопка сохранения в разделах Тян и небесных тел всегда на виду */
+#ty-save,#bd-save{position:sticky;top:90px;z-index:4}
+#ty-save:disabled,#bd-save:disabled{opacity:.6;filter:grayscale(.4)}
+.holo img.plain{filter:drop-shadow(0 0 18px #e9b94955);-webkit-mask:none;mask:none;animation:float 6s ease-in-out infinite}

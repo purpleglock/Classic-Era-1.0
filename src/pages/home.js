@@ -220,6 +220,7 @@ async function startTyan(root) {
   const line = $('#line', root), img = $('#tyan-art', root), sil = $('#tyan-sil', root), btn = $('#speech', root);
   if (!line) return;
   $('#spk', root).textContent = cfg.speaker || 'Классикал-Тян';
+  img.classList.toggle('plain', cfg.holo === false);
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let dlg = pickDialogue(cfg), i = 0, timer = 0;
   const show = () => {
