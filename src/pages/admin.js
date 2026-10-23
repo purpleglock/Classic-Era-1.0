@@ -41,6 +41,8 @@ export async function renderAdmin(root) {
     root.innerHTML = html`<section class="panel gate"><span class="m-ic">${icon('i-shield')}</span><div><h1>Нет доступа</h1><p>Админ-панель видна только команде проекта.</p></div><a class="btn" href="#/">На главную</a></section>`;
     return;
   }
+  const want = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
+  if (want && SECTIONS.some(([k]) => k === want)) current = want;
   const visible = SECTIONS.filter(([, , , saOnly]) => !saOnly || isSuperadmin());
   root.innerHTML = html`
     <div class="adm-head panel">
@@ -260,13 +262,18 @@ const RENDER = {
 
   // ── Редакция страниц и посты администрации ──────────────────────
   async pages(sec, q = '') {
-    const [pages, posts] = await Promise.all([
+    const [pages, posts, docs] = await Promise.all([
       list('pages', q || null, 200),
       sb.from('v1_posts').select('id,kind,title,body,published,created_at').order('created_at', { ascending: false }).limit(50).then((r) => r.data || []),
+      sb.from('v1_docs').select('id,kind,grp,title,body,sort').order('kind').order('sort').then((r) => r.data || []),
     ]);
+    const guide = docs.filter((d) => d.kind === 'guide');
     sec.innerHTML = html`<div class="sec-h"><h2>Редакция страниц</h2><input class="search" type="search" id="p-q" placeholder="Поиск страницы" aria-label="Поиск страницы" value="${q}"></div>
       <div class="split">
         <div class="tree" id="tree">
+          <b>Гайдбук</b>${guide.length ? '' : raw('<span class="hint tree-hint">Примените миграцию 20261023_03_guide.sql</span>')}
+          ${guide.map((d) => raw(html`<button type="button" data-doc="${d.id}">${d.title}</button>`))}
+          ${guide.length ? raw('<button type="button" data-doc="new">+ Новый раздел</button>') : ''}
           <b>Посты администрации</b><button type="button" data-post="new">+ Новый пост</button>
           ${posts.map((p) => raw(html`<button type="button" data-post="${p.id}">${p.published ? '' : '◌ '}${p.title}</button>`))}
           ${Object.entries(groupBy(pages, (p) => p.section || 'Без раздела')).map(([s, ps]) => raw(html`<b>${s}</b>${ps.map((p) => raw(html`<button type="button" data-page="${p.id}">${p.title || p.slug}</button>`))}`))}
@@ -287,6 +294,21 @@ const RENDER = {
           <p class="hint">${isSuperadmin() ? '' : 'Удаление уйдёт суперадмину на одобрение.'}</p>`;
         $('#pg-save', ed).onclick = () => act('page.update', p.id, { title: $('#pg-title', ed).value, content: $('#pg-body', ed).value });
         $('#pg-del', ed).onclick = async () => { if (await confirmBox(`Удалить страницу «${p.title}»?`, 'Удалить')) { await act('page.delete', p.id); RENDER.pages(sec, q); } };
+      } else if (b.dataset.doc) {
+        const groups = [...new Set(guide.map((d) => d.grp))];
+        const d = guide.find((x) => x.id === b.dataset.doc) || { id: '', grp: groups[groups.length - 1] || 'Начало', title: '', body: '', sort: (guide.at(-1)?.sort || 0) + 10 };
+        ed.innerHTML = html`<label for="dc-title">Заголовок раздела</label><input id="dc-title" type="text" value="${d.title}">
+          <label for="dc-grp">Группа в оглавлении</label><input id="dc-grp" type="text" list="dc-grps" value="${d.grp}"><datalist id="dc-grps">${groups.map((g) => raw(html`<option value="${g}">`))}</datalist>
+          <label for="dc-body">Текст</label><textarea id="dc-body" rows="18">${d.body}</textarea>
+          <p class="hint">Разметка: пустая строка — абзац, «## » — подзаголовок, «- » — пункт, «| a | b |» — таблица, «> » — совет, «>! » — важно, **жирный**.</p>
+          <div class="acts"><button type="button" class="btn gold sm" id="dc-save">Сохранить</button>${d.id ? raw(html`<a class="btn sm" href="#/guide?s=${d.id.replace('guide/', '')}">Открыть в гайдбуке</a><button type="button" class="btn sm danger" id="dc-del">Удалить раздел</button>`) : ''}</div>`;
+        $('#dc-save', ed).onclick = async () => {
+          const title = $('#dc-title', ed).value.trim();
+          const id = d.id || `guide/${title.toLowerCase().replace(/[^a-zа-яё0-9]+/gi, '-').replace(/^-|-$/g, '').slice(0, 40) || Date.now()}`;
+          await act('doc.save', id, { kind: 'guide', grp: $('#dc-grp', ed).value.trim(), title, body: $('#dc-body', ed).value, sort: d.sort });
+          RENDER.pages(sec, q);
+        };
+        $('#dc-del', ed)?.addEventListener('click', async () => { if (await confirmBox(`Удалить раздел «${d.title}» из гайдбука?`, 'Удалить')) { await act('doc.delete', d.id); RENDER.pages(sec, q); } });
       } else if (b.dataset.post) {
         const p = posts.find((x) => x.id === b.dataset.post) || { kind: 'announce', title: '', body: '', published: false };
         ed.innerHTML = html`<label for="po-kind">Тип</label><select id="po-kind"><option value="event">Ивент</option><option value="lore">Лор</option><option value="announce">Объявление</option></select>

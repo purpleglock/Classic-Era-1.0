@@ -15,6 +15,7 @@ const GROUPS = [
     ['outer', 'i-flag', 'Внешняя политика', 'Границы, союзы, войны, кредиты'],
     ['colonize', 'i-planet', 'Колонизация', 'Захват систем и заселение планет'],
     ['colonies', 'i-grid', 'Управление колониями', 'Застройка планет, ячейки и слоты'],
+    ['research', 'i-flask', 'Исследования', 'Дерево технологий и очередь'],
   ]],
   ['Флот и война', [
     ['map', 'i-map', 'Карта галактики', 'Системы, границы и маршруты'],
@@ -81,7 +82,7 @@ export async function renderCabinet(root) {
           <p>${sub}</p>
         </div>
         <div class="state-acts">
-          <a class="btn sm" href="#/soon?s=guide">${icon('i-guide')}Как играть</a>
+          <a class="btn sm" href="#/guide">${icon('i-guide')}Как играть</a>
           ${isTeam() ? raw(html`<a class="btn sm" href="#/admin">${icon('i-shield')}Админ-панель</a>`) : ''}
         </div>
       </div>

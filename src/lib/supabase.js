@@ -20,6 +20,7 @@ const MESSAGES = {
   last_superadmin: 'Нельзя убрать последнего суперадмина.',
   policy_locked: 'Правила для этого действия меняться не могут.',
   empty_body: 'Напишите текст ответа.',
+  empty_title: 'Нужен заголовок.',
 };
 
 export function humanError(error) {

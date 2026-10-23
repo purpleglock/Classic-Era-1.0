@@ -76,6 +76,19 @@ create table if not exists public.v1_posts (
   updated_at timestamptz not null default now()
 );
 
+-- ── Гайдбук и правила: тексты, которые команда правит в админ-панели ──
+create table if not exists public.v1_docs (
+  id         text primary key,                 -- 'guide/start', 'rules/main'
+  kind       text not null check (kind in ('guide','rules')),
+  grp        text not null default '',
+  title      text not null,
+  body       text not null default '',
+  sort       integer not null default 0,
+  updated_by uuid references auth.users(id),
+  updated_at timestamptz not null default now()
+);
+create index if not exists v1_docs_kind_idx on public.v1_docs(kind, sort);
+
 -- ════════════════════════════════════════════════════════════════════
 -- Проверки ролей
 -- ════════════════════════════════════════════════════════════════════
@@ -214,6 +227,17 @@ begin
     get diagnostics n = row_count;
 
   -- посты администрации
+  when 'doc.save' then
+    if coalesce(trim(p_payload->>'title'),'') = '' then raise exception 'empty_title'; end if;
+    insert into v1_docs(id, kind, grp, title, body, sort, updated_by, updated_at)
+    values (p_target, coalesce(p_payload->>'kind', split_part(p_target, '/', 1)), coalesce(p_payload->>'grp', ''),
+            p_payload->>'title', coalesce(p_payload->>'body', ''), coalesce((p_payload->>'sort')::int, 0), actor, now())
+    on conflict (id) do update set
+      grp = coalesce(p_payload->>'grp', v1_docs.grp), title = excluded.title, body = excluded.body,
+      sort = coalesce((p_payload->>'sort')::int, v1_docs.sort), updated_by = actor, updated_at = now();
+    n := 1;
+  when 'doc.delete' then
+    delete from v1_docs where id = p_target; get diagnostics n = row_count;
   when 'post.delete' then
     delete from v1_posts where id = p_target::uuid;
     get diagnostics n = row_count;
@@ -453,6 +477,10 @@ begin
              coalesce((select max(display_name) from user_roles where user_id = l.actor), 'Команда') as actor_name
       from v1_audit_log l order by l.created_at desc limit lim) a;
 
+  when 'docs' then
+    select coalesce(jsonb_agg(d order by d.kind, d.sort), '[]') into out from (
+      select id, kind, grp, title, sort, updated_at from v1_docs where q is null or kind = q) d;
+
   when 'policy' then
     select coalesce(jsonb_agg(p order by p.action), '[]') into out from (select action, label, mode from v1_action_policy) p;
 
@@ -474,6 +502,13 @@ alter table public.v1_action_policy  enable row level security;
 alter table public.v1_admin_requests enable row level security;
 alter table public.v1_audit_log      enable row level security;
 alter table public.v1_posts          enable row level security;
+alter table public.v1_docs           enable row level security;
+
+-- Гайдбук и правила читают все; пишут только через v1_admin_do('doc.save' / 'doc.delete').
+drop policy if exists v1_docs_read on public.v1_docs;
+create policy v1_docs_read on public.v1_docs for select using (true);
+revoke insert, update, delete on public.v1_docs from anon, authenticated;
+grant select on public.v1_docs to anon, authenticated;
 
 -- Таблицы команды из браузера не читаются и не пишутся напрямую — только через функции выше.
 revoke all on public.v1_staff, public.v1_action_policy, public.v1_admin_requests, public.v1_audit_log from anon, authenticated;
@@ -509,6 +544,8 @@ insert into public.v1_action_policy(action, label, mode) values
   ('page.update',      'Изменить страницу',                 'free'),
   ('page.delete',      'Удалить страницу',                  'approval'),
   ('post.delete',      'Удалить пост администрации',        'approval'),
+  ('doc.save',         'Изменить гайдбук или правила',      'free'),
+  ('doc.delete',       'Удалить раздел гайдбука или правил','approval'),
   ('user.ban',         'Забанить пользователя',             'approval'),
   ('user.unban',       'Снять бан',                         'free'),
   ('user.set_level',   'Изменить уровень пользователя',     'approval'),
