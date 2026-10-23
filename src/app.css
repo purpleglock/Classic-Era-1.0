@@ -1,0 +1,60 @@
+/* Дополнения к дизайну H для живого сайта */
+.view{min-height:50vh}
+.skeleton{padding:28px 20px;color:var(--faint);font-size:14px}
+.empty{color:var(--mute);font-size:14px;margin:0}
+.empty-li{padding:12px;color:var(--faint);font-size:14px;list-style:none}
+.warn{color:#e8b4a8}
+.note.warn{margin-top:-4px}
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stats-line{margin:18px 0 0;font-size:13px;color:var(--mute)}
+.upd ol li span:nth-child(2){font-weight:600}
+.more-news{margin-top:12px;align-self:center}
+.admin li.empty{color:var(--mute);font-size:14px;border:0;padding:6px 0}
+
+/* врата: страница без доступа или без державы */
+.gate{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:24px}
+.gate h1{margin:4px 0;font-size:24px;font-weight:800}
+.gate p{margin:0;color:var(--mute);max-width:60ch}
+@media (max-width:760px){.gate{grid-template-columns:auto minmax(0,1fr)}.gate .btn{grid-column:1/-1}}
+
+/* значок роли — виден игрокам */
+.role-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);border:1px solid var(--line2);border-radius:999px;padding:2px 9px}
+.role-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--faint)}
+.role-badge[data-role="team"]{color:var(--gold);border-color:#e9b94966}
+.role-badge[data-role="team"]::before{background:var(--gold)}
+.role-badge[data-role="player"]{color:var(--text)}
+.role-badge[data-role="player"]::before{background:var(--text)}
+
+/* гербы-картинки */
+.ban img,.crest img,.state-bg img{width:100%;height:100%;object-fit:cover}
+.crest img{object-fit:contain;padding:6px}
+.state-bg img{object-fit:contain}
+.ban>img{position:absolute;inset:0}
+.ban>svg{width:96px;height:96px}
+.crest.sm{width:40px;height:40px;border-radius:10px;flex:none}
+.crest.sm svg{width:26px;height:26px}
+.det-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.det-head h3{margin:0}
+.cab small{max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* полоска до начисления */
+.tick i{background:linear-gradient(90deg,var(--gold) var(--p,0%),var(--line) var(--p,0%))!important}
+
+/* админка */
+.req-list{display:flex;flex-direction:column;gap:8px}
+.req{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px;border:1px solid var(--line2);border-radius:12px;background:var(--panel2)}
+.req b{display:block}
+.req span{font-size:13px;color:var(--mute)}
+.req code{display:block;margin-top:6px;font:12px var(--mono);color:var(--faint);word-break:break-all}
+.sub-h{margin:22px 0 10px;font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.msg-b.staff{border-left-color:var(--gold)}
+.msg-b small{color:var(--faint);font-size:12px}
+details.full{margin:0 0 12px}
+details.full summary{cursor:pointer;color:var(--mute);font-size:13px;margin-bottom:8px}
+.toast[data-kind="err"]{background:#3a1410;color:#ffd2c9;border:1px solid #a14a3e}
+.toast{max-width:calc(100vw - 32px)}
+.alt{margin:14px 0 0;font-size:13px;color:var(--mute)}
+.alt a{color:var(--gold)}
+.check{display:flex!important;gap:8px;align-items:center;margin:0 0 14px!important;color:var(--text)!important}
+.check input{width:auto!important;margin:0!important;accent-color:var(--gold)}
+@media (max-width:760px){.req{grid-template-columns:1fr}}

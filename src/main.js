@@ -1,0 +1,54 @@
+import { SPRITE } from './ui/icons.svg.js';
+import { html, icon } from './lib/dom.js';
+import { initSession, onSession, session } from './lib/session.js';
+import { route, startRouter, render, setRouteListener, currentPath } from './lib/router.js';
+import { renderHeader, renderFooter } from './ui/header.js';
+import { renderHome } from './pages/home.js';
+import { renderCabinet } from './pages/cabinet.js';
+import { renderAdmin } from './pages/admin.js';
+
+const SOON = {
+  wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', guide: 'Гайдбук', rules: 'Правила', help: 'Помощь',
+  privacy: 'Политика конфиденциальности', terms: 'Пользовательское соглашение', consent: 'Согласие на обработку персональных данных',
+  apply: 'Заявка на державу', stats: 'Статистика державы', inner: 'Внутренняя политика', outer: 'Внешняя политика',
+  colonize: 'Колонизация', colonies: 'Управление колониями', map: 'Карта галактики', fleet: 'Флот и войска',
+  designs: 'Конструкторы', war: 'Война', intel: 'Разведка', mining: 'Добыча ресурсов', trade: 'Торговля',
+  arena: 'Арена', bar: 'Ресторан-бар «Классикал»',
+};
+
+document.body.insertAdjacentHTML('afterbegin', SPRITE);
+document.getElementById('app').innerHTML = `
+  <div class="page">
+    <header class="panel top" id="top"></header>
+    <main id="view" class="view"></main>
+    <footer class="panel foot" id="foot"></footer>
+  </div>`;
+
+const view = () => document.getElementById('view');
+
+route('/', () => renderHome(view()));
+route('/cabinet', () => renderCabinet(view()));
+route('/admin', () => renderAdmin(view()));
+route('/soon', () => {
+  const key = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
+  const title = SOON[key] || 'Раздел';
+  view().innerHTML = html`<section class="panel gate"><span class="m-ic">${icon('i-clock')}</span>
+    <div><h1>${title}</h1><p>Раздел переносим на новый движок. Он появится здесь, как только будет готов.</p></div>
+    <a class="btn" href="${session.user ? '#/cabinet' : '#/'}">${session.user ? 'В кабинет' : 'На главную'}</a></section>`;
+});
+
+setRouteListener(() => renderHeader());
+renderFooter();
+
+initSession().then(() => {
+  startRouter();
+  // вход/выход меняет роль — перерисовываем текущую страницу
+  let lastUser = session.user?.id;
+  onSession(() => {
+    if (session.user?.id !== lastUser) {
+      lastUser = session.user?.id;
+      if (!session.user && ['/cabinet', '/admin'].includes(currentPath())) location.hash = '/';
+      else render();
+    }
+  });
+});
