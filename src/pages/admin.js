@@ -284,13 +284,27 @@ const RENDER = {
   // Новости
   async news(sec, tab = 'pending') {
     const H = await loadHeralds().catch(() => ({}));
-    const tabs = html`<div class="seg" role="group" aria-label="Новости"><button type="button" data-nt="pending" aria-pressed="${String(tab === 'pending')}">На одобрение</button><button type="button" data-nt="live" aria-pressed="${String(tab === 'live')}">Опубликованные</button></div><a class="btn sm" href="#/news?new=post">+ Пост от команды проекта</a>`;
+    const tabs = html`<div class="seg" role="group" aria-label="Новости"><button type="button" data-nt="pending" aria-pressed="${String(tab === 'pending')}">На одобрение</button><button type="button" data-nt="live" aria-pressed="${String(tab === 'live')}">Опубликованные</button><button type="button" data-nt="bulletins" aria-pressed="${String(tab === 'bulletins')}">Сводки сектора</button></div><a class="btn sm" href="#/news?new=post">+ Пост от команды проекта</a>`;
     const wireTabs = () => { $('.sec-h .seg', sec).onclick = (e) => { const b = e.target.closest('[data-nt]'); if (b) RENDER.news(sec, b.dataset.nt); }; };
+    if (tab === 'bulletins') {
+      // короткие автоматические сводки: достижения, арена, события сектора — отдельно от передач держав
+      const { data } = await sb.from('faction_news').select('id,faction_name,title,body,published_at,created_at,kind')
+        .eq('status', 'approved').neq('kind', 'news').order('created_at', { ascending: false }).limit(150);
+      split(sec, 'Сводки сектора', data || [],
+        (n) => html`<b>${plain(n.title)}</b><span>${dateTime(n.published_at || n.created_at)}</span>`,
+        (det, n) => {
+          det.innerHTML = html`<h3>${plain(n.title)}</h3><p class="who">${n.faction_name || 'Сводка сектора'} · ${starDate(n.published_at || n.created_at)}</p>
+            <div class="msg-b">${plain(n.body)}</div>
+            <p class="hint">Сводки пишет сама игра (достижения, арена, события). В вестник они не попадают — игроки видят их в кабинете, во вкладке «Сектор».</p>`;
+        }, tabs);
+      wireTabs();
+      return;
+    }
     if (tab === 'live') {
       const { data } = await sb.from('faction_news').select('id,faction_id,faction_name,title,excerpt,body,image_url,published_at,created_at,kind')
-        .eq('status', 'approved').order('published_at', { ascending: false, nullsFirst: false }).limit(80);
+        .eq('status', 'approved').eq('kind', 'news').order('published_at', { ascending: false, nullsFirst: false }).limit(80);
       split(sec, 'Опубликованные новости', data || [],
-        (n) => html`<b>${n.title}</b><span>${n.faction_name || 'Держава'} · ${dateTime(n.published_at || n.created_at)}</span>${n.kind !== 'news' ? raw(html`<span class="tag">${n.kind}</span>`) : ''}`,
+        (n) => html`<b>${n.title}</b><span>${n.faction_name || 'Держава'} · ${dateTime(n.published_at || n.created_at)}</span>`,
         (det, n) => {
           det.innerHTML = html`<h3>${n.title}</h3><p class="who">${n.faction_name || 'Держава'} · ${starDate(n.published_at || n.created_at)}</p>
             <div class="msg-b">${plain(n.body).slice(0, 600)}</div>
