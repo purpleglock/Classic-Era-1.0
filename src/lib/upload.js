@@ -41,11 +41,11 @@ const slug = (name) => String(name).toLowerCase().replace(/\.[^.]+$/, '')
  * автоматически 'u/<id>' для игроков. Картинки сжимаются (max — длинная сторона).
  * Возвращает { url, path, name, mime, size, width, height }.
  */
-export async function uploadMedia(file, { folder = 'page', max = 1920 } = {}) {
+export async function uploadMedia(file, { folder = 'page', max = 1920, own = false } = {}) {
   if (file.size > 15 * 1024 * 1024) throw new Error('Файл больше 15 МБ.');
   const isImg = file.type.startsWith('image/');
   const c = isImg ? await compressImage(file, { max }) : { blob: file, type: file.type };
-  const dir = session.role === 'team' ? folder : `u/${session.user?.id}`;
+  const dir = session.role === 'team' && !own ? folder : `u/${session.user?.id}`;
   const path = `${dir}/${Date.now().toString(36)}-${slug(file.name)}.${EXT[c.type] || 'bin'}`;
   const { error } = await sb.storage.from(MEDIA_BUCKET).upload(path, c.blob, { contentType: c.type, cacheControl: '31536000', upsert: false });
   if (error) throw new Error(/bucket/i.test(error.message) ? 'Хранилище медиатеки ещё не создано: нужна миграция 06.' : error.message);

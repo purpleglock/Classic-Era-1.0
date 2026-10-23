@@ -14,6 +14,8 @@ export async function rpc(name, args = {}) {
 
 const MESSAGES = {
   not_staff: 'Это действие доступно только команде проекта.',
+  bad_avatar: 'Аватар можно загрузить только через кнопку на этой странице.',
+  bad_version: 'Неизвестная редакция документов.',
   superadmin_only: 'Это действие может выполнить только суперадмин.',
   request_already_decided: 'Заявку уже рассмотрели.',
   request_not_cancellable: 'Заявку уже нельзя отозвать.',

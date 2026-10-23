@@ -3,6 +3,7 @@ import { sb, rpc } from '../lib/supabase.js';
 import { session, roleTitle, refreshRole } from '../lib/session.js';
 import { openLogin } from '../ui/login.js';
 import { dayMonth } from '../lib/format.js';
+import { uploadMedia } from '../lib/upload.js';
 
 /** Статус Discord-сертификации текущего пользователя. */
 export async function myDiscord() {
@@ -37,6 +38,18 @@ export async function renderAccount(root) {
       <div><span class="role-badge" data-role="${session.role}">${roleTitle()}</span><h1>${session.displayName || 'Аккаунт'}</h1><p>${session.user.email || ''}</p>
         ${ds.linked ? raw(html`<p class="ds-line">${discordBadge(ds.name)}</p>`) : ''}</div>
       <a class="btn sm" href="#/cabinet">В кабинет</a>
+    </section>
+
+    <section class="panel acc-card" id="ava-card">
+      <label class="ava-big" for="av-file" title="Загрузить аватар">${session.avatar ? raw(html`<img src="${session.avatar}" alt="">`) : (session.displayName || '?').slice(0, 1).toUpperCase()}</label>
+      <div class="acc-body">
+        <h2>Аватар</h2>
+        <p>Показывается в шапке и рядом с вашим именем. Картинка ужимается до 256×256.</p>
+        <div class="acts"><label class="btn gold sm" for="av-file">${icon('i-image')}${session.avatar ? 'Заменить' : 'Загрузить'}</label>${session.avatar ? raw('<button type="button" class="btn sm" id="av-del">Убрать</button>') : ''}</div>
+        <input type="file" id="av-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+        <p class="nm-msg" id="av-msg" aria-live="polite"></p>
+        <p class="hint">PNG, JPG, WebP или GIF до 15 МБ. Без чужих лиц без разрешения, без политики и непристойного — правила те же, что для имени.</p>
+      </div>
     </section>
 
     <section class="panel acc-card" id="name-card">
@@ -103,6 +116,28 @@ export async function renderAccount(root) {
       renderAccount(root);
     } catch (e) { nmMsg.className = 'nm-msg bad'; nmMsg.textContent = e.missingSchema ? 'Имена ещё не подключены в базе (миграция 12).' : e.message; }
   };
+
+  const avMsg = $('#av-msg', root);
+  const setAva = async (url) => {
+    await rpc('v1_set_avatar', { p_url: url });
+    await refreshRole();
+    import('../ui/header.js').then((m) => m.renderHeader());
+    renderAccount(root);
+  };
+  $('#av-file', root).onchange = async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!f.type.startsWith('image/')) { avMsg.className = 'nm-msg bad'; avMsg.textContent = 'Нужна картинка.'; return; }
+    avMsg.className = 'nm-msg'; avMsg.textContent = 'Загружаем…';
+    try {
+      const up = await uploadMedia(f, { own: true, max: 256 });
+      await setAva(up.url);
+      toast('Аватар обновлён');
+    } catch (err) { avMsg.className = 'nm-msg bad'; avMsg.textContent = err.missingSchema ? 'Аватары ещё не подключены в базе (миграция 14).' : err.message; }
+  };
+  $('#av-del', root)?.addEventListener('click', async () => {
+    try { await setAva(null); toast('Аватар убран'); } catch (err) { avMsg.className = 'nm-msg bad'; avMsg.textContent = err.message; }
+  });
 
   $('#ds-link', root)?.addEventListener('click', async () => {
     const { error } = await sb.auth.linkIdentity({ provider: 'discord', options: { redirectTo: `${location.origin}${location.pathname}#/account?discord=1` } });

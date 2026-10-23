@@ -283,14 +283,34 @@ const RENDER = {
   },
 
   // Новости
-  async news(sec, tab = 'pending') {
+  async news(sec, tab = 'pending', q = '', lim = 100) {
     const H = await loadHeralds().catch(() => ({}));
-    const tabs = html`<div class="seg" role="group" aria-label="Новости"><button type="button" data-nt="pending" aria-pressed="${String(tab === 'pending')}">На одобрение</button><button type="button" data-nt="live" aria-pressed="${String(tab === 'live')}">Опубликованные</button><button type="button" data-nt="bulletins" aria-pressed="${String(tab === 'bulletins')}">Сводки сектора</button></div><a class="btn sm" href="#/news?new=post">+ Пост от команды проекта</a>`;
-    const wireTabs = () => { $('.sec-h .seg', sec).onclick = (e) => { const b = e.target.closest('[data-nt]'); if (b) RENDER.news(sec, b.dataset.nt); }; };
+    const like = `%${q.replace(/[%_\\]/g, ' ').trim()}%`;
+    const tabs = html`<div class="seg" role="group" aria-label="Новости"><button type="button" data-nt="pending" aria-pressed="${String(tab === 'pending')}">На одобрение</button><button type="button" data-nt="live" aria-pressed="${String(tab === 'live')}">Опубликованные</button><button type="button" data-nt="bulletins" aria-pressed="${String(tab === 'bulletins')}">Сводки сектора</button></div>
+      <form class="nw-find" role="search"><input type="search" id="nw-q" value="${q}" placeholder="Поиск по названию" aria-label="Поиск по названию"><button type="submit" class="btn sm">Найти</button></form>
+      <a class="btn sm" href="#/news?new=post">+ Пост от команды проекта</a>`;
+    // Показано N из M и кнопка «Показать ещё» — чтобы добраться до любой новости
+    const more = (shown, total) => {
+      const h = $('.sec-h', sec);
+      if (!h || total == null) return;
+      const p = document.createElement('p');
+      p.className = 'nw-count';
+      p.innerHTML = html`${q ? `Найдено: ${total}` : `Всего: ${total}`} · показано ${shown}${shown < total ? raw(' <button type="button" class="btn sm" id="nw-more">Показать ещё</button>') : ''}`;
+      h.after(p);
+      $('#nw-more', p)?.addEventListener('click', () => RENDER.news(sec, tab, q, lim + 100));
+    };
+    const wireTabs = () => {
+      $('.sec-h .seg', sec).onclick = (e) => { const b = e.target.closest('[data-nt]'); if (b) RENDER.news(sec, b.dataset.nt, $('#nw-q', sec)?.value.trim() || ''); };
+      $('.nw-find', sec).onsubmit = (e) => { e.preventDefault(); RENDER.news(sec, tab, $('#nw-q', sec).value.trim()); };
+      const qi = $('#nw-q', sec);
+      if (q && qi) { qi.focus(); qi.setSelectionRange(q.length, q.length); }
+    };
     if (tab === 'bulletins') {
       // короткие автоматические сводки: достижения, арена, события сектора — отдельно от передач держав
-      const { data } = await sb.from('faction_news').select('id,faction_name,title,body,published_at,created_at,kind')
-        .eq('status', 'approved').neq('kind', 'news').order('created_at', { ascending: false }).limit(150);
+      let qr = sb.from('faction_news').select('id,faction_name,title,body,published_at,created_at,kind', { count: 'exact' })
+        .eq('status', 'approved').neq('kind', 'news');
+      if (q) qr = qr.ilike('title', like);
+      const { data, count } = await qr.order('created_at', { ascending: false }).limit(lim);
       split(sec, 'Сводки сектора', data || [],
         (n) => html`<b>${plain(n.title)}</b><span>${dateTime(n.published_at || n.created_at)}</span>`,
         (det, n) => {
@@ -298,12 +318,15 @@ const RENDER = {
             <div class="msg-b">${plain(n.body)}</div>
             <p class="hint">Сводки пишет сама игра (достижения, арена, события). В вестник они не попадают — игроки видят их в кабинете, во вкладке «Сектор».</p>`;
         }, tabs);
+      more((data || []).length, count);
       wireTabs();
       return;
     }
     if (tab === 'live') {
-      const { data } = await sb.from('faction_news').select('id,faction_id,faction_name,title,excerpt,body,image_url,published_at,created_at,kind')
-        .eq('status', 'approved').eq('kind', 'news').order('published_at', { ascending: false, nullsFirst: false }).limit(80);
+      let qr = sb.from('faction_news').select('id,faction_id,faction_name,title,excerpt,body,image_url,published_at,created_at,kind', { count: 'exact' })
+        .eq('status', 'approved').eq('kind', 'news');
+      if (q) qr = qr.ilike('title', like);
+      const { data, count } = await qr.order('published_at', { ascending: false, nullsFirst: false }).limit(lim);
       split(sec, 'Опубликованные новости', data || [],
         (n) => html`<b>${n.title}</b><span>${n.faction_name || 'Держава'} · ${dateTime(n.published_at || n.created_at)}</span>`,
         (det, n) => {
@@ -315,13 +338,15 @@ const RENDER = {
           $('#tp-go', det).onclick = async () => {
             if (!(await confirmBox(`Перенести «${n.title}» в «От команды проекта»?`, 'Перенести'))) return;
             const r = await act('news.to_post', n.id, { kind: $('#tp-kind', det).value }).catch(() => null);
-            if (r) RENDER.news(sec, 'live');
+            if (r) RENDER.news(sec, 'live', q, lim);
           };
         }, tabs);
+      more((data || []).length, count);
       wireTabs();
       return;
     }
-    const items = await list('news');
+    const ql = q.toLowerCase();
+    const items = (await list('news')).filter((n) => !ql || (n.title || '').toLowerCase().includes(ql));
     split(sec, 'Новости на одобрение', items,
       (n) => html`<b>${n.title}</b><span>${n.faction_name || 'Держава'} · ${dateTime(n.created_at)}</span>`,
       (det, n) => {

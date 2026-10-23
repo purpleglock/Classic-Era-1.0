@@ -14,10 +14,11 @@ import { renderNews } from './pages/news.js';
 import { renderRegistry } from './pages/registry.js';
 import { renderBattle } from './pages/battle.js';
 import { renderHistory, renderWiki, renderLoreLink } from './pages/lore.js';
+import { renderLegal } from './pages/legal.js';
+import { checkConsent } from './ui/consent.js';
 
 const SOON = {
   wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', help: 'Помощь',
-  privacy: 'Политика конфиденциальности', terms: 'Пользовательское соглашение', consent: 'Согласие на обработку персональных данных',
   stats: 'Статистика державы', inner: 'Внутренняя политика', outer: 'Внешняя политика',
   research: 'Исследования', colonize: 'Колонизация', colonies: 'Управление колониями', fleet: 'Флот и войска',
   designs: 'Конструкторы', techs: 'Конструктор технологий', war: 'Война', intel: 'Разведка', mining: 'Добыча ресурсов', trade: 'Торговля',
@@ -48,6 +49,7 @@ route('/battle', () => renderBattle(view()));
 route('/history', () => renderHistory(view()));
 route('/wiki', () => renderWiki(view()));
 route('/lore', () => renderLoreLink(view()));
+route('/legal', () => renderLegal(view()));
 route('/soon', () => {
   const key = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
   const title = SOON[key] || 'Раздел';
@@ -57,7 +59,7 @@ route('/soon', () => {
     <a class="btn" href="#/guide">Гайдбук</a></section>`;
 });
 
-setRouteListener(() => renderHeader());
+setRouteListener(() => { renderHeader(); checkConsent(); });
 renderFooter();
 
 initSession().then(() => {
@@ -70,5 +72,6 @@ initSession().then(() => {
       if (!session.user && ['/cabinet', '/admin', '/account', '/apply'].includes(currentPath())) location.hash = '/';
       else render();
     }
+    checkConsent();
   });
 });

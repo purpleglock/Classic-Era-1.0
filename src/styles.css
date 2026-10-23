@@ -361,3 +361,33 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   .copy{margin-left:0}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ═ Документы, согласие, аватары ═ */
+.ds i.ds-ava{background:#000;border:1px solid var(--line)}
+.ds-ava img{width:100%;height:100%;object-fit:contain;padding:5px;display:block}
+.cab i img{width:100%;height:100%;object-fit:cover;border-radius:9px;display:block}
+.cab i:has(img){background:#000;overflow:hidden}
+.legal-ok{align-items:flex-start!important;font-size:12.5px;line-height:1.45;color:var(--mute)}
+.legal-ok input{margin-top:2px;flex:none}
+.legal-ok a,.consent-modal a{color:var(--gold)}
+.legal-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.legal-tabs a{text-decoration:none}
+.legal-body{max-width:880px;line-height:1.65}
+.legal-body table{width:100%;border-collapse:collapse;margin:10px 0 16px;font-size:14px}
+.legal-body th,.legal-body td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+.legal-body th{color:var(--gold)}
+.consent-modal{width:min(520px,100%)}
+.consent-modal .check{align-items:flex-start!important;font-size:13.5px}
+.consent-modal .check input{margin-top:3px;flex:none}
+.cs-docs{margin:8px 0 16px;padding-left:20px;line-height:1.9}
+#veil-consent{z-index:60}
+.ava-big{width:84px;height:84px;flex:none;border-radius:16px;background:linear-gradient(135deg,var(--gold-hi),var(--gold-dim));display:grid;place-items:center;font-size:34px;font-weight:800;color:#120e05;cursor:pointer;overflow:hidden;border:1px solid var(--line)}
+.ava-big img{width:100%;height:100%;object-fit:cover;display:block}
+.nw-find{display:flex;gap:6px;flex:1 1 220px;min-width:0}
+.nw-find input{flex:1;min-width:0}
+.nw-count{margin:-4px 0 10px;font-size:13px;color:var(--mute);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.seg a{padding:7px 12px;font-size:13px;color:var(--mute)}
+.seg a[aria-pressed="true"]{background:var(--gold-soft);color:var(--gold)}
+.legal-tabs.seg{width:fit-content;max-width:100%}
+#ava-card{grid-template-columns:84px minmax(0,1fr)}
+@media (max-width:760px){#ava-card{grid-template-columns:64px minmax(0,1fr)}.ava-big{width:64px;height:64px;font-size:26px}}

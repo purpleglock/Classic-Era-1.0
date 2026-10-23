@@ -12,6 +12,7 @@ const state = {
   banned: false,
   factionId: null,
   displayName: null,
+  avatar: null,
   pendingRequests: 0,
   schemaMissing: false,
 };
@@ -51,13 +52,15 @@ async function loadRole() {
       level: r.level || null,
       banned: !!r.banned,
       factionId: r.faction_id || null,
-      displayName: r.display_name || state.user.email?.split('@')[0] || 'Игрок',
+      displayName: r.display_name || 'Игрок',
       pendingRequests: Number(r.pending_requests || 0),
       schemaMissing: false,
     });
+    const { data: pr } = await sb.from('v1_profile').select('avatar_url').eq('user_id', state.user.id).maybeSingle();
+    state.avatar = pr?.avatar_url || null;
   } catch (e) {
     // Миграция ролей ещё не применена: показываем сайт как гостю, но предупреждаем.
-    Object.assign(state, { role: 'guest', level: null, schemaMissing: !!e.missingSchema, displayName: state.user.email?.split('@')[0] });
+    Object.assign(state, { role: 'guest', level: null, schemaMissing: !!e.missingSchema, displayName: 'Игрок' });
   }
 }
 
@@ -84,12 +87,12 @@ export async function signInWithPassword(email, password) {
 }
 
 export async function signUp(email, password) {
-  const { error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.origin } });
+  const { error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } });
   if (error) throw new Error(error.message);
 }
 
 export async function signInWithGoogle() {
-  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${location.origin}/#/cabinet` } });
+  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${location.origin}${location.pathname}#/cabinet` } });
   if (error) throw new Error(error.message);
 }
 

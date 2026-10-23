@@ -16,8 +16,8 @@ import { esc } from './dom.js';
  * Всё экранируется до разметки: HTML из текста не проходит, ссылки — только http(s).
  */
 
-export const COLORS = { gold: '#e9b949', amber: '#ffb347', white: '#f6f1e6', grey: '#9a948a', red: '#ff6b5e', cyan: '#6fd6e6', green: '#8fe08a', violet: '#b48cff' };
-export const COLOR_NAME = { gold: 'Золото', amber: 'Янтарь', white: 'Белый', grey: 'Серый', red: 'Красный', cyan: 'Бирюза', green: 'Зелёный', violet: 'Фиолетовый' };
+export const COLORS = { gold: '#e9b949', amber: '#ffb347', white: '#f6f1e6', grey: '#9a948a', red: '#ff6b5e', cyan: '#6fd6e6', blue: '#7fa8ff', green: '#8fe08a', violet: '#b48cff' };
+export const COLOR_NAME = { gold: 'Золото', amber: 'Янтарь', white: 'Белый', grey: 'Серый', red: 'Красный', cyan: 'Бирюза', blue: 'Синий', green: 'Зелёный', violet: 'Фиолетовый' };
 export const BACKS = { gold: 'Золотая плашка', dark: 'Тёмная плашка', cyber: 'Терминал', red: 'Тревога' };
 export const FX = { scanner: 'Сканер', jitter: 'Дрожь', glitch: 'Глитч', schizo: 'Помехи' };
 /** Шрифты для новостей — все с кириллицей, грузятся с Google Fonts только когда встречаются в тексте. */
@@ -101,10 +101,13 @@ export function rich(src = '', opts = {}) {
   const used = new Set();
   const inline = (s) => {
     let x = esc(s);
-    x = x.replace(/\[fac:([\w-]+)(\|flag)?\]([\s\S]*?)\[\/fac\]/g, (_, id, flag, name) => {
+    // упоминание державы: [fac:id]Имя[/fac], [fac:id|flag] — с гербом, старые новости: [fac:id|https://…герб]
+    x = x.replace(/\[fac:([\w-]+)(?:\|([^\]]*))?\]([\s\S]*?)\[\/fac\]/g, (_, id, opt = '', name) => {
       const h = H[id] || {};
       const col = /^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\))$/i.test(h.color || '') ? h.color : '';
-      const crest = flag && h.herald_url ? `<img src="${esc(h.herald_url)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '';
+      const own = /^(https:\/\/[^\s"<>]+|data:image\/(png|jpeg|webp|gif);base64,[\w+/=]+)$/i.test(opt) ? opt : '';
+      const src = own || (opt && h.herald_url ? esc(h.herald_url) : '');
+      const crest = src ? `<img src="${src}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '';
       return `<a class="rx-fac" href="#/wiki?f=${id}" data-fid="${id}"${col ? ` style="--fc:${esc(col)}"` : ''}>${crest}${name}</a>`;
     });
     // ссылки на страницы лора со старой вики: [page:era-vojny|ЭРА ВОЙНЫ]

@@ -56,7 +56,7 @@ export function renderHeader() {
       </div>
       ${logged ? raw(html`
         ${isTeam() ? raw(html`<a class="ib admin-btn" href="#/admin" aria-label="Админ-панель" title="Админ-панель">${icon('i-shield')}${session.pendingRequests ? raw(`<span class="badge">${session.pendingRequests}</span>`) : ''}</a>`) : ''}
-        <a class="cab" href="#/cabinet" title="${roleTitle()}"><i>${initials(session.displayName)}</i><span><small>${roleShort()}</small><b>${session.displayName || 'Кабинет'}</b></span></a>
+        <a class="cab" href="#/cabinet" title="${roleTitle()}"><i>${session.avatar ? raw(html`<img src="${session.avatar}" alt="">`) : initials(session.displayName)}</i><span><small>${roleShort()}</small><b>${session.displayName || 'Кабинет'}</b></span></a>
         <a class="ib" href="#/account" aria-label="Аккаунт и Discord" title="Аккаунт и Discord">${icon('i-users')}</a>
         <button type="button" class="ib" id="logout" aria-label="Выйти" title="Выйти">${icon('i-logout')}</button>`)
       : raw(html`<button type="button" class="btn gold sm" id="login-btn">Войти</button>`)}
@@ -141,9 +141,9 @@ document.addEventListener('click', (e) => {
 
 export function renderFooter() {
   $('#foot').innerHTML = html`
-    <a class="ds" href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener"><i>${icon('i-chat')}</i><span>Discord<small>discord.gg/jApCDH2zyM</small></span></a>
-    <nav class="docs" aria-label="Документы"><a href="#/soon?s=privacy">Политика конфиденциальности</a><a href="#/soon?s=terms">Пользовательское соглашение</a><a href="#/soon?s=consent">Согласие на обработку персональных данных</a></nav>
-    <span class="copy">© 2025–2026 Классическая эра</span>`;
+    <a class="ds" href="https://discord.gg/jApCDH2zyM" target="_blank" rel="noopener"><i class="ds-ava"><img src="assets/ce-mark.png" alt=""></i><span>Discord<small>discord.gg/jApCDH2zyM</small></span></a>
+    <nav class="docs" aria-label="Документы"><a href="#/legal?d=privacy">Политика конфиденциальности</a><a href="#/legal?d=terms">Пользовательское соглашение</a><a href="#/legal?d=consent">Согласие на обработку персональных данных</a></nav>
+    <span class="copy">© 2025–2026 Classic Era</span>`;
 }
 
 export { esc };
