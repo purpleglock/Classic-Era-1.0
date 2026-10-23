@@ -20,13 +20,13 @@ export async function loadGalaxy(force = false) {
     sysQuery(`${SYS_COLS},planets_n:v1_planet_count`),
     sb.from('map_hyperlanes').select('id,a_id,b_id').limit(20000),
     sb.from('map_sectors').select('id,name,color,lore,system_ids'),
-    sb.from('faction_applications').select('faction_id,name,color,herald_url').eq('status', 'approved'),
+    sb.from('faction_applications').select('faction_id,name,color,herald_url,system_id').eq('status', 'approved'),
   ]);
   // до миграции 06 функции счёта планет нет — берём системы без него
   const sys = sys0.error ? await sysQuery(SYS_COLS) : sys0;
   if (sys.error) throw new Error(sys.error.message);
   const factions = {};
-  for (const a of apps.data || []) if (a.faction_id) factions[a.faction_id] = { name: a.name, color: a.color, herald: a.herald_url };
+  for (const a of apps.data || []) if (a.faction_id) factions[a.faction_id] = { name: a.name, color: a.color, herald: a.herald_url, capital: a.system_id };
   const systems = (sys.data || []).map((s) => ({
     ...s, x: Number(s.x), y: Number(s.y),
     planets: Array.isArray(s.planets) ? s.planets : null,
@@ -155,4 +155,58 @@ export function autoRadius(systems) {
     return m;
   }).filter(Number.isFinite).sort((a, b) => a - b);
   return Math.max(10, d[Math.floor(d.length / 2)] * 1.6);
+}
+
+/**
+ * Гиперпути как дорожная сеть. Для каждой трассы:
+ *   • изгиб — мягкая дуга, у каждой своя (по координатам концов), чтобы сеть не была
+ *     сеткой прямых;
+ *   • ранг — 2 магистраль, 1 трасса, 0 местная ветка. Ранг = сколько кратчайших путей
+ *     между столицами держав проходит по трассе; без столиц — по числу соседей у концов;
+ *   • оттенок — если оба конца у одной державы, синий подмешивает её цвет.
+ */
+export function laneGeometry(g) {
+  const { lanes, byId, factions } = g;
+  const adj = {}, deg = {}, use = {};
+  for (const l of lanes) {
+    (adj[l.a_id] ||= []).push([l.b_id, l.id]); (adj[l.b_id] ||= []).push([l.a_id, l.id]);
+    deg[l.a_id] = (deg[l.a_id] || 0) + 1; deg[l.b_id] = (deg[l.b_id] || 0) + 1;
+  }
+  const caps = [...new Set(Object.values(factions || {}).map((f) => f.capital).filter((id) => id && adj[id]))];
+  for (const src of caps) {
+    const prev = { [src]: null }, q = [src];
+    for (let h = 0; h < q.length; h++) for (const [nb, lid] of adj[q[h]] || []) if (!(nb in prev)) { prev[nb] = [q[h], lid]; q.push(nb); }
+    for (const dst of caps) {
+      if (dst === src || !(dst in prev)) continue;
+      let n = dst, guard = 0;
+      while (prev[n] && guard++ < 5000) { use[prev[n][1]] = (use[prev[n][1]] || 0) + 1; n = prev[n][0]; }
+    }
+  }
+  const max = Math.max(0, ...Object.values(use));
+  const trunk = Math.max(2, max * 0.45);
+  const out = [];
+  for (const l of lanes) {
+    const a = byId[l.a_id], b = byId[l.b_id];
+    if (!a || !b) continue;
+    const u = use[l.id] || 0, md = Math.min(deg[l.a_id] || 0, deg[l.b_id] || 0);
+    const rank = max > 0 ? (u >= trunk ? 2 : u > 0 ? 1 : 0) : (md >= 3 ? 2 : md >= 2 ? 1 : 0);
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+    const h = hash01(Math.min(a.x, b.x) + Math.max(a.x, b.x) * 0.31, Math.min(a.y, b.y) + Math.max(a.y, b.y) * 0.47);
+    const bend = (h - 0.5) * 2 * Math.min(len * 0.11, 55);
+    const cx = (a.x + b.x) / 2 + (-dy / len) * bend, cy = (a.y + b.y) / 2 + (dx / len) * bend;
+    let tint = null;
+    if (a.faction && a.faction === b.faction && factions?.[a.faction]) {
+      const c = rgbOf(solid(factions[a.faction].color));
+      if (c) tint = `rgb(${[120, 200, 255].map((v, i) => Math.round(v * 0.6 + c[i] * 0.4)).join(',')})`;
+    }
+    out.push({ lane: l, a, b, cx, cy, rank, tint });
+  }
+  return out;
+}
+const hash01 = (x, y) => { const s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; return s - Math.floor(s); };
+function rgbOf(c) {
+  const m = String(c).match(/rgba?\(([^)]+)\)/);
+  if (m) return m[1].split(',').slice(0, 3).map((x) => parseFloat(x));
+  if (/^#[0-9a-f]{6}$/i.test(c)) { const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  return null;
 }

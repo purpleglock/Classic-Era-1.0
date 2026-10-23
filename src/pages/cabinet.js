@@ -77,7 +77,6 @@ export async function renderCabinet(root) {
     <section class="panel state">
       <div class="state-bg" aria-hidden="true">${crest(a.herald_url)}</div>
       <div class="state-head">
-        <div class="crest" aria-hidden="true">${crest(a.herald_url)}</div>
         <div class="state-name">
           <span class="role-badge" data-role="${session.role}">${roleTitle()}</span>
           <h1>${name}</h1>

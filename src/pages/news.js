@@ -1,7 +1,7 @@
 import { html, raw, icon, $, toast, confirmBox } from '../lib/dom.js';
 import { sb } from '../lib/supabase.js';
 import { session, isTeam } from '../lib/session.js';
-import { starDate, dateTime } from '../lib/format.js';
+import { starDate, dateTime, plain } from '../lib/format.js';
 import { rich, wireRich, mentionsOf, firstImage } from '../lib/rich.js';
 import { richEditor } from '../ui/rich-editor.js';
 import { uploadMedia } from '../lib/upload.js';
@@ -132,19 +132,37 @@ async function newsForm(root, draftId, H) {
   $('#nw-draft', root).onclick = () => save('draft');
 }
 
-async function myNews(root, H) {
+async function myNews(root, H, filter = '') {
   if (!session.user) { location.hash = '/'; return; }
-  const { data } = await sb.from('faction_news').select('id,title,status,reject_reason,created_at,published_at').eq('owner_id', session.user.id).order('created_at', { ascending: false }).limit(50);
-  const rows = data || [];
+  const { data } = await sb.from('faction_news')
+    .select('id,title,excerpt,body,image_url,status,reject_reason,faction_id,created_at,published_at')
+    .eq('owner_id', session.user.id).order('created_at', { ascending: false }).limit(100);
+  const all = data || [];
+  const count = (st) => all.filter((r) => r.status === st).length;
+  const rows = filter ? all.filter((r) => r.status === filter) : all;
+  const TABS = [['', 'Все', all.length], ['approved', 'Опубликованы', count('approved')], ['pending', 'На проверке', count('pending')], ['draft', 'Черновики', count('draft')], ['rejected', 'Отклонены', count('rejected')]];
   root.innerHTML = html`
-    <section class="panel compose">
-      <div class="sec-h"><h1>Мои новости</h1>${session.factionId ? raw('<a class="btn gold sm" href="#/news?new">Написать новость</a>') : ''}${isTeam() ? raw('<a class="btn sm" href="#/news?new=post">Пост от команды проекта</a>') : ''}</div>
-      <div class="tbl"><table><thead><tr><th>Заголовок</th><th>Статус</th><th>Когда</th></tr></thead><tbody>
-        ${rows.length ? '' : raw('<tr><td colspan="3" class="empty">Вы ещё ничего не писали.</td></tr>')}
-        ${rows.map((r) => raw(html`<tr><td><a href="#/news?${['draft', 'rejected'].includes(r.status) ? 'draft' : 'id'}=${r.id}">${r.title}</a>${r.reject_reason && r.status === 'rejected' ? raw(html`<small>${r.reject_reason}</small>`) : ''}</td>
-          <td><span class="tag ${r.status === 'approved' ? 'new' : ''}">${NEWS_STATUS[r.status] || r.status}</span></td><td>${dateTime(r.published_at || r.created_at)}</td></tr>`))}
-      </tbody></table></div>
+    <section class="panel compose mynews">
+      <div class="sec-h"><h1>Мои новости</h1>
+        ${session.factionId ? raw(`<a class="btn gold sm" href="#/news?new">${icon('i-news').html}Написать новость</a>`) : ''}
+        ${isTeam() ? raw('<a class="btn sm" href="#/news?new=post">Пост от команды проекта</a>') : ''}</div>
+      <div class="seg mn-tabs" role="group" aria-label="Статус">${TABS.filter(([k, , n]) => !k || n).map(([k, t, n]) => raw(html`<button type="button" data-f="${k}" aria-pressed="${String(k === filter)}">${t} <small>${n}</small></button>`))}</div>
+      <ol class="mn-list">${rows.length ? raw(rows.map((r) => {
+        const h = H[r.faction_id] || {};
+        const editable = ['draft', 'rejected', 'pending'].includes(r.status);
+        const img = r.image_url || firstImage(r.body);
+        return html`<li class="mn-item st-${r.status}">
+          <a class="mn-main" href="#/news?${editable && r.status !== 'pending' ? 'draft' : 'id'}=${r.id}">
+            <span class="mn-thumb">${img ? raw(html`<img src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer">`) : crest(h.herald_url)}</span>
+            <span class="mn-text"><b>${r.title}</b><small>${plain(r.excerpt || r.body).slice(0, 140)}</small>
+              ${r.status === 'rejected' && r.reject_reason ? raw(html`<em class="mn-why">Причина: ${r.reject_reason}</em>`) : ''}</span>
+          </a>
+          <span class="mn-side"><span class="tag ${r.status === 'approved' ? 'new' : ''}">${NEWS_STATUS[r.status] || r.status}</span><time>${dateTime(r.published_at || r.created_at)}</time>
+            ${editable ? raw(html`<a class="btn sm" href="#/news?draft=${r.id}">Изменить</a>`) : ''}</span>
+        </li>`;
+      }).join('')) : raw('<li class="empty">Здесь пока пусто.</li>')}</ol>
     </section>`;
+  $('.mn-tabs', root).onclick = (e) => { const b = e.target.closest('[data-f]'); if (b) myNews(root, H, b.dataset.f); };
 }
 
 // ── пост команды проекта ──

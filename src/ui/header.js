@@ -4,6 +4,8 @@ import { go, currentPath } from '../lib/router.js';
 import { openLogin } from './login.js';
 import { sb } from '../lib/supabase.js';
 import { dateShort } from '../lib/format.js';
+import { settings } from '../lib/settings.js';
+import { openRuleUpdate } from './rule-update.js';
 
 const SEEN_KEY = 'ce.notif.seen';
 function seenAt() { try { return localStorage.getItem(SEEN_KEY) || '1970-01-01'; } catch { return '1970-01-01'; } }
@@ -27,7 +29,7 @@ export function renderHeader() {
   const path = currentPath();
   const logged = !!session.user;
   el.innerHTML = html`
-    <a class="brand" href="#/" aria-label="Классическая эра, главная"><span class="mark">КЭ</span><b>Классическая эра</b></a>
+    <a class="brand" href="#/" aria-label="Классическая эра, главная"><span class="mark" id="mark">КЭ</span><b>Классическая эра</b></a>
     <ul class="nav" id="nav" aria-label="Главное меню">
       <li><a href="#/cabinet" data-play ${raw(path === '/cabinet' ? 'aria-current="page"' : '')}>${icon('i-play')}<span>Начать игру</span></a></li>
       <li>
@@ -86,9 +88,10 @@ export function renderHeader() {
     if (unread) bell.insertAdjacentHTML('beforeend', `<span class="badge">${unread}</span>`);
     bell.setAttribute('aria-label', unread ? `Уведомления: ${unread} новых` : 'Уведомления');
     $('#notif-list', el).innerHTML = items.length
-      ? items.map((x) => html`<li class="${x.at > since ? 'unread' : ''}"><span class="tag ${x.at > since ? 'new' : ''}">${x.tag || 'правила'}</span><p>${x.title}</p><time>${dateShort(x.at)}</time></li>`).join('')
+      ? items.map((x) => html`<li class="${x.at > since ? 'unread' : ''}"><button type="button" class="notif-i" data-rid="${x.id}"><span class="tag ${x.at > since ? 'new' : ''}">${x.tag || 'правила'}</span><p>${x.title}</p><time>${dateShort(x.at)}</time></button></li>`).join('')
       : '<li><p>Пока нет уведомлений.</p></li>';
   }).catch(() => { $('#notif-list', el).innerHTML = '<li><p>Не удалось загрузить уведомления.</p></li>'; });
+  $('#notif-list', el).onclick = (e) => { const b = e.target.closest('[data-rid]'); if (b) { notif.hidden = true; openRuleUpdate(b.dataset.rid); } };
   bell.onclick = (e) => { e.stopPropagation(); const o = notif.hidden; notif.hidden = !o; bell.setAttribute('aria-expanded', String(o)); };
   $('#read-all', el).onclick = () => {
     markSeen();
@@ -96,7 +99,37 @@ export function renderHeader() {
     bell.querySelector('.badge')?.remove();
     bell.setAttribute('aria-label', 'Уведомления');
   };
+  // логотип из «Артов страниц»
+  settings().then((st) => {
+    const url = st.arts?.logo;
+    if (url) $('#mark', el).innerHTML = html`<img src="${url}" alt="">`;
+    $('#mark', el).classList.toggle('has-img', !!url);
+    fitHeader();
+  }).catch(() => {});
+  fitHeader();
 }
+
+/**
+ * Шапка-капсула ужимается по шагам, пока всё не влезет: компактнее пункты →
+ * мельче шрифт меню → без надписи у логотипа → пункты меню только иконками. Считаем по факту, а не по
+ * ширине экрана: состав шапки у гостя, игрока и команды проекта разный.
+ */
+export function fitHeader() {
+  const el = document.getElementById('top');
+  if (!el) return;
+  const steps = ['t1', 't2', 't3', 't4'];
+  el.classList.remove(...steps);
+  if (matchMedia('(max-width: 760px)').matches) return; // на телефоне — бургер
+  for (const s of steps) {
+    const nav = el.querySelector('.nav');
+    if (el.scrollWidth <= el.clientWidth + 1 && (!nav || nav.scrollWidth <= nav.clientWidth + 1)) break;
+    el.classList.add(s);
+  }
+}
+let fitT = 0;
+addEventListener('resize', () => { clearTimeout(fitT); fitT = setTimeout(fitHeader, 80); });
+// шрифт Manrope шире запасного: пересчитать, когда он догрузится
+document.fonts?.ready.then(() => fitHeader());
 
 // закрывать выпадашки кликом мимо
 document.addEventListener('click', (e) => {

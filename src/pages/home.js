@@ -7,6 +7,7 @@ import { num, starDate, plain, dayMonth, dateShort } from '../lib/format.js';
 import { loadTyan, pickDialogue, fillName, spriteFor, FALLBACK } from '../lib/tyan.js';
 import { applyArt, art } from '../lib/settings.js';
 import { firstImage } from '../lib/rich.js';
+import { openRuleUpdate } from '../ui/rule-update.js';
 
 const POST_KIND = { event: 'ивент', lore: 'лор', announce: 'объявление' };
 
@@ -100,14 +101,16 @@ async function loadRules(root) {
       <div class="upd-ic">${icon('i-scroll')}</div>
       <div>
         <div class="meta"><b>Изменения правил и механик</b>${fresh ? raw('<span class="tag new">новое</span>') : ''}${last.tag ? raw(html`<span class="tag">${last.tag}</span>`) : ''}<time>${dayMonth(last.at)}</time></div>
-        <h3>${last.title}</h3>
+        <h3><button type="button" class="upd-link" data-rid="${last.id}">${last.title}</button></h3>
         <p class="clamp2">${plain(last.body).slice(0, 260)}</p>
+        <button type="button" class="more upd-read" data-rid="${last.id}">Читать полностью</button>
       </div>
       ${rest.length ? raw(html`<button type="button" class="more" id="more" aria-expanded="false" aria-controls="upd-list">Все изменения ${icon('i-down')}</button>`) : ''}
     </div>
     <ol id="upd-list" hidden>
-      ${rest.map((r) => raw(html`<li><time>${dateShort(r.at)}</time><span>${r.title}</span>${r.tag ? raw(html`<span class="tag">${r.tag}</span>`) : raw('<span></span>')}</li>`))}
+      ${rest.map((r) => raw(html`<li><button type="button" class="upd-row" data-rid="${r.id}"><time>${dateShort(r.at)}</time><span>${r.title}</span>${r.tag ? raw(html`<span class="tag">${r.tag}</span>`) : raw('<span></span>')}</button></li>`))}
     </ol>`;
+  box.addEventListener('click', (e) => { const b = e.target.closest('[data-rid]'); if (b) openRuleUpdate(b.dataset.rid); });
   const more = $('#more', box);
   if (more) more.onclick = () => { const l = $('#upd-list', box); const o = l.hidden; l.hidden = !o; more.setAttribute('aria-expanded', String(o)); };
 }

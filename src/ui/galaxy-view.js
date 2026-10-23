@@ -1,4 +1,4 @@
-import { STAR_COLOR, solid, bounds, cellsOf, distToSegment } from '../lib/galaxy.js';
+import { STAR_COLOR, solid, bounds, cellsOf, distToSegment, laneGeometry } from '../lib/galaxy.js';
 import { drawBody } from '../lib/bodies.js';
 
 /**
@@ -48,12 +48,15 @@ export class GalaxyView {
   }
   laneAt(sx, sy) {
     let best = null, bd = 6;
-    for (const l of this.data.lanes) {
-      const a = this.data.byId[l.a_id], b = this.data.byId[l.b_id];
-      if (!a || !b) continue;
-      const [ax, ay] = this.toScreen(a.x, a.y), [bx, by] = this.toScreen(b.x, b.y);
-      const d = distToSegment(sx, sy, ax, ay, bx, by);
-      if (d < bd) { bd = d; best = l; }
+    for (const g of this.lanesGeo()) {
+      // дуга — ломаной из 8 отрезков
+      let px, py;
+      for (let i = 0; i <= 8; i++) {
+        const t = i / 8, u = 1 - t;
+        const [x, y] = this.toScreen(u * u * g.a.x + 2 * u * t * g.cx + t * t * g.b.x, u * u * g.a.y + 2 * u * t * g.cy + t * t * g.b.y);
+        if (i) { const d = distToSegment(sx, sy, px, py, x, y); if (d < bd) { bd = d; best = g.lane; } }
+        px = x; py = y;
+      }
     }
     return best;
   }
@@ -80,7 +83,7 @@ export class GalaxyView {
       if (!moved) return;
       if (dragSys) {
         const [wx, wy] = this.toWorld(sx, sy);
-        dragSys.x = Math.round(wx); dragSys.y = Math.round(wy); this.cells = null;
+        dragSys.x = Math.round(wx); dragSys.y = Math.round(wy); this.cells = null; this.geo = null;
         this.o.onDrag?.(dragSys, dragSys.x, dragSys.y, false);
       } else {
         this.ox = down.ox + (sx - down.sx); this.oy = down.oy + (sy - down.sy);
@@ -171,16 +174,29 @@ export class GalaxyView {
       }
     }
 
-    // гиперпути
-    ctx.lineWidth = 1;
-    for (const l of lanes) {
-      const a = byId[l.a_id], b = byId[l.b_id];
-      if (!a || !b) continue;
-      const [ax, ay] = this.toScreen(a.x, a.y), [bx, by] = this.toScreen(b.x, b.y);
-      const own = a.faction && a.faction === b.faction;
-      ctx.strokeStyle = this.hotLane === l.id ? '#ff8a7a' : own ? withAlpha(solid(factions[a.faction]?.color), 0.45) : 'rgba(233,185,73,0.16)';
-      ctx.lineWidth = this.hotLane === l.id ? 2.5 : 1;
-      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    // гиперпути — дорожная сеть: ореол у несущих трасс → тёмный кожух → ядро → светлая жила магистралей
+    {
+      const geo = this.lanesGeo();
+      const z = Math.min(1, Math.max(0, (zoomed - 1) / 3));      // 0 — обзор, 1 — вблизи
+      const LW = [0.9, 1.5, 2.4], LA = [0.2 + 0.62 * z, 0.55 + 0.33 * z, 0.9];
+      const GW = [0, 5, 9], GA = [0, 0.05, 0.09];
+      const BLUE = 'hsl(206 92% 64%)';
+      const path = (g) => {
+        const [ax, ay] = this.toScreen(g.a.x, g.a.y), [cx, cy] = this.toScreen(g.cx, g.cy), [bx, by] = this.toScreen(g.b.x, g.b.y);
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(cx, cy, bx, by);
+      };
+      ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      for (const g of geo) { if (!GW[g.rank]) continue; ctx.globalAlpha = GA[g.rank] * LA[g.rank]; ctx.lineWidth = GW[g.rank]; ctx.strokeStyle = g.tint || BLUE; path(g); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(5,8,14,0.8)';
+      for (const g of geo) { ctx.globalAlpha = LA[g.rank] * 0.8; ctx.lineWidth = LW[g.rank] + 1.7; path(g); ctx.stroke(); }
+      for (const g of geo) {
+        const hot = this.hotLane === g.lane.id;
+        ctx.globalAlpha = hot ? 1 : LA[g.rank]; ctx.lineWidth = hot ? 3 : LW[g.rank]; ctx.strokeStyle = hot ? '#ff6b5e' : g.tint || BLUE;
+        path(g); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(225,242,255,0.9)'; ctx.lineWidth = 0.6;
+      for (const g of geo) { if (g.rank !== 2) continue; ctx.globalAlpha = 0.35 + 0.35 * z; path(g); ctx.stroke(); }
+      ctx.restore();
     }
     if (this.linkFrom && this.mouse) {
       const [ax, ay] = this.toScreen(this.linkFrom.x, this.linkFrom.y);
@@ -227,7 +243,8 @@ export class GalaxyView {
   }
 
   /** Новые данные карты: ячейки секторов пересчитаются. */
-  setData(d) { this.data = d; this.cells = null; this.draw(); }
+  setData(d) { this.data = d; this.cells = null; this.geo = null; this.draw(); }
+  lanesGeo() { return (this.geo ||= laneGeometry(this.data)); }
   setMouse(e) { const r = this.cv.getBoundingClientRect(); this.mouse = [e.clientX - r.left, e.clientY - r.top]; }
   destroy() { this.ro.disconnect(); clearInterval(this.anim); this.anim = 0; }
 }
