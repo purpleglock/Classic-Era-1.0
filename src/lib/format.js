@@ -31,6 +31,10 @@ export const dateTime = (iso) => new Date(iso).toLocaleString('ru-RU', { day: '2
 /** Текст новости без разметки старого редактора ([c:gold]…[/c], ##, >, [fac:…|…], [music:…]). */
 export function plain(text = '') {
   return String(text)
+    .replace(/\[lock:[^\]\n]*\][\s\S]*?\[\/lock\]/gi, ' 🔒 ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]\n]+)\]\(https?:[^)]*\)/g, '$1')
+    .replace(/\*\*|`/g, '')
     .replace(/\[(?:music|img|video):[^\]]*\]/gi, ' ')
     .replace(/\[fac:[^|\]]*\|?[^\]]*\]/gi, ' ')
     .replace(/\[\/?[a-z]+(?::[^\]]*)?\]/gi, '')

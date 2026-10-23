@@ -1,8 +1,9 @@
 import { html, raw, icon, $, $$, toast, confirmBox } from '../lib/dom.js';
 import { isTeam } from '../lib/session.js';
 import { act } from '../lib/act.js';
-import { loadGalaxy, dropGalaxyCache, STAR_NAME, newSystemId, solid } from '../lib/galaxy.js';
+import { loadGalaxy, dropGalaxyCache, planetsOf, allPlanets, STAR_NAME, newSystemId, solid } from '../lib/galaxy.js';
 import { GalaxyView } from '../ui/galaxy-view.js';
+import { applyArt } from '../lib/settings.js';
 
 const MODES = [
   ['select', 'Выбор и перенос', 'Клик — открыть систему. Перетащите звезду, чтобы перенести её.'],
@@ -39,6 +40,7 @@ export async function renderMap(root) {
       <aside class="panel map-side" id="m-side"><p class="empty">Выберите систему на карте.</p></aside>
     </div>`;
 
+  applyArt($('.map-head', root), 'map');
   let data;
   try { data = await loadGalaxy(); } catch (e) { $('#map-sub', root).textContent = `Не удалось загрузить карту: ${e.message}`; return; }
   const sub = () => { $('#map-sub', root).textContent = `${data.systems.length} систем · ${data.lanes.length} гиперпутей · ${data.sectors.length} секторов · ${data.systems.filter((s) => s.faction).length} под властью держав`; };
@@ -47,7 +49,7 @@ export async function renderMap(root) {
 
   const side = $('#m-side', root);
   let editing = false, mode = 'select';
-  const resCatalog = buildResCatalog(data);
+  let resCatalog = null; // каталог ресурсов собирается один раз, при первом открытии редактора
 
   view = new GalaxyView($('#m-cv', root), data, {
     draggable: false,
@@ -104,14 +106,18 @@ export async function renderMap(root) {
   async function reload() {
     dropGalaxyCache();
     data = await loadGalaxy(true);
-    view.data = data;
     if (view.selected) view.selected = data.byId[view.selected.id] || null;
-    view.draw(); sub();
+    view.setData(data); sub();
   }
 
   // ── просмотр ──
-  function info(s) {
+  async function info(s) {
     if (!s) { side.innerHTML = '<p class="empty">Выберите систему на карте.</p>'; return; }
+    if (!Array.isArray(s.planets)) {
+      side.innerHTML = html`<h2>${s.name}</h2><p class="skeleton">Загружаю планеты…</p>`;
+      try { await planetsOf(s); } catch { s.planets = []; }
+      if (view.selected !== s) return; // пока грузили, выбрали другую систему
+    }
     const owner = s.faction && data.factions[s.faction];
     const sec = data.sectors.find((x) => x.system_ids.includes(s.id));
     side.innerHTML = html`
@@ -127,8 +133,15 @@ export async function renderMap(root) {
   const neighbours = (s) => data.lanes.filter((l) => l.a_id === s.id || l.b_id === s.id).map((l) => data.byId[l.a_id === s.id ? l.b_id : l.a_id]).filter(Boolean);
 
   // ── редактор системы ──
-  function editForm(s) {
+  async function editForm(s) {
     if (!s) return;
+    if (!resCatalog) {
+      side.innerHTML = html`<h2>${s.name}</h2><p class="skeleton">Загружаю планеты для редактора…</p>`;
+      await allPlanets(data).catch(() => {});
+      resCatalog = buildResCatalog(data);
+      if (view.selected !== s) return;
+    }
+    if (!Array.isArray(s.planets)) await planetsOf(s).catch(() => { s.planets = []; });
     const owner = s.faction && data.factions[s.faction];
     const planets = structuredClone(s.planets);
     side.innerHTML = html`
@@ -269,7 +282,7 @@ export async function renderMap(root) {
 const STAR_COLOR_CSS = (s) => ({ yellow: '#ffd76a', red: '#ff8a5c', blue: '#8fb8ff', white: '#f4f1ea', green: '#9fe0a8' }[s.star_type] || '#fff');
 function buildResCatalog(data) {
   const out = {};
-  for (const s of data.systems) for (const p of s.planets) for (const r of p.resources || []) if (r.name && !out[r.name]) out[r.name] = { r: r.r, rname: r.rname, icon: r.icon };
+  for (const s of data.systems) for (const p of s.planets || []) for (const r of p.resources || []) if (r.name && !out[r.name]) out[r.name] = { r: r.r, rname: r.rname, icon: r.icon };
   return out;
 }
 function toRoman(n) { return ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][n - 1] || String(n); }

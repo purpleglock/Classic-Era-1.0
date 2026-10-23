@@ -11,10 +11,10 @@
 ```
 index.html            точка входа
 src/config.js         адрес Supabase и публичный ключ
-src/main.js           маршруты: #/ главная, #/cabinet кабинет, #/admin админ-панель
+src/main.js           маршруты: #/ главная, #/cabinet кабинет, #/admin админ-панель, #/news вестник, #/map карта
 src/lib/              база, сессия и роли, форматирование, маршрутизатор
 src/ui/               шапка, подвал, окно входа, иконки
-src/pages/            главная, кабинет державы, админ-панель
+src/pages/            главная, кабинет, админ-панель (+ admin-media: медиатека, Тян, 3D-модели), новости, карта
 src/styles.css        дизайн (чёрный и золото), src/app.css — дополнения
 supabase/migrations/  изменения базы (применять по порядку)
 design/               макеты дизайна
@@ -35,13 +35,8 @@ design/               макеты дизайна
 
 ## Запуск
 
-1. Примените миграции в Supabase → SQL Editor, по порядку:
-   `supabase/migrations/20261023_01_roles.sql`, затем `20261023_02_seed_team.sql`
-   (во втором файле раскомментируйте тех, кого добавить в команду),
-   затем `20261023_03_guide.sql` (гайдбук) и `20261023_04_rules.sql` (правила).
-   Затем `20261023_05_discord_map.sql` (Discord-сертификация, редактор карты, защита картинок).
-   Для Discord: Authentication → Providers → Discord (Client ID и Secret из Discord Developer Portal)
-   и Authentication → Settings → «Allow manual linking».
-2. Локально: запустите start.bat (Windows, работает на встроенном PowerShell, ставить ничего не нужно) или `python3 -m http.server 8000` в папке проекта и откройте http://localhost:8000. Двойной щелчок по `index.html` не работает: браузер не грузит модули из файла.
-3. Vercel: импортировать репозиторий, Framework Preset — Other, без команды сборки.
-4. Вход через Google: в Supabase → Authentication → URL Configuration добавить адрес сайта в Redirect URLs.
+Порядок миграций и все настройки на день запуска — в [LAUNCH.md](LAUNCH.md).
+
+Локально: запустите start.bat (Windows, работает на встроенном PowerShell, ставить ничего не нужно) или `python3 -m http.server 8000` в папке проекта и откройте http://localhost:8000. Двойной щелчок по `index.html` не работает: браузер не грузит модули из файла.
+
+Пока миграции не применены, сайт работает на старых данных: новые разделы (медиатека, Тян, модели) показывают подсказку «примените миграцию».

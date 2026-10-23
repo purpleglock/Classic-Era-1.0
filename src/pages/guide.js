@@ -4,6 +4,7 @@ import { markup, searchText } from '../lib/markup.js';
 import { GUIDE } from '../content/guide.js';
 import { RULES } from '../content/rules.js';
 import { isTeam } from '../lib/session.js';
+import { applyArt } from '../lib/settings.js';
 
 /** Документы сайта: гайдбук и правила. Устроены одинаково. */
 const DOCS = {
@@ -62,6 +63,7 @@ async function renderDocs(root, kind) {
       </nav>
       <article class="panel guide-body" id="g-body" aria-live="polite"></article>
     </div>`;
+  applyArt($('.guide-head', root), kind);
 
   const toc = $('#toc', root), body = $('#g-body', root);
   const drawToc = (q = '') => {

@@ -1,6 +1,7 @@
 import { html, icon, $ } from '../lib/dom.js';
 import { signInWithPassword, signUp, signInWithGoogle } from '../lib/session.js';
 import { go } from '../lib/router.js';
+import { applyArt } from '../lib/settings.js';
 
 /** Окно входа и регистрации. После входа игрок сразу попадает в кабинет. */
 export function openLogin(mode = 'in') {
@@ -24,6 +25,7 @@ export function openLogin(mode = 'in') {
       <p class="alt">${mode === 'up' ? 'Уже есть аккаунт? ' : 'Нет аккаунта? '}<a href="#" id="switch">${mode === 'up' ? 'Войти' : 'Зарегистрироваться'}</a></p>
     </form>`;
   document.body.appendChild(veil);
+  applyArt($('#login', veil), 'login');
   const msg = $('#msg', veil);
   const form = $('#login', veil);
   $('#email', veil).focus();

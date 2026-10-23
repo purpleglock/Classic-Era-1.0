@@ -1,5 +1,5 @@
 /* H «Монолит»: только чёрный и золото, ровный чёрный фон без сетки. Всё в плавающих панелях.
-   Шапка-капсула → полоса изменений правил и механик → баннер с голограммой → вестник фракций слева, посты администрации справа → подвал. */
+   Шапка-капсула → полоса изменений правил и механик → баннер с голограммой → вестник фракций слева, посты команды проекта справа → подвал. */
 :root{
   color-scheme: dark;
   --bg:#000000; --panel:#0a0a0a; --panel2:#111111; --line:#1e1c18; --line2:#2c2820;
@@ -107,7 +107,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .dots button{width:10px;height:6px;border-radius:999px;border:0;background:var(--line2);cursor:pointer;padding:0;transition:width .3s}
 .dots button[aria-current="true"]{width:28px;background:var(--gold)}
 
-/* вестник и посты администрации */
+/* вестник и посты команды проекта */
 .cols{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
 .news{display:flex;flex-direction:column;gap:12px}
 .card{display:grid;grid-template-columns:200px minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;min-height:176px;position:relative}

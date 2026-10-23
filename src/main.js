@@ -10,6 +10,7 @@ import { renderGuide, renderRules } from './pages/guide.js';
 import { renderApply } from './pages/apply.js';
 import { renderAccount } from './pages/account.js';
 import { renderMap } from './pages/map.js';
+import { renderNews } from './pages/news.js';
 
 const SOON = {
   wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', help: 'Помощь',
@@ -38,6 +39,7 @@ route('/rules', () => renderRules(view()));
 route('/apply', () => renderApply(view()));
 route('/account', () => renderAccount(view()));
 route('/map', () => renderMap(view()));
+route('/news', () => renderNews(view()));
 route('/soon', () => {
   const key = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
   const title = SOON[key] || 'Раздел';

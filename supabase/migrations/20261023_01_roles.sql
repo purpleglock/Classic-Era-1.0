@@ -61,7 +61,7 @@ create table if not exists public.v1_audit_log (
 );
 create index if not exists v1_audit_log_created_idx on public.v1_audit_log(created_at desc);
 
--- Посты администрации на главной (ивенты, лор, объявления)
+-- Посты команды проекта на главной (ивенты, лор, объявления)
 create table if not exists public.v1_posts (
   id         uuid primary key default gen_random_uuid(),
   kind       text not null default 'announce' check (kind in ('event','lore','announce')),
@@ -219,7 +219,7 @@ begin
     delete from pages where id = p_target::bigint;
     get diagnostics n = row_count;
 
-  -- посты администрации
+  -- посты команды проекта
   when 'doc.save' then
     if coalesce(trim(p_payload->>'title'),'') = '' then raise exception 'empty_title'; end if;
     insert into v1_docs(id, kind, grp, title, body, sort, updated_by, updated_at)
@@ -536,7 +536,7 @@ insert into public.v1_action_policy(action, label, mode) values
   ('app.return',       'Вернуть заявку на доработку',       'free'),
   ('page.update',      'Изменить страницу',                 'free'),
   ('page.delete',      'Удалить страницу',                  'approval'),
-  ('post.delete',      'Удалить пост администрации',        'approval'),
+  ('post.delete',      'Удалить пост команды проекта',        'approval'),
   ('doc.save',         'Изменить гайдбук или правила',      'free'),
   ('doc.delete',       'Удалить раздел гайдбука или правил','approval'),
   ('user.ban',         'Забанить пользователя',             'approval'),

@@ -4,12 +4,10 @@ import { session, isTeam } from '../lib/session.js';
 import { openLogin } from '../ui/login.js';
 import { go } from '../lib/router.js';
 import { num, starDate, plain, dayMonth, dateShort } from '../lib/format.js';
+import { loadTyan, pickDialogue, fillName, spriteFor, FALLBACK } from '../lib/tyan.js';
+import { applyArt, art } from '../lib/settings.js';
+import { firstImage } from '../lib/rich.js';
 
-const LINES = [
-  'Улыбнись. Галактика ждёт твоего хода.',
-  'На границах шевелятся флоты. Проверим оборону?',
-  'Новая держава? Я покажу, с чего начать.',
-];
 const POST_KIND = { event: 'ивент', lore: 'лор', announce: 'объявление' };
 
 /** Герб державы: картинка из заявки или заглушка-щит. */
@@ -35,7 +33,7 @@ export async function renderHome(root) {
     <section class="panel hero" aria-label="Главное">
       <div class="slide on">
         <div>
-          <div class="speech"><b>Классикал-Тян</b><span id="line">${LINES[0]}</span></div>
+          <button type="button" class="speech" id="speech" aria-live="polite"><b id="spk">Классикал-Тян</b><span id="line">${fillName(FALLBACK.dialogues[0].lines[0].text)}</span><small aria-hidden="true">▸</small></button>
           <h1 class="t">Звёздные державы, флоты и войны за системы</h1>
           <p class="sub">Браузерная стратегия: колонии и экономика, сражения на тактической арене, дипломатия, разведка и союзы.</p>
           <div class="acts" id="hero-acts"></div>
@@ -43,7 +41,8 @@ export async function renderHome(root) {
         </div>
         <figure class="holo" style="margin:0" aria-label="Голограмма Классикал-Тян">
           <div class="cone"></div>
-          <svg viewBox="0 0 200 260" aria-hidden="true"><use href="#tyan"/></svg>
+          <svg viewBox="0 0 200 260" aria-hidden="true" id="tyan-sil"><use href="#tyan"/></svg>
+          <img id="tyan-art" alt="" hidden>
           <div class="base"></div>
         </figure>
       </div>
@@ -62,8 +61,8 @@ export async function renderHome(root) {
         <div class="news" id="news"><div class="skeleton">Загружаю вестник…</div></div>
         <button type="button" class="btn sm more-news" id="more-news" hidden>Показать ещё</button>
       </section>
-      <aside class="panel admin" aria-label="От администрации">
-        <div class="sec-h"><h2>От администрации</h2></div>
+      <aside class="panel admin" aria-label="От команды проекта">
+        <div class="sec-h"><h2>От команды проекта</h2>${isTeam() ? raw('<a class="btn sm" href="#/news?new=post">+ Пост</a>') : ''}</div>
         <ol id="posts"><li class="empty">Загружаю…</li></ol>
       </aside>
     </div>`;
@@ -78,9 +77,8 @@ export async function renderHome(root) {
     acts.innerHTML = html`<a class="btn gold" href="${session.factionId ? '#/cabinet' : '#/apply'}">${session.factionId ? 'В кабинет державы' : 'Подать заявку на державу'}</a>`;
   }
 
-  // реплики Классикал-Тян
-  let li = 0;
-  $('.speech', root).onclick = () => { li = (li + 1) % LINES.length; $('#line', root).textContent = LINES[li]; };
+  startTyan(root);
+  applyArt($('.hero', root), 'home');
 
   loadRules(root);
   loadNews(root);
@@ -117,7 +115,7 @@ async function loadRules(root) {
 const PAGE = 6;
 async function loadNews(root) {
   const box = $('#news', root);
-  const H = await loadHeralds().catch(() => ({}));
+  const [H, fallbackArt] = await Promise.all([loadHeralds().catch(() => ({})), art('news')]);
   let offset = 0;
   const { count } = await sb.from('faction_news').select('id', { count: 'exact', head: true }).eq('status', 'approved').eq('kind', 'news');
   if (count != null) $('#news-count', root).textContent = `передач: ${num(count)}`;
@@ -130,7 +128,7 @@ async function loadNews(root) {
       .range(offset, offset + PAGE - 1);
     if (error) { box.innerHTML = '<p class="empty">Не удалось загрузить вестник.</p>'; return; }
     if (offset === 0) box.innerHTML = '';
-    box.insertAdjacentHTML('beforeend', (data || []).map((n) => newsCard(n, H)).join(''));
+    box.insertAdjacentHTML('beforeend', (data || []).map((n) => newsCard(n, H, fallbackArt)).join(''));
     if (offset === 0 && !data.length) box.innerHTML = '<p class="empty">Пока ни одной передачи. Первая новость державы появится здесь.</p>';
     offset += data.length;
     $('#more-news', root).hidden = data.length < PAGE;
@@ -140,14 +138,16 @@ async function loadNews(root) {
   $('#open-arch', root).onclick = () => openArchive(H);
 }
 
-export function newsCard(n, H = {}) {
+export function newsCard(n, H = {}, fallbackArt = null) {
   const h = H[n.faction_id] || {};
   const text = plain(n.excerpt || n.body).slice(0, 260);
-  const banner = n.image_url
-    ? html`<img src="${n.image_url}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+  const img = n.image_url || firstImage(n.body) || fallbackArt;
+  const banner = img
+    ? html`<img src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer">`
     : crest(h.herald_url).html;
   return html`
     <article class="card">
+      <a class="card-link" href="#/news?id=${n.id}" aria-label="Читать: ${n.title}"></a>
       <div class="ban">${raw(banner)}</div>
       <div class="c-body"><span class="fac"><i></i>${n.faction_name || h.name || 'Держава'}</span>
         <h3>${n.title}</h3>
@@ -176,7 +176,7 @@ async function openArchive(H) {
   const chips = $('#chips', veil), list = $('#arch', veil);
   chips.innerHTML = html`<button type="button" data-f="" aria-pressed="true">Все</button>${facs.map(([id, name]) => raw(html`<button type="button" data-f="${id}" aria-pressed="false">${name}</button>`))}`;
   const draw = (f) => {
-    list.innerHTML = rows.filter((r) => !f || r.faction_id === f).map((r) => html`<li><time>${starDate(r.published_at || r.created_at)}</time><div><b>${r.faction_name || H[r.faction_id]?.name || 'Держава'}</b><span>${r.title}</span></div></li>`).join('') || '<li>Нет передач.</li>';
+    list.innerHTML = rows.filter((r) => !f || r.faction_id === f).map((r) => html`<li><time>${starDate(r.published_at || r.created_at)}</time><div><b>${r.faction_name || H[r.faction_id]?.name || 'Держава'}</b><a href="#/news?id=${r.id}" data-close>${r.title}</a></div></li>`).join('') || '<li>Нет передач.</li>';
   };
   draw('');
   chips.onclick = (e) => {
@@ -188,13 +188,13 @@ async function openArchive(H) {
 
 async function loadPosts(root) {
   const box = $('#posts', root);
-  const { data, error } = await sb.from('v1_posts').select('id,kind,title,body,created_at').eq('published', true).order('created_at', { ascending: false }).limit(5);
+  const { data, error } = await sb.from('v1_posts').select('id,kind,title,body,image_url,created_at').eq('published', true).order('created_at', { ascending: false }).limit(6);
   if (error || !data?.length) {
-    box.innerHTML = html`<li class="empty">${isTeam() ? 'Постов пока нет. Добавьте первый в админ-панели, раздел «Редакция страниц».' : 'Здесь появятся ивенты и лорные вступления от команды проекта.'}</li>`;
+    box.innerHTML = html`<li class="empty">${isTeam() ? 'Постов пока нет. Нажмите «+ Пост» выше или перенесите лорную новость из вестника в админ-панели.' : 'Здесь появятся ивенты и лорные вступления от команды проекта.'}</li>`;
     return;
   }
-  box.innerHTML = data.map((p, i) => html`<li><div class="meta"><span class="tag ${i === 0 ? 'new' : ''}">${POST_KIND[p.kind] || 'пост'}</span><time>${dayMonth(p.created_at)}</time></div>
-    <h3>${p.title}</h3><p>${plain(p.body).slice(0, 180)}</p></li>`).join('');
+  box.innerHTML = data.map((p, i) => html`<li>${p.image_url ? raw(html`<img class="post-img" src="${p.image_url}" alt="" loading="lazy" referrerpolicy="no-referrer">`) : ''}<div class="meta"><span class="tag ${i === 0 ? 'new' : ''}">${POST_KIND[p.kind] || 'пост'}</span><time>${dayMonth(p.created_at)}</time></div>
+    <h3><a href="#/news?post=${p.id}">${p.title}</a></h3><p>${plain(p.body).slice(0, 180)}</p></li>`).join('');
 }
 
 async function loadAdminSummary(root) {
@@ -208,6 +208,31 @@ async function loadAdminSummary(root) {
     if (session.level === 'superadmin') parts.push(`заявки админов <em>${session.pendingRequests}</em>`);
     $('#adm-sum', root).innerHTML = parts.join(' · ');
   } catch { /* миграция не применена — оставляем текст по умолчанию */ }
+}
+
+/** Реплики Классикал-Тян: диалог по времени суток, арт у каждой реплики, печать по буквам. */
+async function startTyan(root) {
+  const cfg = await loadTyan();
+  const name = session.displayName || (session.user ? 'командир' : 'странник');
+  const line = $('#line', root), img = $('#tyan-art', root), sil = $('#tyan-sil', root), btn = $('#speech', root);
+  if (!line) return;
+  $('#spk', root).textContent = cfg.speaker || 'Классикал-Тян';
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let dlg = pickDialogue(cfg), i = 0, timer = 0;
+  const show = () => {
+    const l = dlg.lines[i] || {};
+    const text = fillName(l.text, name);
+    clearInterval(timer);
+    if (calm) line.textContent = text;
+    else { let k = 0; line.textContent = ''; timer = setInterval(() => { line.textContent = text.slice(0, ++k); if (k >= text.length) clearInterval(timer); }, 22); }
+    const url = spriteFor(cfg, dlg, l);
+    if (url) { if (img.getAttribute('src') !== url) img.src = url; img.hidden = false; sil.hidden = true; } else { img.hidden = true; sil.hidden = false; }
+  };
+  btn.onclick = () => {
+    if (++i >= dlg.lines.length) { dlg = pickDialogue(cfg, dlg.id); i = 0; }
+    show();
+  };
+  show();
 }
 
 export { go };

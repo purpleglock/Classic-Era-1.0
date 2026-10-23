@@ -3,8 +3,10 @@ import { sb, rpc } from '../lib/supabase.js';
 import { session, isTeam, isSuperadmin, refreshRole, LEVEL_LABEL, ROLE_LABEL } from '../lib/session.js';
 import { num, dateTime, starDate, plain } from '../lib/format.js';
 import { crest, loadHeralds } from './home.js';
+import { rich, wireRich } from '../lib/rich.js';
 import { act } from '../lib/act.js';
 import { discordBadge } from './account.js';
+import { media, tyan, models } from './admin-media.js';
 
 /** Discord-ники пользователей: { user_id: name }. Пусто, если сертификация ещё не подключена. */
 async function discordNames(ids) {
@@ -22,6 +24,9 @@ const SECTIONS = [
   ['users', 'i-users', 'Пользователи'],
   ['news', 'i-news', 'Новости'],
   ['pages', 'i-lore', 'Редакция страниц'],
+  ['media', 'i-image', 'Медиатека и арты'],
+  ['tyan', 'i-spark', 'Классикал-Тян'],
+  ['models', 'i-cube', '3D-модели'],
   ['policy', 'i-shield', 'Правила одобрения', true],
   ['audit', 'i-list', 'Журнал действий'],
   ['tests', 'i-wrench', 'Тестовые функции'],
@@ -61,6 +66,7 @@ export async function renderAdmin(root) {
   };
   const show = () => {
     const sec = $('#sec', root);
+    sec.onclick = sec.onchange = sec.oninput = null; // обработчики прошлого раздела
     sec.innerHTML = '<div class="skeleton">Загружаю…</div>';
     (RENDER[current] || RENDER.requests)(sec).catch((e) => {
       sec.innerHTML = html`<p class="empty warn">${e.missingSchema ? 'Роли и админ-функции ещё не подключены в базе: примените миграцию 20261023_01_roles.sql.' : e.message}</p>`;
@@ -82,6 +88,7 @@ function split(sec, title, items, renderItem, renderDetail, extraHead = '') {
 }
 
 const RENDER = {
+  media, tyan, models,
   // Заявки админов
   async requests(sec) {
     const items = await list('requests', 'pending');
@@ -244,9 +251,31 @@ const RENDER = {
   },
 
   // Новости
-  async news(sec) {
-    const items = await list('news');
+  async news(sec, tab = 'pending') {
     const H = await loadHeralds().catch(() => ({}));
+    const tabs = html`<div class="seg" role="group" aria-label="Новости"><button type="button" data-nt="pending" aria-pressed="${String(tab === 'pending')}">На одобрение</button><button type="button" data-nt="live" aria-pressed="${String(tab === 'live')}">Опубликованные</button></div><a class="btn sm" href="#/news?new=post">+ Пост от команды проекта</a>`;
+    const wireTabs = () => { $('.sec-h .seg', sec).onclick = (e) => { const b = e.target.closest('[data-nt]'); if (b) RENDER.news(sec, b.dataset.nt); }; };
+    if (tab === 'live') {
+      const { data } = await sb.from('faction_news').select('id,faction_id,faction_name,title,excerpt,body,image_url,published_at,created_at,kind')
+        .eq('status', 'approved').order('published_at', { ascending: false, nullsFirst: false }).limit(80);
+      split(sec, 'Опубликованные новости', data || [],
+        (n) => html`<b>${n.title}</b><span>${n.faction_name || 'Держава'} · ${dateTime(n.published_at || n.created_at)}</span>${n.kind !== 'news' ? raw(html`<span class="tag">${n.kind}</span>`) : ''}`,
+        (det, n) => {
+          det.innerHTML = html`<h3>${n.title}</h3><p class="who">${n.faction_name || 'Держава'} · ${starDate(n.published_at || n.created_at)}</p>
+            <div class="msg-b">${plain(n.body).slice(0, 600)}</div>
+            <div class="acts"><a class="btn sm" href="#/news?id=${n.id}">Открыть</a></div>
+            <div class="grp"><h4>Лорная новость?</h4><p class="hint">Тексты вроде «Война есть и будет» — это вступления от команды проекта, а не передачи держав. Перенос создаст пост в правой колонке главной и уберёт новость из вестника в архив.</p>
+              <div class="give"><select id="tp-kind" aria-label="Тип поста"><option value="lore">Лор</option><option value="event">Ивент</option><option value="announce">Объявление</option></select><button type="button" class="btn gold sm" id="tp-go">Перенести в «От команды проекта»</button></div></div>`;
+          $('#tp-go', det).onclick = async () => {
+            if (!(await confirmBox(`Перенести «${n.title}» в «От команды проекта»?`, 'Перенести'))) return;
+            const r = await act('news.to_post', n.id, { kind: $('#tp-kind', det).value }).catch(() => null);
+            if (r) RENDER.news(sec, 'live');
+          };
+        }, tabs);
+      wireTabs();
+      return;
+    }
+    const items = await list('news');
     split(sec, 'Новости на одобрение', items,
       (n) => html`<b>${n.title}</b><span>${n.faction_name || 'Держава'} · ${dateTime(n.created_at)}</span>`,
       (det, n) => {
@@ -254,19 +283,21 @@ const RENDER = {
         det.innerHTML = html`<p class="who">Предпросмотр, как увидят игроки</p>
           <article class="card preview"><div class="ban">${n.image_url ? raw(html`<img src="${n.image_url}" alt="" referrerpolicy="no-referrer">`) : crest(h.herald_url)}</div>
             <div class="c-body"><span class="fac"><i></i>${n.faction_name || h.name || 'Держава'}</span><h3>${n.title}</h3><p>${plain(n.excerpt || n.body).slice(0, 260)}</p><span class="sd">${starDate(n.created_at)}</span></div></article>
-          <details class="full"><summary>Полный текст</summary><div class="msg-b">${plain(n.body)}</div></details>
+          <details class="full"><summary>Полный текст с оформлением</summary><div class="msg-b rich" id="n-full">${raw(rich(n.body || '', { heralds: H }))}</div></details>
           <label for="n-reason">Причина отклонения</label><input id="n-reason" type="text" placeholder="Например: нарушение правил РП">
           <div class="acts"><button type="button" class="btn gold sm" id="n-ok">Одобрить</button><button type="button" class="btn sm danger" id="n-no">Отклонить</button></div>`;
+        wireRich($('#n-full', det));
         $('#n-ok', det).onclick = async () => { await act('news.approve', n.id); RENDER.news(sec); };
         $('#n-no', det).onclick = async () => { await act('news.reject', n.id, { reason: $('#n-reason', det).value.trim() }); RENDER.news(sec); };
-      });
+      }, tabs);
+    wireTabs();
   },
 
-  // Редакция страниц и посты администрации
+  // Редакция страниц и посты команды проекта
   async pages(sec, q = '') {
     const [pages, posts, docs] = await Promise.all([
       list('pages', q || null, 200),
-      sb.from('v1_posts').select('id,kind,title,body,published,created_at').order('created_at', { ascending: false }).limit(50).then((r) => r.data || []),
+      sb.from('v1_posts').select('id,kind,title,published,created_at').order('created_at', { ascending: false }).limit(50).then((r) => r.data || []),
       sb.from('v1_docs').select('id,kind,grp,title,body,sort').order('kind').order('sort').then((r) => r.data || []),
     ]);
     const KIND = { guide: ['Гайдбук', '20261023_03_guide.sql', 'гайдбуке'], rules: ['Правила', '20261023_04_rules.sql', 'правилах'] };
@@ -277,8 +308,8 @@ const RENDER = {
           ${Object.entries(KIND).map(([k, [name, file]]) => raw(html`<b>${name}</b>${ofKind(k).length ? '' : raw(html`<span class="hint tree-hint">Примените миграцию ${file}</span>`)}
             ${ofKind(k).map((d) => raw(html`<button type="button" data-doc="${d.id}" data-kind="${k}">${d.title}</button>`))}
             ${ofKind(k).length ? raw(html`<button type="button" data-doc="new" data-kind="${k}">+ Новый раздел</button>`) : ''}`))}
-          <b>Посты администрации</b><button type="button" data-post="new">+ Новый пост</button>
-          ${posts.map((p) => raw(html`<button type="button" data-post="${p.id}">${p.published ? '' : '◌ '}${p.title}</button>`))}
+          <b>Посты команды проекта</b><a class="tree-a" href="#/news?new=post">+ Новый пост</a>
+          ${posts.map((p) => raw(html`<a class="tree-a" href="#/news?edit=${p.id}">${p.published ? '' : '◌ '}${p.title}</a>`))}
           ${Object.entries(groupBy(pages, (p) => p.section || 'Без раздела')).map(([s, ps]) => raw(html`<b>${s}</b>${ps.map((p) => raw(html`<button type="button" data-page="${p.id}">${p.title || p.slug}</button>`))}`))}
         </div>
         <div class="detail" id="ed"><p class="empty">Выберите страницу или пост слева.</p></div>
@@ -304,7 +335,7 @@ const RENDER = {
         ed.innerHTML = html`<label for="dc-title">Заголовок раздела</label><input id="dc-title" type="text" value="${d.title}">
           <label for="dc-grp">Группа в оглавлении</label><input id="dc-grp" type="text" list="dc-grps" value="${d.grp}"><datalist id="dc-grps">${groups.map((g) => raw(html`<option value="${g}">`))}</datalist>
           <label for="dc-body">Текст</label><textarea id="dc-body" rows="18">${d.body}</textarea>
-          <p class="hint">Разметка: пустая строка — абзац, «## » — подзаголовок, «- » — пункт, «| a | b |» — таблица, «> » — совет, «>! » — важно, **жирный**.</p>
+          <p class="hint">Разметка: пустая строка — абзац, «## » — подзаголовок, «- » — пункт, «| a | b |» — таблица, «> » — совет, «>! » — важно, **жирный**, ![подпись](ссылка) — картинка из медиатеки (кнопка «Для текста»).</p>
           <div class="acts"><button type="button" class="btn gold sm" id="dc-save">Сохранить</button>${d.id ? raw(html`<a class="btn sm" href="#/${kind}?s=${d.id.replace(`${kind}/`, '')}">Открыть в ${KIND[kind][2]}</a><button type="button" class="btn sm danger" id="dc-del">Удалить раздел</button>`) : ''}</div>`;
         $('#dc-save', ed).onclick = async () => {
           const title = $('#dc-title', ed).value.trim();
@@ -313,21 +344,6 @@ const RENDER = {
           RENDER.pages(sec, q);
         };
         $('#dc-del', ed)?.addEventListener('click', async () => { if (await confirmBox(`Удалить раздел «${d.title}»?`, 'Удалить')) { await act('doc.delete', d.id); RENDER.pages(sec, q); } });
-      } else if (b.dataset.post) {
-        const p = posts.find((x) => x.id === b.dataset.post) || { kind: 'announce', title: '', body: '', published: false };
-        ed.innerHTML = html`<label for="po-kind">Тип</label><select id="po-kind"><option value="event">Ивент</option><option value="lore">Лор</option><option value="announce">Объявление</option></select>
-          <label for="po-title">Заголовок</label><input id="po-title" type="text" value="${p.title}">
-          <label for="po-body">Текст</label><textarea id="po-body" rows="8">${p.body}</textarea>
-          <label class="check" for="po-pub"><input id="po-pub" type="checkbox" ${raw(p.published ? 'checked' : '')}> Опубликовать на главной</label>
-          <div class="acts"><button type="button" class="btn gold sm" id="po-save">Сохранить</button>${p.id ? raw('<button type="button" class="btn sm danger" id="po-del">Удалить</button>') : ''}</div>`;
-        $('#po-kind', ed).value = p.kind;
-        $('#po-save', ed).onclick = async () => {
-          const row = { kind: $('#po-kind', ed).value, title: $('#po-title', ed).value.trim(), body: $('#po-body', ed).value, published: $('#po-pub', ed).checked, updated_at: new Date().toISOString() };
-          if (!row.title) { toast('Нужен заголовок', 'err'); return; }
-          const { error } = p.id ? await sb.from('v1_posts').update(row).eq('id', p.id) : await sb.from('v1_posts').insert({ ...row, author_id: session.user.id });
-          if (error) toast(error.message, 'err'); else { toast('Пост сохранён'); RENDER.pages(sec, q); }
-        };
-        $('#po-del', ed)?.addEventListener('click', async () => { if (await confirmBox(`Удалить пост «${p.title}»?`, 'Удалить')) { await act('post.delete', p.id); RENDER.pages(sec, q); } });
       }
     };
   },

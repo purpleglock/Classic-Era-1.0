@@ -5,6 +5,7 @@ import { openLogin } from '../ui/login.js';
 import { go } from '../lib/router.js';
 import { loadGalaxy, STAR_NAME } from '../lib/galaxy.js';
 import { GalaxyView } from '../ui/galaxy-view.js';
+import { applyArt } from '../lib/settings.js';
 import { myDiscord, discordBadge, STATUS } from './account.js';
 import {
   MOD_LABEL, GOV, REGIME, GOV_REGIME, IDEOLOGY, GOV_IDEO_BAN, RACE, MACHINE_GOV, MACHINE_RACE,
@@ -107,6 +108,7 @@ function draw(root) {
       <button type="button" class="btn" id="ap-draft">Сохранить черновик</button>
       ${last ? raw('<button type="button" class="btn gold" id="ap-send">Отправить на рассмотрение</button>') : raw('<button type="button" class="btn gold" id="ap-next">Далее</button>')}
     </div>`;
+  applyArt($('.guide-head', root), 'apply');
   const body = $('#ap-body', root);
   STEP_RENDER[A.step](body, d, () => draw(root));
   body.addEventListener('input', () => save());
@@ -232,7 +234,7 @@ const STEP_RENDER = [
     const showSide = () => {
       const s = g.byId[d.system_id];
       side.innerHTML = s
-        ? html`<span class="fac"><i></i>${STAR_NAME[s.star_type] || 'Звезда'}</span><h3>${s.name}</h3><p class="hint">Планет: ${s.planets.length}. Соседей по гиперпутям: ${g.lanes.filter((l) => l.a_id === s.id || l.b_id === s.id).length}.</p><p class="ok">Выбрано для столицы.</p>`
+        ? html`<span class="fac"><i></i>${STAR_NAME[s.star_type] || 'Звезда'}</span><h3>${s.name}</h3><p class="hint">Планет: ${s.planets_n ?? '—'}. Соседей по гиперпутям: ${g.lanes.filter((l) => l.a_id === s.id || l.b_id === s.id).length}.</p><p class="ok">Выбрано для столицы.</p>`
         : html`<p class="empty">Свободных систем: ${g.systems.filter(free).length}. Кликните по золотой звезде.</p>`;
     };
     A.view = new GalaxyView($('#pick-cv', el), g, {

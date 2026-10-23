@@ -5,6 +5,7 @@ import { esc } from './dom.js';
  * Сначала всё экранируется, потом размечается — HTML из текста не проходит.
  *   пустая строка — новый абзац;  ## Подзаголовок;  - пункт;  1. пункт
  *   | a | b |  — таблица (первая строка — заголовок);  > совет;  >! важно;  **жирный**
+ *   ![подпись](https://…) на отдельной строке — картинка из медиатеки
  */
 export function markup(src = '') {
   const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
@@ -14,6 +15,11 @@ export function markup(src = '') {
   while (i < lines.length) {
     const line = lines[i].trim();
     if (!line) { i++; continue; }
+    const img = line.match(/^!\[([^\]]*)\]\((https?:\/\/[^)\s"'<>]+)\)$/);
+    if (img) {
+      out.push(`<figure class="doc-img"><img src="${esc(img[2])}" alt="${esc(img[1])}" loading="lazy">${img[1] ? `<figcaption>${esc(img[1])}</figcaption>` : ''}</figure>`);
+      i++; continue;
+    }
     if (line.startsWith('## ')) { out.push(`<h3>${inline(line.slice(3))}</h3>`); i++; continue; }
     if (line.startsWith('>')) {
       const warn = line.startsWith('>!');
@@ -42,11 +48,11 @@ export function markup(src = '') {
       continue;
     }
     const buf = [];
-    while (i < lines.length && lines[i].trim() && !/^(##\s|>|\||-\s|\d+\.\s)/.test(lines[i].trim())) { buf.push(lines[i].trim()); i++; }
+    while (i < lines.length && lines[i].trim() && !/^(##\s|>|\||-\s|\d+\.\s|!\[)/.test(lines[i].trim())) { buf.push(lines[i].trim()); i++; }
     out.push(`<p>${inline(buf.join(' '))}</p>`);
   }
   return out.join('');
 }
 
 /** Плоский текст раздела — для поиска. */
-export const searchText = (s = '') => String(s).replace(/[*|#>]/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+export const searchText = (s = '') => String(s).replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/[*|#>]/g, ' ').replace(/\s+/g, ' ').toLowerCase();

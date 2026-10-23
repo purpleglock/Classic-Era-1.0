@@ -1,4 +1,4 @@
-import { STAR_COLOR, solid, bounds, hull, distToSegment } from '../lib/galaxy.js';
+import { STAR_COLOR, solid, bounds, cellsOf, distToSegment } from '../lib/galaxy.js';
 
 /**
  * Холст карты: отрисовка, панорама, зум, клики и перетаскивание.
@@ -79,7 +79,7 @@ export class GalaxyView {
       if (!moved) return;
       if (dragSys) {
         const [wx, wy] = this.toWorld(sx, sy);
-        dragSys.x = Math.round(wx); dragSys.y = Math.round(wy);
+        dragSys.x = Math.round(wx); dragSys.y = Math.round(wy); this.cells = null;
         this.o.onDrag?.(dragSys, dragSys.x, dragSys.y, false);
       } else {
         this.ox = down.ox + (sx - down.sx); this.oy = down.oy + (sy - down.sy);
@@ -127,26 +127,46 @@ export class GalaxyView {
     const { systems, byId, lanes, sectors, factions } = this.data;
     const zoomed = this.k / this.k0;
 
-    // секторы
+    // секторы: ячейки звёзд, залитые цветом сектора; граница — только там, где сектор кончается
+    if (!this.cells) this.cells = cellsOf(systems);
     const secs = this.draft ? [...sectors.filter((s) => s.id !== this.draft.id), this.draft] : sectors;
+    const secOf = new Map();
+    for (const sec of secs) for (const id of sec.system_ids || []) secOf.set(id, sec);
+    const pt = (p) => this.toScreen(p[0], p[1]);
     for (const sec of secs) {
-      const pts = (sec.system_ids || []).map((id) => byId[id]).filter(Boolean).map((s) => this.toScreen(s.x, s.y));
-      if (pts.length < 2) continue;
-      const h = hull(pts);
+      const ids = (sec.system_ids || []).filter((id) => this.cells.has(id));
+      if (!ids.length) continue;
+      const isDraft = sec === this.draft, col = solid(sec.color);
       ctx.beginPath();
-      h.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-      ctx.closePath();
-      ctx.fillStyle = withAlpha(solid(sec.color), sec === this.draft ? 0.14 : 0.06);
-      ctx.strokeStyle = withAlpha(solid(sec.color), sec === this.draft ? 0.9 : 0.35);
-      ctx.lineWidth = sec === this.draft ? 1.6 : 1;
-      ctx.setLineDash(sec === this.draft ? [6, 4] : []);
-      ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+      for (const id of ids) {
+        const poly = this.cells.get(id);
+        poly.forEach((p, i) => { const [x, y] = pt(p); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+        ctx.closePath();
+      }
+      ctx.fillStyle = withAlpha(col, isDraft ? 0.16 : 0.08);
+      ctx.fill();
+      ctx.beginPath();
+      for (const id of ids) {
+        const poly = this.cells.get(id);
+        for (let i = 0; i < poly.length; i++) {
+          const tag = poly[i][2];
+          if (tag && secOf.get(tag) === sec) continue; // сосед из того же сектора — внутреннее ребро
+          const [ax, ay] = pt(poly[i]), [bx, by] = pt(poly[(i + 1) % poly.length]);
+          ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+        }
+      }
+      ctx.strokeStyle = withAlpha(col, isDraft ? 0.95 : 0.55);
+      ctx.lineWidth = isDraft ? 1.8 : 1.2;
+      ctx.setLineDash(isDraft ? [6, 4] : []);
+      ctx.stroke(); ctx.setLineDash([]);
       if (zoomed < 3 && this.o.labels !== 'none') {
-        const cx = h.reduce((a, p) => a + p[0], 0) / h.length, cy = h.reduce((a, p) => a + p[1], 0) / h.length;
-        ctx.fillStyle = withAlpha(solid(sec.color), 0.7);
+        let cx = 0, cy = 0;
+        for (const id of ids) { cx += byId[id].x; cy += byId[id].y; }
+        const [lx, ly] = this.toScreen(cx / ids.length, cy / ids.length);
+        ctx.fillStyle = withAlpha(col, 0.75);
         ctx.font = '700 11px Manrope, system-ui, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(String(sec.name || '').toUpperCase(), cx, cy);
+        ctx.fillText(String(sec.name || '').toUpperCase(), lx, ly);
       }
     }
 
@@ -194,6 +214,8 @@ export class GalaxyView {
     }
   }
 
+  /** Новые данные карты: ячейки секторов пересчитаются. */
+  setData(d) { this.data = d; this.cells = null; this.draw(); }
   setMouse(e) { const r = this.cv.getBoundingClientRect(); this.mouse = [e.clientX - r.left, e.clientY - r.top]; }
   destroy() { this.ro.disconnect(); }
 }

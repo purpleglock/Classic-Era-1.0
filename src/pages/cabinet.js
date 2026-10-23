@@ -4,6 +4,7 @@ import { session, isTeam, roleTitle } from '../lib/session.js';
 import { openLogin } from '../ui/login.js';
 import { num, signed, plain, dateShort, untilText } from '../lib/format.js';
 import { crest } from './home.js';
+import { applyArt } from '../lib/settings.js';
 
 /** Редкие ресурсы подсвечиваются ярким золотом. */
 const RARE = new Set(['Старвис', 'Реликтовое дерево', 'Стелларит', 'Хтонит', 'Ионит', 'Гравиядро', 'Рагенод', 'Ихор', 'Программируемая материя', 'Странный фрагмент']);
@@ -16,6 +17,7 @@ const GROUPS = [
     ['colonize', 'i-planet', 'Колонизация', 'Захват систем и заселение планет'],
     ['colonies', 'i-grid', 'Управление колониями', 'Застройка планет, ячейки и слоты'],
     ['research', 'i-flask', 'Исследования', 'Дерево технологий и очередь'],
+    ['news', 'i-news', 'Вестник державы', 'Написать новость, мои публикации', '#/news'],
   ]],
   ['Флот и война', [
     ['map', 'i-map', 'Карта галактики', 'Системы, границы и маршруты', '#/map'],
@@ -120,6 +122,8 @@ export async function renderCabinet(root) {
         <div id="p-ach" role="tabpanel" aria-labelledby="t-ach" hidden></div>
       </aside>
     </div>`;
+
+  if (!a.herald_url) applyArt($('.state', root), 'cabinet');
 
   // ресурсы
   let all = false;
