@@ -40,7 +40,7 @@ export function renderHeader() {
       </li>
       <li><a href="#/" data-vestnik>${icon('i-news')}<span>Вестник</span></a></li>
       <li><a href="#/guide" ${raw(path === '/guide' ? 'aria-current="page"' : '')}>${icon('i-guide')}<span>Гайдбук</span></a></li>
-      <li><a href="#/soon?s=rules">${icon('i-rules')}<span>Правила</span></a></li>
+      <li><a href="#/rules" ${raw(path === '/rules' ? 'aria-current="page"' : '')}>${icon('i-rules')}<span>Правила</span></a></li>
       <li><a href="#/soon?s=help">${icon('i-help')}<span>Помощь</span></a></li>
     </ul>
     <div class="tools">

@@ -6,10 +6,10 @@ import { renderHeader, renderFooter } from './ui/header.js';
 import { renderHome } from './pages/home.js';
 import { renderCabinet } from './pages/cabinet.js';
 import { renderAdmin } from './pages/admin.js';
-import { renderGuide } from './pages/guide.js';
+import { renderGuide, renderRules } from './pages/guide.js';
 
 const SOON = {
-  wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', rules: 'Правила', help: 'Помощь',
+  wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', help: 'Помощь',
   privacy: 'Политика конфиденциальности', terms: 'Пользовательское соглашение', consent: 'Согласие на обработку персональных данных',
   apply: 'Заявка на державу', stats: 'Статистика державы', inner: 'Внутренняя политика', outer: 'Внешняя политика',
   research: 'Исследования', colonize: 'Колонизация', colonies: 'Управление колониями', map: 'Карта галактики', fleet: 'Флот и войска',
@@ -31,6 +31,7 @@ route('/', () => renderHome(view()));
 route('/cabinet', () => renderCabinet(view()));
 route('/admin', () => renderAdmin(view()));
 route('/guide', () => renderGuide(view()));
+route('/rules', () => renderRules(view()));
 route('/soon', () => {
   const key = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
   const title = SOON[key] || 'Раздел';
