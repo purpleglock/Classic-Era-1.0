@@ -493,3 +493,17 @@ button.speech:hover span{color:#fff}
 .holo:has(img:not([hidden])) .base{width:74%}
 .holo:has(img:not([hidden])) svg{display:none!important}
 @media (max-width:1100px){.holo:has(img:not([hidden])){height:320px;max-width:280px}}
+
+/* ── имя в игре ── */
+.name-row{display:flex;gap:8px;max-width:460px;margin:8px 0 4px}
+.name-row input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:10px 12px;font-size:15px}
+.name-row input:focus{outline:none;border-color:var(--gold)}
+.nm-msg{min-height:1.4em;margin:0;font-size:13px}
+.nm-msg.ok{color:#8fe08a}.nm-msg.bad{color:#ff8a7a}
+.blk-list p{margin:6px 0;line-height:2}
+.blk-w{display:inline-flex;gap:4px;align-items:center}
+.blk-w button{background:none;border:0;color:var(--faint);cursor:pointer;padding:0 2px}
+.blk-w button:hover{color:#ff8a7a}
+td .link-btn{background:none;border:0;padding:0;font-size:12px}
+.name-nudge{display:flex;align-items:center;gap:12px;padding:12px 16px;margin:0;color:var(--text)}
+.name-nudge span{flex:1}.name-nudge svg{color:var(--gold)}

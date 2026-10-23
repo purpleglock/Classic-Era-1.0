@@ -124,6 +124,11 @@ export async function renderCabinet(root) {
     </div>`;
 
   if (!a.herald_url) applyArt($('.state', root), 'cabinet');
+  // напомнить задать имя, если его ещё нет
+  sb.from('v1_names').select('user_id').eq('user_id', session.user.id).maybeSingle().then(({ data, error }) => {
+    if (error || data) return;
+    $('.state', root)?.insertAdjacentHTML('afterend', html`<p class="panel note-bar name-nudge">${icon('i-users')}<span>Задайте имя в игре — так вас будут видеть другие игроки.</span><a class="btn sm gold" href="#/account">Задать имя</a></p>`);
+  });
 
   // ресурсы
   let all = false;

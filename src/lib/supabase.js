@@ -44,7 +44,10 @@ const MESSAGES = {
 export function humanError(error) {
   const raw = error?.message || String(error);
   const key = Object.keys(MESSAGES).find((k) => raw.includes(k));
-  const err = new Error(key ? MESSAGES[key] : raw);
+  // причины с текстом из базы: «name_rejected: …», «name_cooldown: 31.10 00:59»
+  const nr = raw.match(/name_rejected: (.+)/), nc = raw.match(/name_cooldown: (.+)/);
+  const text = nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.` : key ? MESSAGES[key] : raw;
+  const err = new Error(text);
   err.raw = raw;
   err.missingSchema = /function .*v1_|relation .*v1_|Could not find the function/i.test(raw);
   return err;

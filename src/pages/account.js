@@ -27,6 +27,7 @@ export async function renderAccount(root) {
   if (back) { history.replaceState(null, '', '#/account'); if (ds?.linked) toast(`Discord подтверждён: ${ds.name}`); }
   ds = ds || await myDiscord();
 
+  const { data: nameRow } = await sb.from('v1_names').select('name,changed_at').eq('user_id', session.user.id).maybeSingle();
   const { data: app } = await sb.from('faction_applications').select('id,name,status,reject_reason,updated_at')
     .eq('owner_id', session.user.id).order('updated_at', { ascending: false }).limit(1).maybeSingle();
 
@@ -36,6 +37,18 @@ export async function renderAccount(root) {
       <div><span class="role-badge" data-role="${session.role}">${roleTitle()}</span><h1>${session.displayName || 'Аккаунт'}</h1><p>${session.user.email || ''}</p>
         ${ds.linked ? raw(html`<p class="ds-line">${discordBadge(ds.name)}</p>`) : ''}</div>
       <a class="btn sm" href="#/cabinet">В кабинет</a>
+    </section>
+
+    <section class="panel acc-card" id="name-card">
+      <div class="acc-ic">${icon('i-users')}</div>
+      <div class="acc-body">
+        <h2>Имя в игре</h2>
+        <p>Так вас видят другие игроки и команда проекта.${nameRow ? '' : raw(' <b>Пока имя не задано.</b>')}</p>
+        <div class="name-row"><input id="nm-in" type="text" maxlength="24" value="${nameRow?.name || ''}" placeholder="Например: Архонт Вейл" aria-label="Имя в игре" autocomplete="nickname">
+          <button type="button" class="btn gold sm" id="nm-save">Сохранить</button></div>
+        <p class="nm-msg" id="nm-msg" aria-live="polite"></p>
+        <p class="hint">3–24 знака: буквы, цифры, пробел и - _ . ' Без мата, без имён реальных политиков и без служебных слов вроде «Админ». Менять имя можно раз в 7 дней${nameRow ? ` (последняя смена — ${dayMonth(nameRow.changed_at)})` : ''}.</p>
+      </div>
     </section>
 
     <section class="panel acc-card">
@@ -65,6 +78,31 @@ export async function renderAccount(root) {
       </div>
       <div class="acc-act">${session.factionId ? raw('<a class="btn sm" href="#/cabinet">Открыть кабинет</a>') : raw(html`<a class="btn gold sm" href="#/apply">${app ? 'Открыть заявку' : 'Подать заявку'}</a>`)}</div>
     </section>`;
+
+  // имя: проверка на лету и сохранение
+  const nmIn = $('#nm-in', root), nmMsg = $('#nm-msg', root);
+  let nmT = 0;
+  nmIn.addEventListener('input', () => {
+    clearTimeout(nmT);
+    nmMsg.className = 'nm-msg'; nmMsg.textContent = '';
+    const v = nmIn.value.trim();
+    if (!v || v === nameRow?.name) return;
+    nmT = setTimeout(async () => {
+      const r = await rpc('v1_name_check', { p_name: v }).catch(() => null);
+      if (!r || nmIn.value.trim() !== v) return;
+      nmMsg.className = `nm-msg ${r.ok ? 'ok' : 'bad'}`;
+      nmMsg.textContent = r.ok ? 'Имя свободно' : r.reason;
+    }, 350);
+  });
+  $('#nm-save', root).onclick = async () => {
+    try {
+      const r = await rpc('v1_set_name', { p_name: nmIn.value });
+      toast(`Имя сохранено: ${r.name}`);
+      await refreshRole();
+      import('../ui/header.js').then((m) => m.renderHeader());
+      renderAccount(root);
+    } catch (e) { nmMsg.className = 'nm-msg bad'; nmMsg.textContent = e.missingSchema ? 'Имена ещё не подключены в базе (миграция 12).' : e.message; }
+  };
 
   $('#ds-link', root)?.addEventListener('click', async () => {
     const { error } = await sb.auth.linkIdentity({ provider: 'discord', options: { redirectTo: `${location.origin}${location.pathname}#/account?discord=1` } });

@@ -220,7 +220,7 @@ const RENDER = {
     sec.innerHTML = html`<div class="sec-h"><h2>Пользователи</h2><input class="search" type="search" id="u-q" placeholder="${isSuperadmin() ? 'Ник или почта' : 'Ник'}" aria-label="Поиск" value="${q}"></div>
       <div class="tbl"><table><thead><tr><th>Пользователь</th><th>Роль</th><th>Уровень</th><th>Статус</th><th></th></tr></thead><tbody>
       ${rows.map((u) => raw(html`<tr data-id="${u.id}">
-        <td><b>${u.name}</b>${ds[u.id] ? discordBadge(ds[u.id]) : ''}${u.email ? raw(html`<small>${u.email}</small>`) : ''}</td>
+        <td><b>${u.name}</b> <button type="button" class="link-btn" data-rename>изменить</button>${ds[u.id] ? discordBadge(ds[u.id]) : ''}${u.email ? raw(html`<small>${u.email}</small>`) : ''}</td>
         <td>${isSuperadmin()
           ? raw(html`<select data-staff aria-label="Роль">
               <option value="" ${raw(!u.staff_level ? 'selected' : '')}>${ROLE_LABEL[u.role === 'team' ? 'player' : u.role]}</option>
@@ -231,10 +231,37 @@ const RENDER = {
         <td><span class="tag ${u.banned ? 'new' : ''}">${u.banned ? 'забанен' : 'активен'}</span></td>
         <td>${u.staff_level === 'superadmin' ? '' : raw(html`<button type="button" class="btn sm ${u.banned ? '' : 'danger'}" data-ban="${u.banned ? 'unban' : 'ban'}">${u.banned ? 'Разбанить' : 'Бан'}</button>`)}</td></tr>`))}
       </tbody></table></div>
-      <p class="hint">${isSuperadmin() ? 'Роль в команде меняет только суперадмин.' : 'Бан и смена уровня уходят суперадмину на одобрение.'}</p>`;
+      <p class="hint">${isSuperadmin() ? 'Роль в команде меняет только суперадмин.' : 'Бан и смена уровня уходят суперадмину на одобрение.'}</p>
+      <div class="grp" id="blk"><h4>Запрещённые слова в именах</h4><p class="hint">Проверяются с учётом обхода: латиница вместо кириллицы, цифры вместо букв, точки и пробелы внутри слова, повторы букв. Пишите корень слова (не короче 3 букв).</p>
+        <div class="give"><input type="text" id="blk-w" placeholder="Слово или корень" aria-label="Слово"><select id="blk-k" aria-label="Тип"><option value="mat">мат, оскорбление</option><option value="politics">политик</option><option value="nazi">нацизм</option><option value="reserved">служебное</option><option value="other">другое</option></select><button type="button" class="btn sm" id="blk-add">Запретить</button></div>
+        <div class="blk-list" id="blk-list">Загружаю…</div></div>`;
     const inp = $('#u-q', sec);
     inp.onkeydown = (e) => { if (e.key === 'Enter') RENDER.users(sec, inp.value.trim()); };
+    const KINDS = { mat: 'мат', politics: 'политики', nazi: 'нацизм', reserved: 'служебные', other: 'другое' };
+    const drawBlk = async () => {
+      const list = await rpc('v1_name_blocklist_list').catch(() => null);
+      $('#blk-list', sec).innerHTML = !list ? '<p class="empty warn">Имена ещё не подключены в базе (миграция 12).</p>'
+        : Object.entries(KINDS).map(([k, t]) => { const ws = list.filter((x) => x.kind === k); return ws.length ? html`<p><b>${t}:</b> ${raw(ws.map((x) => html`<span class="tag blk-w">${x.word}<button type="button" data-unblock="${x.word}" aria-label="Убрать">×</button></span>`).join(' '))}</p>` : ''; }).join('');
+    };
+    drawBlk();
     sec.onclick = async (e) => {
+      if (e.target.closest('#blk-add')) {
+        const w = $('#blk-w', sec).value.trim(); if (!w) return;
+        await act('names.block_add', w, { kind: $('#blk-k', sec).value }).catch(() => {});
+        $('#blk-w', sec).value = ''; drawBlk(); return;
+      }
+      const ub = e.target.closest('[data-unblock]');
+      if (ub) { await act('names.block_del', ub.dataset.unblock).catch(() => {}); drawBlk(); return; }
+      const rn = e.target.closest('[data-rename]');
+      if (rn) {
+        const tr = rn.closest('tr'); const cell = rn.parentElement;
+        cell.innerHTML = html`<div class="give"><input type="text" maxlength="24" value="${tr.querySelector('b')?.textContent || ''}" aria-label="Новое имя"><button type="button" class="btn sm gold" data-rn-save>OK</button></div>`;
+        cell.querySelector('[data-rn-save]').onclick = async () => {
+          const r = await act('names.rename', tr.dataset.id, { name: cell.querySelector('input').value }).catch(() => null);
+          if (r) RENDER.users(sec, q);
+        };
+        return;
+      }
       const b = e.target.closest('[data-ban]'); if (!b) return;
       const id = b.closest('tr').dataset.id;
       if (b.dataset.ban === 'ban' && !(await confirmBox('Забанить пользователя? Он потеряет доступ к кабинету, держава останется.', 'Забанить'))) return;
