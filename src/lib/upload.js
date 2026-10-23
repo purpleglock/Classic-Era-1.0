@@ -30,7 +30,11 @@ async function sizeOf(file) {
 }
 
 const EXT = { 'image/webp': 'webp', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/svg+xml': 'svg', 'audio/mpeg': 'mp3', 'audio/ogg': 'ogg', 'audio/wav': 'wav', 'audio/webm': 'webm' };
-const slug = (name) => String(name).toLowerCase().replace(/\.[^.]+$/, '').replace(/[^a-z0-9а-яё]+/gi, '-').replace(/^-|-$/g, '').slice(0, 40) || 'file';
+// Хранилище Supabase принимает в имени файла только латиницу: кириллицу переводим транслитом.
+const TR = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' };
+const slug = (name) => String(name).toLowerCase().replace(/\.[^.]+$/, '')
+  .replace(/[а-яё]/g, (c) => TR[c] ?? '')
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'file';
 
 /**
  * Загрузка файла в медиатеку. folder: 'page', 'tyan', 'news' (команда) или
