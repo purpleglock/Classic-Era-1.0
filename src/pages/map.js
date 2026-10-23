@@ -4,6 +4,8 @@ import { act } from '../lib/act.js';
 import { loadGalaxy, dropGalaxyCache, planetsOf, allPlanets, STAR_NAME, newSystemId, solid } from '../lib/galaxy.js';
 import { GalaxyView } from '../ui/galaxy-view.js';
 import { applyArt } from '../lib/settings.js';
+import { loadBodies } from '../lib/bodies.js';
+import { SystemView } from '../ui/system-view.js';
 
 const MODES = [
   ['select', 'Выбор и перенос', 'Клик — открыть систему. Перетащите звезду, чтобы перенести её.'],
@@ -15,10 +17,10 @@ const MODES = [
 const GROUPS = { terrestrial: 'Землеподобная', oceanic: 'Океаническая', desert: 'Пустынная', volcanic: 'Вулканическая', lava: 'Лавовая', cryo: 'Криомир', micro: 'Малое тело', exotic: 'Экзотическая', gasgiant: 'Газовый гигант', icegiant: 'Ледяной гигант', hotgiant: 'Горячий гигант', belt: 'Пояс астероидов', anomaly: 'Аномалия', gaia: 'Идеальный мир' };
 const AMOUNTS = ['следы', 'мало', 'умеренно', 'много', 'очень много', 'колоссально'];
 
-let view = null;
+let view = null, sysView = null;
 
 export async function renderMap(root) {
-  view?.destroy();
+  view?.destroy(); sysView?.destroy(); sysView = null;
   root.innerHTML = html`
     <section class="panel map-head">
       <span class="m-ic">${icon('i-map')}</span>
@@ -42,6 +44,7 @@ export async function renderMap(root) {
 
   applyArt($('.map-head', root), 'map');
   let data;
+  const bodies = await loadBodies();
   try { data = await loadGalaxy(); } catch (e) { $('#map-sub', root).textContent = `Не удалось загрузить карту: ${e.message}`; return; }
   const sub = () => { $('#map-sub', root).textContent = `${data.systems.length} систем · ${data.lanes.length} гиперпутей · ${data.sectors.length} секторов · ${data.systems.filter((s) => s.faction).length} под властью держав`; };
   sub();
@@ -53,6 +56,7 @@ export async function renderMap(root) {
 
   view = new GalaxyView($('#m-cv', root), data, {
     draggable: false,
+    bodies,
     onPick: (s, ev) => {
       if (editing && mode === 'add' && !s) return addStar(ev.world);
       if (editing && mode === 'link' && s) return linkClick(s);
@@ -127,14 +131,23 @@ export async function renderMap(root) {
         <dt>Сектор</dt><dd>${sec?.name || '—'}</dd><dt>Планет</dt><dd>${s.planets.length}</dd>
         <dt>Соседи</dt><dd>${neighbours(s).map((n) => n.name).join(', ') || '—'}</dd></dl>
       ${s.description ? raw(html`<p class="who">${s.description}</p>`) : ''}
-      <ol class="planets">${s.planets.map((p) => raw(html`<li><b>${p.name || 'Без названия'}</b><span>${p.type || GROUPS[p.g] || ''}${p.slotsK ? ` · ячеек ${p.slotsK}` : ''}</span>
+      ${s.planets.length ? raw('<canvas class="sysview" id="sv" aria-label="Вид системы"></canvas>') : ''}
+      <ol class="planets">${s.planets.map((p, i) => raw(html`<li data-i="${i}"><b>${p.name || 'Без названия'}</b><span>${p.type || GROUPS[p.g] || ''}${p.slotsK ? ` · ячеек ${p.slotsK}` : ''}</span>
         ${(p.resources || []).length ? raw(html`<small>${p.resources.map((r) => `${r.name} — ${r.amt}`).join(', ')}</small>`) : ''}</li>`))}</ol>`;
+      sysView?.destroy(); sysView = null;
+    const cv = $('#sv', side);
+    if (cv) {
+      const lis = [...side.querySelectorAll('.planets li')];
+      sysView = new SystemView(cv, s, bodies, { onHover: (p) => lis.forEach((li) => li.classList.toggle('hot', !!p && s.planets[li.dataset.i] === p)) });
+    }
   }
+
   const neighbours = (s) => data.lanes.filter((l) => l.a_id === s.id || l.b_id === s.id).map((l) => data.byId[l.a_id === s.id ? l.b_id : l.a_id]).filter(Boolean);
 
   // ── редактор системы ──
   async function editForm(s) {
     if (!s) return;
+    sysView?.destroy(); sysView = null;
     if (!resCatalog) {
       side.innerHTML = html`<h2>${s.name}</h2><p class="skeleton">Загружаю планеты для редактора…</p>`;
       await allPlanets(data).catch(() => {});

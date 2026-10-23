@@ -11,6 +11,8 @@ import { renderApply } from './pages/apply.js';
 import { renderAccount } from './pages/account.js';
 import { renderMap } from './pages/map.js';
 import { renderNews } from './pages/news.js';
+import { renderRegistry } from './pages/registry.js';
+import { renderBattle } from './pages/battle.js';
 
 const SOON = {
   wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', help: 'Помощь',
@@ -40,6 +42,8 @@ route('/apply', () => renderApply(view()));
 route('/account', () => renderAccount(view()));
 route('/map', () => renderMap(view()));
 route('/news', () => renderNews(view()));
+route('/registry', () => renderRegistry(view()));
+route('/battle', () => renderBattle(view()));
 route('/soon', () => {
   const key = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
   const title = SOON[key] || 'Раздел';

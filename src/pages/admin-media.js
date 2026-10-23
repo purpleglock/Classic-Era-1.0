@@ -7,7 +7,7 @@ import { uploadMedia, uploadModelFile, fileSize } from '../lib/upload.js';
 import { settings, dropSettings, ART_SLOTS } from '../lib/settings.js';
 import { TIMES, FALLBACK, fillName } from '../lib/tyan.js';
 
-const TAGS = { page: 'Страницы', tyan: 'Классикал-Тян', news: 'Новости', other: 'Разное' };
+const TAGS = { page: 'Страницы', tyan: 'Классикал-Тян', map: 'Карта', news: 'Новости', other: 'Разное' };
 const needMig = '<p class="empty warn">Медиатека ещё не подключена в базе: примените миграцию 20261023_06_media_news.sql.</p>';
 
 async function mediaRows(tag = null) {
@@ -293,5 +293,78 @@ export async function models(sec, kind = '') {
     const li = e.target.closest('li[data-i]'); if (!li) return;
     $$('#mo-list li', sec).forEach((x) => x.classList.toggle('sel', x === li));
     form(rows[li.dataset.i]);
+  };
+}
+
+// ═ Небесные тела: арты звёзд, планет, астероидов ═
+export async function bodies(sec) {
+  const { BODY_GROUPS, BODY_LABEL, drawBody } = await import('../lib/bodies.js');
+  const s = await settings(true);
+  if (!s.bodies && (await sb.from('v1_settings').select('key').limit(1)).error) { sec.innerHTML = needMig; return; }
+  const cfg = structuredClone(s.bodies || {});
+  let dirty = false;
+  const defMode = (k) => (k.startsWith('star:') || ['belt', 'structure', 'anomaly'].includes(k) ? 'sprite' : 'surface');
+  const slotCfg = (k) => (cfg[k] ||= { mode: defMode(k), urls: [], speed: 1 });
+  const draw = () => {
+    sec.innerHTML = html`
+      <div class="sec-h"><h2>Небесные тела</h2><small>арты для карты и вида системы</small><button type="button" class="btn gold sm" id="bd-save" ${raw(dirty ? '' : 'disabled')}>Сохранить</button></div>
+      <p class="hint">«Поверхность» — карта поверхности планеты (лучше вдвое шире, чем выше, например 2048×1024): она прокручивается внутри круга, и планета вращается вокруг оси. «Картинка» — готовое тело на прозрачном фоне (PNG): оно поворачивается целиком, так лучше для звёзд и астероидов. Несколько артов в одном слоте — варианты: каждой планете достаётся свой, плюс свой оттенок и наклон.</p>
+      ${BODY_GROUPS.map(([g, slots]) => raw(html`<h3 class="sub-h">${g}</h3><div class="bodies">${Object.keys(slots).map((k) => {
+        const c = cfg[k] || {};
+        return raw(html`<div class="body-slot" data-k="${k}">
+          <canvas class="bd-prev" aria-label="Предпросмотр: ${BODY_LABEL[k]}"></canvas>
+          <div class="bd-info"><b>${BODY_LABEL[k]}</b>
+            <div class="bd-urls">${(c.urls || []).map((u, i) => raw(html`<span class="bd-u"><img src="${u}" alt=""><button type="button" class="ib" data-rm="${i}" aria-label="Убрать вариант">${icon('i-x')}</button></span>`))}
+              <label class="bd-add" title="Загрузить арт">+<input type="file" accept="image/png,image/webp,image/jpeg" multiple hidden></label></div>
+            <div class="bd-row"><select data-mode aria-label="Как вращать"><option value="surface" ${raw((c.mode || defMode(k)) === 'surface' ? 'selected' : '')}>Поверхность</option><option value="sprite" ${raw((c.mode || defMode(k)) === 'sprite' ? 'selected' : '')}>Картинка</option></select>
+              <label class="bd-speed">скорость<input type="range" min="0" max="4" step="0.25" value="${c.speed ?? 1}" data-speed></label></div>
+          </div></div>`);
+      })}</div>`))}`;
+  };
+  draw();
+  const mark = () => { dirty = true; $('#bd-save', sec).disabled = false; };
+
+  // живые превью — одна анимация на все видимые слоты
+  const t0 = performance.now();
+  const tick = () => {
+    if (!sec.isConnected || !sec.querySelector('.bodies')) return;
+    const t = (performance.now() - t0) / 1000;
+    for (const cv of sec.querySelectorAll('.bd-prev')) {
+      const r = cv.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > innerHeight) continue;
+      const dpr = devicePixelRatio || 1;
+      if (cv.width !== Math.round(r.width * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
+      const ctx = cv.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height);
+      const k = cv.closest('[data-k]').dataset.k;
+      drawBody(ctx, r.width / 2, r.height / 2, Math.min(r.width, r.height) * 0.3, k, cfg[k], t, k);
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+
+  sec.onchange = async (e) => {
+    const box = e.target.closest('[data-k]'); if (!box) return;
+    const k = box.dataset.k, c = slotCfg(k);
+    if (e.target.matches('[data-mode]')) { c.mode = e.target.value; mark(); }
+    if (e.target.type === 'file' && e.target.files.length) {
+      try {
+        const up = await uploadAll([...e.target.files], 'map', c.mode === 'surface' ? 2048 : 1024);
+        c.urls.push(...up.map((r) => r.url)); mark(); draw();
+      } catch (err) { toast(err.message, 'err'); }
+    }
+  };
+  sec.oninput = (e) => {
+    if (!e.target.matches('[data-speed]')) return;
+    slotCfg(e.target.closest('[data-k]').dataset.k).speed = Number(e.target.value); mark();
+  };
+  sec.onclick = async (e) => {
+    const rm = e.target.closest('[data-rm]');
+    if (rm) { const k = rm.closest('[data-k]').dataset.k; cfg[k].urls.splice(Number(rm.dataset.rm), 1); mark(); draw(); return; }
+    if (e.target.closest('#bd-save')) {
+      const clean = Object.fromEntries(Object.entries(cfg).filter(([k, c]) => c.urls?.length || (c.speed ?? 1) !== 1 || (c.mode && c.mode !== defMode(k))));
+      const r = await act('settings.save', 'bodies', clean).catch(() => null);
+      if (r) { dirty = false; dropSettings(); $('#bd-save', sec).disabled = true; }
+    }
   };
 }

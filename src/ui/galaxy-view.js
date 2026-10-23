@@ -1,4 +1,5 @@
 import { STAR_COLOR, solid, bounds, cellsOf, distToSegment } from '../lib/galaxy.js';
+import { drawBody } from '../lib/bodies.js';
 
 /**
  * Холст карты: отрисовка, панорама, зум, клики и перетаскивание.
@@ -189,6 +190,12 @@ export class GalaxyView {
 
     // звёзды
     const showLabels = this.o.labels === 'all' || (this.o.labels === 'auto' && zoomed >= 2.2);
+    // крупный план: звёзды с артами вращаются — крутим анимацию, пока приближено
+    const textured = !!this.o.bodies && zoomed >= 3 && Object.keys(this.o.bodies).some((k) => k.startsWith('star:') && this.o.bodies[k]?.urls?.length);
+    this.t = (performance.now() - (this.t0 ||= performance.now())) / 1000;
+    if (textured && !this.anim && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.anim = setInterval(() => { if (!this.cv.isConnected) { clearInterval(this.anim); this.anim = 0; return; } this.draw(); }, 50);
+    } else if (!textured && this.anim) { clearInterval(this.anim); this.anim = 0; }
     for (const s of systems) {
       const [x, y] = this.toScreen(s.x, s.y);
       if (x < -20 || y < -20 || x > r.width + 20 || y > r.height + 20) continue;
@@ -200,8 +207,13 @@ export class GalaxyView {
         ctx.beginPath(); ctx.arc(x, y, size + 5, 0, 7); ctx.fill();
       }
       ctx.globalAlpha = st.dim ? 0.28 : 1;
-      ctx.fillStyle = st.fill || STAR_COLOR[s.star_type] || '#fff';
-      ctx.beginPath(); ctx.arc(x, y, size, 0, 7); ctx.fill();
+      const slot = `star:${s.star_type}`;
+      if (textured && !st.fill && this.o.bodies[slot]?.urls?.length) {
+        drawBody(ctx, x, y, size * 1.5, slot, this.o.bodies[slot], this.t, s.name, { onload: () => this.draw() });
+      } else {
+        ctx.fillStyle = st.fill || STAR_COLOR[s.star_type] || '#fff';
+        ctx.beginPath(); ctx.arc(x, y, size, 0, 7); ctx.fill();
+      }
       ctx.globalAlpha = 1;
       const ring = st.ring || (this.selected === s ? '#e9b949' : this.linkFrom === s ? '#e9b949' : this.draft?.system_ids.includes(s.id) ? solid(this.draft.color) : null);
       if (ring) { ctx.strokeStyle = ring; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(x, y, size + 4, 0, 7); ctx.stroke(); }
@@ -217,7 +229,7 @@ export class GalaxyView {
   /** Новые данные карты: ячейки секторов пересчитаются. */
   setData(d) { this.data = d; this.cells = null; this.draw(); }
   setMouse(e) { const r = this.cv.getBoundingClientRect(); this.mouse = [e.clientX - r.left, e.clientY - r.top]; }
-  destroy() { this.ro.disconnect(); }
+  destroy() { this.ro.disconnect(); clearInterval(this.anim); this.anim = 0; }
 }
 
 function withAlpha(color, a) {

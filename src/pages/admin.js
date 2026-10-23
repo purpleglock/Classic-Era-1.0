@@ -6,7 +6,8 @@ import { crest, loadHeralds } from './home.js';
 import { rich, wireRich } from '../lib/rich.js';
 import { act } from '../lib/act.js';
 import { discordBadge } from './account.js';
-import { media, tyan, models } from './admin-media.js';
+import { media, tyan, models, bodies } from './admin-media.js';
+import { achievements, battles } from './admin-game.js';
 
 /** Discord-ники пользователей: { user_id: name }. Пусто, если сертификация ещё не подключена. */
 async function discordNames(ids) {
@@ -20,12 +21,15 @@ const SECTIONS = [
   ['tickets', 'i-chat', 'Тикеты'],
   ['apps', 'i-flag', 'Регистрация фракций'],
   ['factions', 'i-crown', 'Управление фракциями'],
+  ['achievements', 'i-crown', 'Достижения'],
+  ['battles', 'i-sword', 'Сражения'],
   ['multi', 'i-eye', 'Аудит мультиаккаунтов'],
   ['users', 'i-users', 'Пользователи'],
   ['news', 'i-news', 'Новости'],
   ['pages', 'i-lore', 'Редакция страниц'],
   ['media', 'i-image', 'Медиатека и арты'],
   ['tyan', 'i-spark', 'Классикал-Тян'],
+  ['bodies', 'i-planet', 'Небесные тела'],
   ['models', 'i-cube', '3D-модели'],
   ['policy', 'i-shield', 'Правила одобрения', true],
   ['audit', 'i-list', 'Журнал действий'],
@@ -88,7 +92,7 @@ function split(sec, title, items, renderItem, renderDetail, extraHead = '') {
 }
 
 const RENDER = {
-  media, tyan, models,
+  media, tyan, models, bodies, achievements, battles,
   // Заявки админов
   async requests(sec) {
     const items = await list('requests', 'pending');

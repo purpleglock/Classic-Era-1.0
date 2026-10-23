@@ -378,3 +378,51 @@ button.speech:hover span{color:#fff}
   .rx-g{border-right:0}
   .slot{grid-template-columns:72px minmax(0,1fr)}.slot-img{width:72px}
 }
+
+/* ── вид системы ── */
+.sysview{width:100%;aspect-ratio:1.35;display:block;margin:6px 0 10px;border-radius:12px;background:radial-gradient(70% 70% at 50% 50%,#e9b9490d,transparent 70%),#030303;border:1px solid var(--line)}
+.planets li.hot{border-color:var(--gold)}
+.bodies{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
+.body-slot{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg)}
+.bd-prev{width:110px;height:110px;border-radius:10px;background:#030303}
+.bd-info b{display:block;font-size:14px;margin-bottom:6px}
+.bd-urls{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.bd-u{position:relative;width:46px;height:30px;border-radius:6px;overflow:hidden;border:1px solid var(--line2)}
+.bd-u img{width:100%;height:100%;object-fit:cover}
+.bd-u .ib{position:absolute;inset:auto 0 0 auto;width:16px;height:16px;padding:0;border-radius:4px;background:#000c}
+.bd-u .ib svg{width:10px;height:10px}
+.bd-add{width:46px;height:30px;border:1px dashed var(--gold-dim);border-radius:6px;display:grid;place-items:center;color:var(--gold);cursor:pointer;margin:0!important}
+.bd-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bd-row select{padding:5px 8px!important;font-size:12px!important}
+.bd-speed{display:flex!important;align-items:center;gap:6px;font-size:11px!important;margin:0!important;color:var(--faint)}
+.bd-speed input{width:80px;accent-color:var(--gold)}
+
+/* ── реестр ── */
+.reg-tabs{width:max-content;max-width:100%;flex-wrap:wrap}
+.reg-sec{padding:18px}
+.unit{border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--bg)}
+.unit summary{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;flex-wrap:wrap}
+.unit summary b{margin-right:auto}
+.u-cls{font:12px var(--mono);color:var(--gold);min-width:150px}
+.u-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin:0;padding:0 14px 10px}
+.u-stats div{background:var(--panel2);border-radius:8px;padding:6px 10px}
+.u-stats dt{font-size:11px;color:var(--faint)}.u-stats dd{margin:0;font-weight:800}
+.u-card{margin:0 14px 14px;padding:12px;background:#050505;border:1px solid var(--line);border-radius:10px;font:12px/1.5 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;color:var(--mute)}
+.ach-tbl input{width:100%;min-width:120px;margin:2px 0!important}
+.ach-tbl input[type=number]{width:110px;min-width:0}
+.ach-tbl td{vertical-align:top}
+.ach-note{margin:0 0 10px;font-size:13px;color:var(--gold);border:1px dashed var(--gold-dim);border-radius:10px;padding:8px 12px}
+
+/* ── поле боя ── */
+.bt-wrap{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+.bt-board{padding:12px}
+.bt-board canvas{width:100%;display:block;border-radius:10px;cursor:pointer}
+.bt-side{padding:16px;display:flex;flex-direction:column;gap:10px}
+.bt-sd{display:flex;flex-direction:column;gap:4px;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
+.bt-sd.me{border-color:var(--gold-dim)}
+.bt-log{list-style:none;margin:0;padding:0;max-height:340px;overflow:auto;font-size:13px}
+.bt-log li{padding:5px 0;border-bottom:1px solid var(--line);color:var(--mute)}
+.bt-log time{font:11px var(--mono);color:var(--faint);margin-right:8px}
+.bt-sides{gap:16px}.bt-sides>div{display:flex;flex-direction:column;gap:4px}
+.bt-list{margin:8px 0;padding-left:18px;color:var(--mute);font-size:13px}
+@media (max-width:900px){.bt-wrap{grid-template-columns:1fr}}

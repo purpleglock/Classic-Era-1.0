@@ -4,7 +4,7 @@ import { session, isTeam, roleTitle } from '../lib/session.js';
 import { openLogin } from '../ui/login.js';
 import { num, signed, plain, dateShort, untilText } from '../lib/format.js';
 import { crest } from './home.js';
-import { applyArt } from '../lib/settings.js';
+import { applyArt, settings } from '../lib/settings.js';
 
 /** Редкие ресурсы подсвечиваются ярким золотом. */
 const RARE = new Set(['Старвис', 'Реликтовое дерево', 'Стелларит', 'Хтонит', 'Ионит', 'Гравиядро', 'Рагенод', 'Ихор', 'Программируемая материя', 'Странный фрагмент']);
@@ -22,6 +22,7 @@ const GROUPS = [
   ['Флот и война', [
     ['map', 'i-map', 'Карта галактики', 'Системы, границы и маршруты', '#/map'],
     ['fleet', 'i-ship', 'Флот и войска', 'Флоты, армии и производство'],
+    ['registry', 'i-list', 'Реестр', 'Свои и общедоступные проекты', '#/registry'],
     ['war', 'i-sword', 'Война', 'Ноты, сражения, оккупация'],
     ['intel', 'i-eye', 'Разведка', 'Агенты и тайные операции'],
   ]],
@@ -159,13 +160,19 @@ async function loadFeed(root, fid) {
     sb.from('faction_news').select('title,published_at,created_at,faction_id').eq('status', 'approved').contains('mentions', [fid]).order('created_at', { ascending: false }).limit(8),
     sb.from('faction_achievements').select('ach_id,reward,earned_at').eq('faction_id', fid).order('earned_at', { ascending: false }).limit(8),
   ]);
+  const [cat, st] = await Promise.all([
+    sb.from('v1_achievements').select('id,name,old_name').then((r) => Object.fromEntries((r.data || []).map((x) => [x.id, x]))),
+    settings().then((s) => s.achievements?.status || 'rework'),
+  ]);
+  const achName = (id) => cat[id]?.name || cat[id]?.old_name || id;
   // старое название «Бойцовский клуб» в сводках показываем как «Арена»
   const fix = (r) => ({ ...r, title: plain(r.title).replace(/^🥊\s*/, '').replace(/Бойцовский клуб/gi, 'Арена').replace(/^[^\p{L}\p{N}]+/u, '') });
   const secRows = (sec.data || []).filter((r) => !/^.?\s*Биржа/i.test(plain(r.title))).map(fix);
   $('#p-sec', root).innerHTML = secRows.map((r) => item(r)).join('') || '<li><p>В секторе тихо.</p></li>';
   $('#p-you', root).innerHTML = (you.data || []).map((r) => item(fix(r), r.faction_id !== fid)).join('') || '<li><p>О вашей державе пока не писали.</p></li>';
   const a = ach.data || [];
-  $('#p-ach', root).innerHTML = a.length
-    ? html`<ol class="ev">${a.map((x) => raw(html`<li><span class="dot gold"></span><p>Достижение «${x.ach_id}»${x.reward ? ` · +${num(x.reward)} ГС` : ''}</p><time>${dateShort(x.earned_at)}</time></li>`))}</ol>`
-    : html`<div class="ev-empty">${icon('i-crown')}<p>Достижений пока нет. Первое появится здесь.</p></div>`;
+  const banner = st === 'live' ? '' : html`<p class="note ach-note">${st === 'off' ? 'Достижения временно выключены.' : 'Система достижений на переработке: новые названия и награды скоро. Полученные достижения сохранены.'}</p>`;
+  $('#p-ach', root).innerHTML = banner + (a.length
+    ? html`<ol class="ev">${a.map((x) => raw(html`<li><span class="dot gold"></span><p>«${achName(x.ach_id)}»${x.reward ? ` · +${num(x.reward)} ГС` : ''}</p><time>${dateShort(x.earned_at)}</time></li>`))}</ol>`
+    : html`<div class="ev-empty">${icon('i-crown')}<p>Достижений пока нет. Первое появится здесь.</p></div>`);
 }
