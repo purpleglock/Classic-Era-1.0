@@ -3,6 +3,15 @@ import { sb, rpc } from '../lib/supabase.js';
 import { session, isTeam, isSuperadmin, refreshRole, LEVEL_LABEL, ROLE_LABEL } from '../lib/session.js';
 import { num, dateTime, starDate, plain } from '../lib/format.js';
 import { crest, loadHeralds } from './home.js';
+import { act } from '../lib/act.js';
+import { discordBadge } from './account.js';
+
+/** Discord-ники пользователей: { user_id: name }. Пусто, если сертификация ещё не подключена. */
+async function discordNames(ids) {
+  const list = [...new Set(ids.filter(Boolean))];
+  if (!list.length) return {};
+  try { const rows = await rpc('v1_discord_of', { p_users: list }); return Object.fromEntries((rows || []).map((x) => [x.user_id, x.name])); } catch { return {}; }
+}
 
 const SECTIONS = [
   ['requests', 'i-check', 'Заявки на одобрение'],
@@ -22,18 +31,6 @@ const STATUS_LABEL = { pending: 'ждёт', approved: 'одобрено', reject
 
 let current = 'requests';
 
-/** Действие команды: суперадмин выполняет сразу, админ — сразу или через заявку, как решает база. */
-async function act(action, target, payload = {}, note = null) {
-  try {
-    const r = await rpc('v1_admin_do', { p_action: action, p_target: target == null ? null : String(target), p_payload: payload, p_note: note });
-    if (r.status === 'pending') toast('Заявка отправлена суперадмину на одобрение');
-    else toast('Готово');
-    return r;
-  } catch (e) {
-    toast(e.message, 'err');
-    throw e;
-  }
-}
 const list = (kind, q = null, limit = 50) => rpc('v1_admin_list', { p_kind: kind, p_q: q, p_limit: limit });
 
 export async function renderAdmin(root) {
@@ -146,13 +143,17 @@ const RENDER = {
   // Регистрация фракций
   async apps(sec) {
     const items = await list('apps');
+    const ds = await discordNames(items.map((a) => a.owner_id));
     split(sec, 'Регистрация фракций', items,
-      (a) => html`<b>${a.name || 'Без названия'}</b><span>${a.owner_name} · ${dateTime(a.updated_at || a.created_at)}</span><span class="tag new">ждёт</span>`,
+      (a) => html`<b>${a.name || 'Без названия'}</b><span>${a.owner_name} · ${dateTime(a.updated_at || a.created_at)}</span><span class="tag new">ждёт</span>${ds[a.owner_id] ? discordBadge(ds[a.owner_id]) : ''}`,
       (det, a) => {
-        det.innerHTML = html`<h3>${a.name || 'Без названия'}</h3>
+        det.innerHTML = html`<div class="det-head"><span class="crest sm">${crest(a.herald_url)}</span><h3>${a.name || 'Без названия'}</h3></div>
+          <p class="who">${a.owner_name} · ${ds[a.owner_id] ? discordBadge(ds[a.owner_id]) : raw('<span class="tag">Discord не привязан</span>')}</p>
           <dl class="kv"><dt>Правление</dt><dd>${[a.gov, a.regime].filter(Boolean).join(' · ') || '—'}</dd><dt>Раса</dt><dd>${a.race || '—'}</dd>
           <dt>Столица</dt><dd>${[a.planet_name, a.system_name].filter(Boolean).join(' / ') || '—'}</dd><dt>Идеология</dt><dd>${a.ideology || '—'}</dd>
+          <dt>Тип</dt><dd>${a.civ_type === 'frontier' ? 'Фронтир' : a.civ_type === 'colony' ? 'Колония' : '—'}</dd>
           <dt>Цвет</dt><dd>${a.color ? raw(html`<i class="sw" style="background:${a.color}"></i>${a.color}`) : '—'}</dd></dl>
+          ${a.culture ? raw(html`<div class="msg-b"><small>Культура</small><br>${plain(a.culture).slice(0, 800)}</div>`) : ''}
           ${a.history ? raw(html`<div class="msg-b">${plain(a.history).slice(0, 1200)}</div>`) : ''}
           <label for="app-reason">Причина (для отказа или доработки)</label><input id="app-reason" type="text" placeholder="Например: не заполнена история державы">
           <div class="acts"><button type="button" class="btn sm" id="a-ret">Вернуть на доработку</button><button type="button" class="btn sm danger" id="a-rej">Отклонить</button></div>
@@ -204,10 +205,11 @@ const RENDER = {
   // Пользователи
   async users(sec, q = '') {
     const rows = await list('users', q || null, 100);
+    const ds = await discordNames(rows.map((u) => u.id));
     sec.innerHTML = html`<div class="sec-h"><h2>Пользователи</h2><input class="search" type="search" id="u-q" placeholder="${isSuperadmin() ? 'Ник или почта' : 'Ник'}" aria-label="Поиск" value="${q}"></div>
       <div class="tbl"><table><thead><tr><th>Пользователь</th><th>Роль</th><th>Уровень</th><th>Статус</th><th></th></tr></thead><tbody>
       ${rows.map((u) => raw(html`<tr data-id="${u.id}">
-        <td><b>${u.name}</b>${u.email ? raw(html`<small>${u.email}</small>`) : ''}</td>
+        <td><b>${u.name}</b>${ds[u.id] ? discordBadge(ds[u.id]) : ''}${u.email ? raw(html`<small>${u.email}</small>`) : ''}</td>
         <td>${isSuperadmin()
           ? raw(html`<select data-staff aria-label="Роль">
               <option value="" ${raw(!u.staff_level ? 'selected' : '')}>${ROLE_LABEL[u.role === 'team' ? 'player' : u.role]}</option>

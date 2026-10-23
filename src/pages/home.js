@@ -75,7 +75,7 @@ export async function renderHome(root) {
     $('#h-reg', root).onclick = () => openLogin('up');
     $('#h-in', root).onclick = () => openLogin('in');
   } else {
-    acts.innerHTML = html`<a class="btn gold" href="#/cabinet">${session.factionId ? 'В кабинет державы' : 'Подать заявку на державу'}</a>`;
+    acts.innerHTML = html`<a class="btn gold" href="${session.factionId ? '#/cabinet' : '#/apply'}">${session.factionId ? 'В кабинет державы' : 'Подать заявку на державу'}</a>`;
   }
 
   // реплики Классикал-Тян

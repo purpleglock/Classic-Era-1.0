@@ -18,9 +18,8 @@ const GROUPS = [
     ['research', 'i-flask', 'Исследования', 'Дерево технологий и очередь'],
   ]],
   ['Флот и война', [
-    ['map', 'i-map', 'Карта галактики', 'Системы, границы и маршруты'],
+    ['map', 'i-map', 'Карта галактики', 'Системы, границы и маршруты', '#/map'],
     ['fleet', 'i-ship', 'Флот и войска', 'Флоты, армии и производство'],
-    ['designs', 'i-wrench', 'Конструкторы', 'Проекты кораблей и техники'],
     ['war', 'i-sword', 'Война', 'Ноты, сражения, оккупация'],
     ['intel', 'i-eye', 'Разведка', 'Агенты и тайные операции'],
   ]],
@@ -33,7 +32,7 @@ const GROUPS = [
     ['bar', 'i-glass', 'Ресторан-бар «Классикал»', 'Встречи, игры на удачу и слухи сектора'],
   ]],
 ];
-const SOON = [['i-trend', 'Биржа', 'На переработке, вернётся в патче'], ['i-planet', 'Георазведка', 'На переработке']];
+const SOON = [['i-wrench', 'Конструкторы', 'Корабли и техника — пересобираем с нуля'], ['i-flask', 'Конструктор технологий', 'Свои технологии державы — в разработке'], ['i-trend', 'Биржа', 'На переработке, вернётся в патче'], ['i-planet', 'Георазведка', 'На переработке']];
 
 export async function renderCabinet(root) {
   if (!session.user) {
@@ -51,7 +50,7 @@ export async function renderCabinet(root) {
         <span class="m-ic">${icon('i-flag')}</span>
         <div><span class="role-badge" data-role="${session.role}">${roleTitle()}</span><h1>У вас пока нет державы</h1>
           <p>Подайте заявку: команда проекта рассмотрит анкету и откроет кабинет. Пока можно читать вестник и лор.</p></div>
-        <a class="btn gold" href="#/soon?s=apply">Подать заявку на державу</a>
+        <a class="btn gold" href="#/apply">Подать заявку на державу</a>
       </section>
       ${session.schemaMissing ? raw(html`<p class="note warn">Роли ещё не подключены в базе: примените миграцию 20261023_01_roles.sql.</p>`) : ''}`;
     return;
@@ -83,6 +82,7 @@ export async function renderCabinet(root) {
         </div>
         <div class="state-acts">
           <a class="btn sm" href="#/guide">${icon('i-guide')}Как играть</a>
+          <a class="btn sm" href="#/account">${icon('i-users')}Аккаунт</a>
           ${isTeam() ? raw(html`<a class="btn sm" href="#/admin">${icon('i-shield')}Админ-панель</a>`) : ''}
         </div>
       </div>
@@ -103,9 +103,9 @@ export async function renderCabinet(root) {
     <div class="cab-cols">
       <div class="groups">
         ${GROUPS.map(([title, tiles], gi) => raw(html`<section aria-labelledby="g${gi}"><h2 class="g-h" id="g${gi}">${title}</h2><div class="tiles">
-          ${tiles.map(([key, ic, t, s]) => raw(html`<a class="tile" href="#/soon?s=${key}">${icon(ic)}<span><b>${t}</b><small>${s}</small></span></a>`))}
+          ${tiles.map(([key, ic, t, s, href]) => raw(html`<a class="tile" href="${href || `#/soon?s=${key}`}">${icon(ic)}<span><b>${t}</b><small>${s}</small></span></a>`))}
         </div></section>`))}
-        <section aria-labelledby="g-soon"><h2 class="g-h" id="g-soon">Скоро</h2><div class="tiles">
+        <section aria-labelledby="g-soon"><h2 class="g-h" id="g-soon">В разработке</h2><div class="tiles">
           ${SOON.map(([ic, t, s]) => raw(html`<div class="tile off">${icon(ic)}<span><b>${t}</b><small>${s}</small></span></div>`))}
         </div></section>
       </div>

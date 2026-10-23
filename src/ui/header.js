@@ -55,6 +55,7 @@ export function renderHeader() {
       ${logged ? raw(html`
         ${isTeam() ? raw(html`<a class="ib admin-btn" href="#/admin" aria-label="Админ-панель" title="Админ-панель">${icon('i-shield')}${session.pendingRequests ? raw(`<span class="badge">${session.pendingRequests}</span>`) : ''}</a>`) : ''}
         <a class="cab" href="#/cabinet" title="${roleTitle()}"><i>${initials(session.displayName)}</i><span><small>${roleShort()}</small><b>${session.displayName || 'Кабинет'}</b></span></a>
+        <a class="ib" href="#/account" aria-label="Аккаунт и Discord" title="Аккаунт и Discord">${icon('i-users')}</a>
         <button type="button" class="ib" id="logout" aria-label="Выйти" title="Выйти">${icon('i-logout')}</button>`)
       : raw(html`<button type="button" class="btn gold sm" id="login-btn">Войти</button>`)}
     </div>`;

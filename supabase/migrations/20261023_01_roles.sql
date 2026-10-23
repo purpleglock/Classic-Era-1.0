@@ -278,7 +278,15 @@ begin
     get diagnostics n = row_count;
 
   else
-    raise exception 'unknown_action: %', p_action;
+    -- Действия модулей: 'map.lane.add' → функция v1_x_map(action, target, payload).
+    -- Каждый модуль приносит свою функцию своей миграцией.
+    if split_part(p_action, '.', 1) ~ '^[a-z]+$'
+       and to_regprocedure(format('public.v1_x_%s(text,text,jsonb)', split_part(p_action, '.', 1))) is not null then
+      execute format('select public.v1_x_%s($1, $2, $3)', split_part(p_action, '.', 1))
+        into strict n using p_action, p_target, p_payload;
+    else
+      raise exception 'unknown_action: %', p_action;
+    end if;
   end case;
 
   return jsonb_build_object('rows', n);
@@ -382,12 +390,12 @@ begin
 
   when 'apps' then
     select coalesce(jsonb_agg(a order by a.created_at desc), '[]') into out from (
-      select f.id, f.name, f.color, f.gov, f.regime, f.race, f.civ_type, f.system_name, f.planet_name,
+      select f.id, f.owner_id, f.name, f.color, f.gov, f.regime, f.race, f.civ_type, f.system_name, f.planet_name,
              f.ideology, f.culture, left(f.history, 2000) as history, f.herald_url, f.status, f.pending_review,
              f.created_at, f.updated_at,
              coalesce((select max(display_name) from user_roles where user_id = f.owner_id), 'Игрок') as owner_name
       from faction_applications f
-      where f.pending_review is true
+      where f.status = 'pending' or f.pending_review is true
       order by f.created_at desc limit lim) a;
 
   when 'news' then

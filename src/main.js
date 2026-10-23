@@ -7,13 +7,16 @@ import { renderHome } from './pages/home.js';
 import { renderCabinet } from './pages/cabinet.js';
 import { renderAdmin } from './pages/admin.js';
 import { renderGuide, renderRules } from './pages/guide.js';
+import { renderApply } from './pages/apply.js';
+import { renderAccount } from './pages/account.js';
+import { renderMap } from './pages/map.js';
 
 const SOON = {
   wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', help: 'Помощь',
   privacy: 'Политика конфиденциальности', terms: 'Пользовательское соглашение', consent: 'Согласие на обработку персональных данных',
-  apply: 'Заявка на державу', stats: 'Статистика державы', inner: 'Внутренняя политика', outer: 'Внешняя политика',
-  research: 'Исследования', colonize: 'Колонизация', colonies: 'Управление колониями', map: 'Карта галактики', fleet: 'Флот и войска',
-  designs: 'Конструкторы', war: 'Война', intel: 'Разведка', mining: 'Добыча ресурсов', trade: 'Торговля',
+  stats: 'Статистика державы', inner: 'Внутренняя политика', outer: 'Внешняя политика',
+  research: 'Исследования', colonize: 'Колонизация', colonies: 'Управление колониями', fleet: 'Флот и войска',
+  designs: 'Конструкторы', techs: 'Конструктор технологий', war: 'Война', intel: 'Разведка', mining: 'Добыча ресурсов', trade: 'Торговля',
   arena: 'Арена', bar: 'Ресторан-бар «Классикал»',
 };
 
@@ -32,6 +35,9 @@ route('/cabinet', () => renderCabinet(view()));
 route('/admin', () => renderAdmin(view()));
 route('/guide', () => renderGuide(view()));
 route('/rules', () => renderRules(view()));
+route('/apply', () => renderApply(view()));
+route('/account', () => renderAccount(view()));
+route('/map', () => renderMap(view()));
 route('/soon', () => {
   const key = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
   const title = SOON[key] || 'Раздел';
@@ -51,7 +57,7 @@ initSession().then(() => {
   onSession(() => {
     if (session.user?.id !== lastUser) {
       lastUser = session.user?.id;
-      if (!session.user && ['/cabinet', '/admin'].includes(currentPath())) location.hash = '/';
+      if (!session.user && ['/cabinet', '/admin', '/account', '/apply'].includes(currentPath())) location.hash = '/';
       else render();
     }
   });
