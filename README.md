@@ -39,6 +39,9 @@ design/               макеты дизайна
    `supabase/migrations/20261023_01_roles.sql`, затем `20261023_02_seed_team.sql`
    (во втором файле раскомментируйте тех, кого добавить в команду),
    затем `20261023_03_guide.sql` (гайдбук) и `20261023_04_rules.sql` (правила).
+   Затем `20261023_05_discord_map.sql` (Discord-сертификация, редактор карты, защита картинок).
+   Для Discord: Authentication → Providers → Discord (Client ID и Secret из Discord Developer Portal)
+   и Authentication → Settings → «Allow manual linking».
 2. Локально: запустите start.bat (Windows, работает на встроенном PowerShell, ставить ничего не нужно) или `python3 -m http.server 8000` в папке проекта и откройте http://localhost:8000. Двойной щелчок по `index.html` не работает: браузер не грузит модули из файла.
 3. Vercel: импортировать репозиторий, Framework Preset — Other, без команды сборки.
 4. Вход через Google: в Supabase → Authentication → URL Configuration добавить адрес сайта в Redirect URLs.

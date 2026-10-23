@@ -197,3 +197,4 @@ input[type=color]{width:56px;height:40px;padding:2px;border:1px solid var(--line
 .map-head .search{width:240px!important;flex:0 1 240px}
 .pl .give input[type=text]{flex:1 1 100%!important}
 @media (max-width:760px){.map-head .acts{flex-wrap:wrap}.map-head .search{width:auto!important;flex:1 1 100%}}
+.list .ds-badge{justify-self:start;grid-column:1;margin:4px 0 0}
