@@ -10,6 +10,18 @@ export async function myDiscord() {
   try { return await rpc('v1_my_discord'); } catch { return { linked: false, unavailable: true }; }
 }
 
+const ROLE_MSG = {
+  ok: ['ok', 'Роль «Игрок» на сервере проекта выдана.'],
+  pending: ['', 'Бот выдаёт роль на сервере проекта…'],
+  not_in_guild: ['warn', `Вы ещё не на сервере проекта. Зайдите на него по ссылке ${'discord.gg/jApCDH2zyM'} и нажмите «Получить роль».`],
+};
+function roleLine(ds) {
+  const [cls, text] = ROLE_MSG[ds.role_status] || (ds.role_status
+    ? ['warn', 'Бот не смог выдать роль на сервере. Попробуйте ещё раз позже или напишите команде проекта.']
+    : ['', 'Роль «Игрок» на сервере проекта ещё не выдавалась. Нажмите «Получить роль».']);
+  return html`<p class="ds-role ${cls}">${text}</p>`;
+}
+
 /** Значок «верифицирован в Discord». */
 export function discordBadge(name) {
   return name ? raw(html`<span class="ds-badge" title="Аккаунт подтверждён через Discord">${icon('i-check')}Discord · ${name}</span>`) : '';
@@ -72,12 +84,13 @@ export async function renderAccount(root) {
           ? raw('<p class="empty warn">Сертификация ещё не подключена в базе: примените миграцию 20261023_05_discord_map.sql.</p>')
           : ds.linked
             ? raw(html`<p>Аккаунт подтверждён: в Discord вы — <b>${ds.name}</b>${ds.username && ds.username !== ds.name ? ` (@${ds.username})` : ''}. Подтверждён ${ds.linked_at ? dayMonth(ds.linked_at) : ''}.</p>
-                <p class="hint">Команда проекта и игроки видят значок рядом с вашим именем, так они знают, кто стоит за державой.</p>`)
+                <p class="hint">Команда проекта и игроки видят значок рядом с вашим именем, так они знают, кто стоит за державой.</p>
+                ${ds.roles_on ? raw(roleLine(ds)) : ''}`)
             : raw(html`<p>Привяжите Discord, чтобы подтвердить, кто вы в сообществе. Рядом с вашим именем появится значок, например <span class="ds-badge">${icon('i-check')}Discord · M</span></p>
                 <p class="hint">Пароль от Discord сайт не видит. Мы получаем только ваш ник и аватар.</p>`)}
       </div>
       <div class="acc-act">${ds.unavailable ? '' : ds.linked
-        ? raw('<button type="button" class="btn sm" id="ds-sync">Обновить ник</button><button type="button" class="btn sm danger" id="ds-unlink">Отвязать</button>')
+        ? raw(`${ds.roles_on && ds.role_status !== 'ok' ? '<button type="button" class="btn gold sm" id="ds-role">Получить роль</button>' : ''}<button type="button" class="btn sm" id="ds-sync">Обновить ник</button><button type="button" class="btn sm danger" id="ds-unlink">Отвязать</button>`)
         : raw('<button type="button" class="btn gold" id="ds-link">Привязать Discord</button>')}</div>
     </section>
 
@@ -142,6 +155,13 @@ export async function renderAccount(root) {
   $('#ds-link', root)?.addEventListener('click', async () => {
     const { error } = await sb.auth.linkIdentity({ provider: 'discord', options: { redirectTo: `${location.origin}${location.pathname}#/account?discord=1` } });
     if (error) toast(/manual linking|not enabled|provider/i.test(error.message) ? 'Привязка Discord ещё не включена в настройках Supabase.' : error.message, 'err');
+  });
+  $('#ds-role', root)?.addEventListener('click', async () => {
+    const r = await rpc('v1_discord_role_retry').catch((e) => { toast(e.message, 'err'); });
+    if (!r) return;
+    if (r.status === 'off') { toast('Выдача ролей в Discord сейчас выключена', 'err'); return; }
+    toast('Запрос отправлен боту');
+    setTimeout(() => renderAccount(root), 3000);
   });
   $('#ds-sync', root)?.addEventListener('click', async () => {
     const r = await rpc('v1_discord_sync').catch((e) => { toast(e.message, 'err'); });

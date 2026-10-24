@@ -366,7 +366,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .ds i.ds-ava{background:#000;border:1px solid var(--line)}
 .ds-ava img{width:100%;height:100%;object-fit:contain;padding:5px;display:block}
 .cab i img{width:100%;height:100%;object-fit:cover;border-radius:9px;display:block}
-.cab i:has(img){background:#000;overflow:hidden}
+.cab i:has(img){background:#000}
 .legal-ok{align-items:flex-start!important;font-size:12.5px;line-height:1.45;color:var(--mute)}
 .legal-ok input{margin-top:2px;flex:none}
 .legal-ok a,.consent-modal a{color:var(--gold)}
@@ -830,3 +830,10 @@ textarea.mono{width:100%;font:12.5px/1.5 var(--mono);background:var(--bg);color:
 .ban-screen .acts{justify-content:center;flex-wrap:wrap}
 .ban-links{border-top:1px solid var(--line);padding-top:14px;width:100%}
 @media (max-width:640px){.ban-screen{padding:24px 16px}}
+/* значок Discord-подтверждения на аватаре в шапке */
+.cab i{position:relative}
+.cab-ds{position:absolute;right:-5px;bottom:-5px;width:16px;height:16px;border-radius:50%;background:var(--gold);border:2px solid var(--bg,#000);display:grid;place-items:center;color:#120e05}
+.cab-ds svg{width:9px;height:9px}
+.ds-role{margin:8px 0 0;font-size:13px;color:var(--mute)}
+.ds-role.ok{color:var(--gold)}
+.ds-role.warn{color:#e0a96d}

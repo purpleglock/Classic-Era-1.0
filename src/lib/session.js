@@ -42,7 +42,7 @@ export function roleTitle(s = state) {
 
 async function loadRole() {
   if (!state.user) {
-    Object.assign(state, { role: 'guest', level: null, banned: false, factionId: null, displayName: null, pendingRequests: 0 });
+    Object.assign(state, { role: 'guest', level: null, banned: false, factionId: null, displayName: null, pendingRequests: 0, discord: null });
     return;
   }
   try {
@@ -56,8 +56,12 @@ async function loadRole() {
       pendingRequests: Number(r.pending_requests || 0),
       schemaMissing: false,
     });
-    const { data: pr } = await sb.from('v1_profile').select('avatar_url').eq('user_id', state.user.id).maybeSingle();
+    const [{ data: pr }, ds] = await Promise.all([
+      sb.from('v1_profile').select('avatar_url').eq('user_id', state.user.id).maybeSingle(),
+      rpc('v1_my_discord').catch(() => null),
+    ]);
     state.avatar = pr?.avatar_url || null;
+    state.discord = ds?.linked ? ds.name || 'Discord' : null;
   } catch (e) {
     // Миграция ролей ещё не применена: показываем сайт как гостю, но предупреждаем.
     Object.assign(state, { role: 'guest', level: null, schemaMissing: !!e.missingSchema, displayName: 'Игрок' });
