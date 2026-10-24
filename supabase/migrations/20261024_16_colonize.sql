@@ -155,20 +155,20 @@ end $$;
 create or replace function public.v1_colonize_state() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare
-  fid text := v1_my_faction();
+  v_fid text := v1_my_faction();
   rules jsonb; eco faction_economy; cd_until timestamptz; used int;
 begin
-  if fid is null then raise exception 'no_faction'; end if;
-  rules := v1_colony_rules(fid);
-  select * into eco from faction_economy where faction_id = fid;
+  if v_fid is null then raise exception 'no_faction'; end if;
+  rules := v1_colony_rules(v_fid);
+  select * into eco from faction_economy where faction_id = v_fid;
   if eco.last_system_claim is not null then
     cd_until := eco.last_system_claim + make_interval(days => (rules->>'claim_cd_days')::int);
     if cd_until <= now() then cd_until := null; end if;
   end if;
   used := case when eco.last_system_claim is null then coalesce(eco.claim_used, 0) else 0 end;
   return jsonb_build_object(
-    'faction_id', fid,
-    'can_manage', v1_can_manage(fid, 'colonize'),
+    'faction_id', v_fid,
+    'can_manage', v1_can_manage(v_fid, 'colonize'),
     'gc', eco.gc,
     'rules', rules,
     'claim', jsonb_build_object('pool', rules->'pool', 'used', case when cd_until is not null then (rules->>'pool')::int else used end, 'cooldown_until', cd_until),
@@ -178,49 +178,49 @@ begin
                  'bodies', jsonb_array_length(coalesce(s.planets, '[]'::jsonb)),
                  'open', (select count(*) from jsonb_array_elements(coalesce(s.planets, '[]'::jsonb)) p where (v1_body_access(rules, s, p)->>'mode') in ('colony','station')),
                  'from', (select jsonb_agg(distinct o.name) from map_hyperlanes h join map_systems o on o.id = case when h.a_id = s.id then h.b_id else h.a_id end
-                          where (h.a_id = s.id or h.b_id = s.id) and o.faction = fid)) as x
+                          where (h.a_id = s.id or h.b_id = s.id) and o.faction = v_fid)) as x
         from map_systems s
         where s.faction is null and exists (
           select 1 from map_hyperlanes h join map_systems o on o.id = case when h.a_id = s.id then h.b_id else h.a_id end
-          where (h.a_id = s.id or h.b_id = s.id) and o.faction = fid)) q), '[]'::jsonb),
+          where (h.a_id = s.id or h.b_id = s.id) and o.faction = v_fid)) q), '[]'::jsonb),
     -- свои системы и их тела
     'systems', coalesce((select jsonb_agg(jsonb_build_object('id', s.id, 'name', s.name, 'star_type', s.star_type,
         'bodies', coalesce((select jsonb_agg(jsonb_build_object('pid', (p->>'pid')::int, 'name', p->>'name', 'type', p->>'type', 'kind', coalesce(p->>'kind','planet'),
-                     'colony', (select jsonb_build_object('id', c.id, 'mine', c.faction_id = fid, 'capital', c.is_capital, 'cells', c.cells)
+                     'colony', (select jsonb_build_object('id', c.id, 'mine', c.faction_id = v_fid, 'capital', c.is_capital, 'cells', c.cells)
                                 from colonies c where c.system_id = s.id and c.planet_pid = (p->>'pid')::int limit 1))
                    || v1_body_access(rules, s, p) order by (p->>'pid')::int)
                    from jsonb_array_elements(coalesce(s.planets, '[]'::jsonb)) p where p ? 'pid'), '[]'::jsonb))
-        order by s.name) from map_systems s where s.faction = fid), '[]'::jsonb));
+        order by s.name) from map_systems s where s.faction = v_fid), '[]'::jsonb));
 end $$;
 
 -- ── Захват системы ──
 create or replace function public.v1_claim_system(p_system_id text) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
-  fid text := v1_my_faction();
+  v_fid text := v1_my_faction();
   rules jsonb; eco faction_economy; cost numeric; pool int; used int;
 begin
-  if fid is null then raise exception 'no_faction'; end if;
-  if not v1_can_manage(fid, 'colonize') then raise exception 'not_allowed'; end if;
-  rules := v1_colony_rules(fid);
+  if v_fid is null then raise exception 'no_faction'; end if;
+  if not v1_can_manage(v_fid, 'colonize') then raise exception 'not_allowed'; end if;
+  rules := v1_colony_rules(v_fid);
   cost := (rules->>'system_cost')::numeric;
   pool := (rules->>'pool')::int;
-  select * into eco from faction_economy where faction_id = fid for update;
+  select * into eco from faction_economy where faction_id = v_fid for update;
   if eco.last_system_claim is not null and eco.last_system_claim > now() - make_interval(days => (rules->>'claim_cd_days')::int) then
     raise exception 'claim_cooldown: %', to_char(eco.last_system_claim + make_interval(days => (rules->>'claim_cd_days')::int), 'DD.MM HH24:MI');
   end if;
   if not exists (select 1 from map_systems where id = p_system_id) then raise exception 'system_not_found'; end if;
   if not exists (select 1 from map_hyperlanes h join map_systems o on o.id = case when h.a_id = p_system_id then h.b_id else h.a_id end
-                 where (h.a_id = p_system_id or h.b_id = p_system_id) and o.faction = fid) then
+                 where (h.a_id = p_system_id or h.b_id = p_system_id) and o.faction = v_fid) then
     raise exception 'not_adjacent';
   end if;
   if coalesce(eco.gc, 0) < cost then raise exception 'not_enough_gc'; end if;
-  update map_systems set faction = fid where id = p_system_id and faction is null;
+  update map_systems set faction = v_fid where id = p_system_id and faction is null;
   if not found then raise exception 'system_taken'; end if;
   used := case when eco.last_system_claim is null then coalesce(eco.claim_used, 0) else 0 end + 1;
   update faction_economy set gc = gc - cost, claim_used = used,
          last_system_claim = case when used >= pool then now() else null end
-   where faction_id = fid and gc >= cost;
+   where faction_id = v_fid and gc >= cost;
   if not found then raise exception 'not_enough_gc'; end if;
   return jsonb_build_object('ok', true, 'system_id', p_system_id, 'cost', cost, 'left', greatest(pool - used, 0));
 end $$;
@@ -229,17 +229,17 @@ end $$;
 create or replace function public.v1_colonize(p_system_id text, p_pid int) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
-  fid text := v1_my_faction();
+  v_fid text := v1_my_faction();
   rules jsonb; sys map_systems; body jsonb; acc jsonb; cost numeric; cells int;
 begin
-  if fid is null then raise exception 'no_faction'; end if;
-  if not v1_can_manage(fid, 'colonize') then raise exception 'not_allowed'; end if;
+  if v_fid is null then raise exception 'no_faction'; end if;
+  if not v1_can_manage(v_fid, 'colonize') then raise exception 'not_allowed'; end if;
   select * into sys from map_systems where id = p_system_id;
   if not found then raise exception 'system_not_found'; end if;
-  if sys.faction is not null and sys.faction <> fid then raise exception 'system_foreign'; end if;
+  if sys.faction is not null and sys.faction <> v_fid then raise exception 'system_foreign'; end if;
   select p into body from jsonb_array_elements(coalesce(sys.planets, '[]'::jsonb)) p where (p->>'pid')::int = p_pid limit 1;
   if body is null then raise exception 'body_not_found'; end if;
-  rules := v1_colony_rules(fid);
+  rules := v1_colony_rules(v_fid);
   acc := v1_body_access(rules, sys, body);
   case acc->>'mode'
     when 'colony', 'station' then null;
@@ -250,10 +250,10 @@ begin
   if exists (select 1 from colonies where system_id = p_system_id and planet_pid = p_pid) then raise exception 'body_taken'; end if;
   cost := (acc->>'cost')::numeric;
   cells := (acc->>'cells')::int;
-  update faction_economy set gc = gc - cost where faction_id = fid and gc >= cost;
+  update faction_economy set gc = gc - cost where faction_id = v_fid and gc >= cost;
   if not found then raise exception 'not_enough_gc'; end if;
   insert into colonies(faction_id, owner_id, system_id, planet_name, planet_pid, planet_type, cells, terraformed, resources)
-  values (fid, (select owner_id from faction_economy where faction_id = fid), p_system_id, body->>'name', p_pid,
+  values (v_fid, (select owner_id from faction_economy where faction_id = v_fid), p_system_id, body->>'name', p_pid,
           coalesce(body->>'type', ''), cells, acc->>'mode' = 'station', coalesce(body->'resources', '[]'::jsonb));
   return jsonb_build_object('ok', true, 'mode', acc->>'mode', 'cost', cost, 'cells', cells, 'name', body->>'name');
 end $$;
