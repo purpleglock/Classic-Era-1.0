@@ -9,7 +9,15 @@ import { num, dayMonth, dateTime, leftText } from '../lib/format.js';
  * Сервер: v1_inner_state, v1_unrest_decide, v1_course_set, v1_faith_*.
  */
 
-const TABS = [['order', 'Порядок'], ['course', 'Курс'], ['faith', 'Вера'], ['log', 'Журнал']];
+const TABS = [['order', 'Порядок'], ['budget', 'Бюджет'], ['course', 'Курс'], ['faith', 'Вера'], ['log', 'Журнал']];
+const LVL = ['нет', 'скудно', 'норма', 'усиленно', 'максимум'];
+const BUDGET = [
+  ['industry', 'Промышленность', (l, c) => `работает ${c.slots?.[l] ?? '?'} из 6 слотов гражданских построек, рабочие — ${[10, 20, 30, 40, 50][l]} % населения`],
+  ['military', 'Оборонзаказ', (l, c) => `работает ${c.slots?.[l] ?? '?'} из 6 слотов военных построек${l === 0 ? '; войска не строятся вовсе' : ''}; чем выше, тем быстрее производство`],
+  ['science', 'Образование', (l, c) => `работает ${c.slots?.[l] ?? '?'} из 6 слотов институтов и спецслужб, наука ×${[0.5, 0.8, 1, 1.2, 1.4][l].toLocaleString('ru-RU')}`],
+  ['social', 'Соцобеспечение', (l) => `доход ×${[0.85, 0.95, 1, 1.08, 1.15][l].toLocaleString('ru-RU')}, население ${['−2', '+0,5', '+1,5', '+2,5', '+3,5'][l]} % в сутки`],
+  ['infra', 'Инфраструктура', (l) => `ёмкость складов ×${[0.8, 0.9, 1, 1.15, 1.3][l].toLocaleString('ru-RU')}`],
+];
 const STAGE = { calm: 'спокойно', unrest: 'волнения', rebellion: 'восстание' };
 // подписи осей курса: [название, «хорошо» — когда плюс]
 const AX = {
@@ -35,7 +43,7 @@ function modChips(m = {}) {
   }).join('');
 }
 
-export async function renderInner(root, ui = { tab: new URLSearchParams(location.hash.split('?')[1] || '').get('t') || 'order', onlyBad: false, q: '', open: new Set(), custom: null }) {
+export async function renderInner(root, ui = { tab: new URLSearchParams(location.hash.split('?')[1] || '').get('t') || 'order', onlyBad: false, q: '', open: new Set(), openSys: new Set(), custom: null }) {
   if (!session.user) {
     root.innerHTML = html`<section class="panel gate"><span class="m-ic">${icon('i-crown')}</span><div><h1>Внутренняя политика</h1><p>Войдите, чтобы управлять державой.</p></div><button type="button" class="btn gold" id="g-in">Войти</button></section>`;
     $('#g-in', root).onclick = () => openLogin();
@@ -47,7 +55,7 @@ export async function renderInner(root, ui = { tab: new URLSearchParams(location
   }
   if (!root.querySelector('.ip-wrap')) root.innerHTML = '<div class="skeleton">Слушаю, о чём говорят в колониях…</div>';
   let s;
-  try { s = await rpc('v1_inner_state'); } catch (e) {
+  try { [s, ui.budget] = await Promise.all([rpc('v1_inner_state'), rpc('v1_budget_state').catch(() => null)]); } catch (e) {
     root.innerHTML = html`<section class="panel gate"><div><h1>Внутренняя политика недоступна</h1><p>${e.missingSchema ? 'Внутренняя политика ещё не подключена в базе (миграция 20).' : e.message}</p></div><a class="btn" href="#/cabinet">В кабинет</a></section>`;
     return;
   }
@@ -99,14 +107,48 @@ function draw(root, s, ui) {
           <label class="check col-free"><input type="checkbox" id="ip-bad" ${raw(ui.onlyBad ? 'checked' : '')}> <span>Только неспокойные</span></label>
           <input class="search" type="search" id="ip-q" value="${ui.q}" placeholder="Найти колонию" aria-label="Найти колонию"></div>
         <p class="hint">Порядок от −100 до 100. Ниже ${cfg.unrest_at ?? -50} начинаются волнения: сначала их пытается погасить служба безопасности (постройте её отделения в «Управлении колониями»), не справится — нужно ваше решение за ${cfg.unrest_days || 2} дн., иначе восстание. Восстание без подавления за ${cfg.secede_days || 5} дн. — колония отделяется.</p>
-        <ul class="ip-cols">${rows.length ? rows.map((x) => raw(html`<li class="${x.stage}">
-          <details data-id="${x.id}" ${raw(ui.open.has(x.id) || x.stage !== 'calm' ? 'open' : '')}>
-            <summary><span class="b-n"><b>${x.name}</b>${x.capital ? raw('<em class="cbadge on">Столица</em>') : ''}<small>${x.system || ''}${x.martial ? ' · военное положение' : ''}</small></span>
-              ${raw(meter(x.value))}<b class="ip-val">${x.value > 0 ? '+' : ''}${x.value}</b>
-              <span class="cbadge ${x.stage === 'calm' ? 'dim' : 'on'}">${STAGE[x.stage]}${x.deadline && x.stage !== 'calm' ? ` · ${leftText(new Date(x.deadline) - Date.now())}` : ''}</span></summary>
-            <ul class="ip-break">${(x.breakdown || []).map((b) => raw(html`<li><span>${b.k}</span><b class="${b.v < 0 ? 'bad' : 'good'}">${b.v > 0 ? '+' : ''}${b.v}</b></li>`))}</ul>
-            ${x.stage !== 'calm' ? raw(decisions(x)) : ''}
-          </details></li>`)) : raw('<li class="empty-li">Ничего не найдено.</li>')}</ul>
+        ${(() => {
+          if (!rows.length) return raw('<p class="empty-li">Ничего не найдено.</p>');
+          const groups = new Map();
+          rows.forEach((x) => { const k = x.system || '—'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(x); });
+          const rank = { rebellion: 2, unrest: 1, calm: 0 };
+          const sys = [...groups.entries()].map(([name, list]) => ({ name, list, worst: list.reduce((m, x) => (rank[x.stage] > rank[m] ? x.stage : m), 'calm'),
+            avg: Math.round(list.reduce((a, x) => a + x.value, 0) / list.length), min: Math.min(...list.map((x) => x.value)), cap: list.some((x) => x.capital) }))
+            .sort((a, b) => (rank[b.worst] - rank[a.worst]) || (b.cap - a.cap) || (a.min - b.min));
+          return raw(html`<div class="ip-systems">${sys.map((g) => raw(html`<details class="ip-sys ${g.worst}" data-sys="${g.name}" ${raw(ui.openSys.has(g.name) || g.worst !== 'calm' || !!q ? 'open' : '')}>
+            <summary><span class="b-n"><b>${g.name}</b>${g.cap ? raw('<em class="cbadge on">Столица</em>') : ''}<small>${g.list.length} ${plural(g.list.length, 'колония', 'колонии', 'колоний')} · худший порядок ${g.min > 0 ? '+' : ''}${g.min}</small></span>
+              ${raw(meter(g.avg))}<b class="ip-val">${g.avg > 0 ? '+' : ''}${g.avg}</b>
+              <span class="cbadge ${g.worst === 'calm' ? 'dim' : 'on'}">${STAGE[g.worst]}</span>${icon('i-down')}</summary>
+            <ul class="ip-cols">${g.list.map((x) => raw(html`<li class="${x.stage}">
+              <details data-id="${x.id}" ${raw(ui.open.has(x.id) || x.stage !== 'calm' ? 'open' : '')}>
+                <summary><span class="b-n"><b>${x.name}</b>${x.capital ? raw('<em class="cbadge on">Столица</em>') : ''}<small>${x.martial ? 'военное положение' : 'колония'}</small></span>
+                  ${raw(meter(x.value))}<b class="ip-val">${x.value > 0 ? '+' : ''}${x.value}</b>
+                  <span class="cbadge ${x.stage === 'calm' ? 'dim' : 'on'}">${STAGE[x.stage]}${x.deadline && x.stage !== 'calm' ? ` · ${leftText(new Date(x.deadline) - Date.now())}` : ''}</span></summary>
+                <ul class="ip-break">${(x.breakdown || []).map((b) => raw(html`<li><span>${b.k}</span><b class="${b.v < 0 ? 'bad' : 'good'}">${b.v > 0 ? '+' : ''}${b.v}</b></li>`))}</ul>
+                ${x.stage !== 'calm' ? raw(decisions(x)) : ''}
+              </details></li>`))}</ul></details>`))}</div>`);
+        })()}
+      </section>`;
+    },
+
+    budget: () => {
+      const B = ui.budget;
+      if (!B) return html`<p class="panel op-empty">Бюджет ещё не подключён в базе (миграция 21).</p>`;
+      ui.levels = ui.levels || { ...B.levels };
+      const L = ui.levels, cfgB = B.cfg || {};
+      const upkeep = Math.round((B.pop || 0) * BUDGET.reduce((a, [k]) => a + (k === 'social' && B.robot ? 0 : (cfgB.weights?.[L[k]] ?? 0) * (cfgB.rates?.[k] ?? 0)), 0));
+      const changed = BUDGET.some(([k]) => L[k] !== B.levels[k]);
+      return html`<section class="panel col-sec ip-budget">
+        <div class="sec-h"><h2>Бюджет державы</h2><small>население ${num(B.pop)}</small></div>
+        <p class="hint">Пять отраслей, у каждой пять уровней. Цена растёт прогрессивно (веса 0 · 1 · 2 · 4 · 7) и зависит от населения. Слоты построек открываются сразу после сохранения. На каждый работающий слот нужно ${cfgB.pop_per_slot || 3} жителя: не хватает людей — урезаются все слоты.</p>
+        <div class="ip-branches">${BUDGET.map(([k, name, fx]) => raw(html`<div class="ip-branch">
+          <div class="ip-bh"><b>${name}</b>${B.buildings?.[k] ? raw(html`<small>построек: ${B.buildings[k]}</small>`) : ''}</div>
+          <div class="seg ip-lvls" role="group" aria-label="${name}">${LVL.map((l, i) => raw(html`<button type="button" data-lvl="${k}" data-v="${i}" aria-pressed="${String(L[k] === i)}" ${raw(s.can_manage ? '' : 'disabled')}>${l}</button>`))}</div>
+          <p>${fx(L[k], cfgB)}${k === 'social' && B.robot ? ' · машинам соцобеспечение бесплатно' : ''}</p></div>`))}</div>
+        <div class="ip-upkeep"><span>Содержание в сутки</span><b>${num(upkeep)} ГС</b>${changed ? raw(html`<small>было ${num(B.upkeep)} ГС</small>`) : ''}</div>
+        ${raw(B.slots_need > B.pop ? html`<p class="st-warn">Населения не хватает на все слоты: нужно ${num(B.slots_need)}, есть ${num(B.pop)}. Слоты урезаны пропорционально.</p>` : '')}
+        ${s.can_manage ? raw(html`<div class="acts"><button type="button" class="btn gold" id="bd-save" ${raw(changed ? '' : 'disabled')}>Сохранить бюджет</button>${changed ? raw('<button type="button" class="btn" id="bd-reset">Отменить</button>') : ''}</div>`) : ''}
+        <p class="hint">Два нуля губят державу: Оборонзаказ на нуле — войска не строятся, Соцобеспечение на нуле — население уходит на 2 % в сутки.</p>
       </section>`;
     },
 
@@ -177,7 +219,11 @@ function draw(root, s, ui) {
   $('#ip-bad', root)?.addEventListener('change', (e) => { ui.onlyBad = e.target.checked; draw(root, s, ui); });
   const qi = $('#ip-q', root);
   if (qi) qi.oninput = (e) => { ui.q = e.target.value.trim(); const pos = e.target.selectionStart; draw(root, s, ui); const n = $('#ip-q', root); n.focus(); n.setSelectionRange(pos, pos); };
-  wrap.addEventListener('toggle', (e) => { const d = e.target.closest('details[data-id]'); if (d) (d.open ? ui.open.add(d.dataset.id) : ui.open.delete(d.dataset.id)); }, true);
+  wrap.addEventListener('toggle', (e) => {
+    const d = e.target;
+    if (d.matches?.('details[data-id]')) (d.open ? ui.open.add(d.dataset.id) : ui.open.delete(d.dataset.id));
+    if (d.matches?.('details[data-sys]')) (d.open ? ui.openSys.add(d.dataset.sys) : ui.openSys.delete(d.dataset.sys));
+  }, true);
 
   const go = async (btn, fn, msg) => {
     if (btn) btn.disabled = true;
@@ -188,6 +234,9 @@ function draw(root, s, ui) {
     const b = e.target.closest('button');
     if (!b) return;
     const d = b.dataset;
+    if (d.lvl) { ui.levels[d.lvl] = Number(d.v); draw(root, s, ui); return; }
+    if (b.id === 'bd-reset') { ui.levels = null; draw(root, s, ui); return; }
+    if (b.id === 'bd-save') { const L = ui.levels; return go(b, () => rpc('v1_budget_set', { p_industry: L.industry, p_military: L.military, p_science: L.science, p_social: L.social, p_infra: L.infra }).then(() => { ui.levels = null; }), 'Бюджет сохранён, слоты пересчитаны'); }
     if (d.ax) { ui.custom[d.ax] = Math.max(-2, Math.min(2, (ui.custom[d.ax] || 0) + Number(d.d))); draw(root, s, ui); return; }
     if (d.dec) {
       if (!(await confirmBox(`${d.label}?`, 'Да'))) return;
@@ -208,4 +257,9 @@ function draw(root, s, ui) {
     const fm = e.target;
     if (fm.dataset.form === 'found') go(fm.querySelector('[type=submit]'), () => rpc('v1_faith_found', { p_name: fm.elements.name.value, p_dogma: fm.elements.dogma.value, p_color: fm.elements.color.value }), 'Вера основана');
   };
+}
+
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many;
 }

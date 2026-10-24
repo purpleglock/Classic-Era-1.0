@@ -15,6 +15,7 @@ const KIND = {
   volcanic: 'вулканический', lava: 'лавовый', micro: 'малое тело', exotic: 'экзотический', gasgiant: 'газовый гигант',
   icegiant: 'ледяной гигант', hotgiant: 'горячий гигант', belt: 'пояс астероидов', anomaly: 'аномалия', std: 'обычный мир',
 };
+const BRANCH = { industry: 'Промышленность', military: 'Оборонзаказ', science: 'Образование' };
 const PROJ = { build: 'Постройка', slot: 'Новый слот', habitat: 'Обустройство среды', terraform: 'Терраформ' };
 
 export async function renderColonies(root, ui = { q: '', open: new Set() }) {
@@ -58,8 +59,9 @@ function draw(root, s, ui) {
     </section>
     ${(s.terraforms || []).length ? raw(html`<section class="panel note-bar cl-tf">${icon('i-planet')}<span>Идёт терраформ: ${s.terraforms.map((t) => `${t.name} (${leftText(new Date(t.ready_at) - Date.now())})`).join(', ')}</span><a class="btn sm" href="#/colonize">Колонизация</a></section>`) : ''}
     <section class="panel col-sec">
-      <div class="sec-h"><h2>Колонии</h2><small>постройка и слот готовы через сутки</small>
+      <div class="sec-h"><h2>Колонии</h2><small>постройка готова через сутки</small>
         <input class="search" type="search" id="cl-q" value="${ui.q}" placeholder="Найти колонию или систему" aria-label="Найти колонию"></div>
+      <p class="hint">У каждой постройки 6 слотов. Сколько из них работает, задаёт бюджет державы: гражданские — «Промышленность» (${s.budget ? `уровень ${s.budget.industry + 1} из 5` : ''}), военные — «Оборонзаказ» (${s.budget ? `${s.budget.military + 1} из 5` : ''}), институты и спецслужбы — «Образование» (${s.budget ? `${s.budget.science + 1} из 5` : ''}). Не хватает населения (3 жителя на слот) — слоты урезаются. <a href="#/inner?t=budget">Бюджет державы →</a></p>
       <div class="cl-list" id="cl-list"></div>
     </section></div>`;
 
@@ -108,8 +110,7 @@ function draw(root, s, ui) {
     if (!t) return;
     const d = t.dataset;
     if (d.pick) { pick(cols.find((c) => c.id === d.pick), s, cat, price, gc, (btype) => run(t, () => rpc('v1_build', { p_colony: d.pick, p_btype: btype }), (r) => `Стройка начата за ${num(r.cost)} ГС · готово через сутки`)); return; }
-    if (d.slot) { run(t, () => rpc('v1_open_slot', { p_building: d.slot }), (r) => `Слот откроется через сутки · ${num(r.cost)} ГС`); return; }
-    if (d.demo && await confirmBox(`Снести «${d.name}»? Вернётся половина цены постройки и незавершённого слота.`, 'Снести')) { run(t, () => rpc('v1_demolish', { p_building: d.demo }), (r) => `Снесено · возврат ${num(r.refund)} ГС`); return; }
+    if (d.demo && await confirmBox(`Снести «${d.name}»? Вернётся половина цены постройки.`, 'Снести')) { run(t, () => rpc('v1_demolish', { p_building: d.demo }), (r) => `Снесено · возврат ${num(r.refund)} ГС`); return; }
     if (d.cancel && await confirmBox(`Отменить «${d.label}»? Деньги вернутся полностью.`, 'Отменить')) { run(t, () => rpc('v1_cancel_project', { p_project: d.cancel }), (r) => `Отменено · возврат ${num(r.refund)} ГС`); return; }
     if (d.hab && await confirmBox(`Обустроить среду на «${d.name}» за ${num(s.habitat_cost)} ГС? +${s.habitat_cells} ячейки через сутки.`, 'Обустроить')) { run(t, () => rpc('v1_habitat', { p_colony: d.hab }), () => 'Обустройство начато'); return; }
     if (d.aban && await confirmBox(`Покинуть колонию «${d.name}»? Все постройки исчезнут, деньги не вернутся.`, 'Покинуть')) { run(t, () => rpc('v1_abandon', { p_colony: d.aban }), () => 'Колония покинута'); }
@@ -120,8 +121,7 @@ function bld(b, c, can, gc) {
   const name = c?.name || b.btype;
   const pips = Array.from({ length: 6 }, (_, i) => `<i class="${i < b.slots ? 'on' : ''}"></i>`).join('');
   return html`<li><span class="b-n"><b>${name}</b><small>${c?.descr || ''}</small></span>
-    <span class="pips" title="Открыто слотов: ${b.slots} из 6">${raw(pips)}</span>
-    ${can && b.next_slot != null ? raw(html`<button type="button" class="btn sm" data-slot="${b.id}" ${raw(b.slot_busy ? 'disabled title="Слот уже строится"' : gc < b.next_slot ? 'disabled title="Не хватает ГС"' : '')}>${b.slot_busy ? 'слот строится' : `+слот · ${num(b.next_slot)}`}</button>`) : ''}
+    <span class="pips" title="Работает слотов: ${b.slots} из 6 — задаёт бюджет («${BRANCH[b.branch] || 'Промышленность'}»)">${raw(pips)}<small>${b.slots}/6</small></span>
     ${can ? raw(html`<button type="button" class="btn sm ghost" data-demo="${b.id}" data-name="${name}" aria-label="Снести ${name}">${icon('i-x')}</button>`) : ''}</li>`;
 }
 
