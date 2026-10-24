@@ -4,8 +4,8 @@
 --
 -- Устройство: триггер на v1_discord → net.http_post → edge-функция
 -- `discord-roles` → Discord API (PUT/DELETE роли). Токен бота хранится только
--- в секретах edge-функций (DISCORD_BOT_TOKEN). Функцию защищает общий секрет:
--- он лежит в Vault (discord_hook_secret) и в секретах функции (DISCORD_HOOK_SECRET).
+-- в секретах edge-функций (DISCORD_BOT_TOKEN). Функцию защищает секрет вызова
+-- из Vault (discord_hook_secret); функция сверяет его через v1_discord_hook_check.
 -- ID сервера и ролей — в v1_settings, ключ 'discord'; правятся в админ-панели.
 
 alter table public.v1_discord
@@ -103,3 +103,12 @@ begin
 end $$;
 revoke execute on function public.v1_discord_role_backfill() from public, anon;
 grant execute on function public.v1_discord_role_backfill() to authenticated;
+
+-- Edge-функция сверяет секрет вызова с Vault (только под service_role),
+-- поэтому вписывать его в секреты функции не нужно.
+create or replace function public.v1_discord_hook_check(p_secret text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from vault.decrypted_secrets where name = 'discord_hook_secret' and decrypted_secret = p_secret);
+$$;
+revoke execute on function public.v1_discord_hook_check(text) from public, anon, authenticated;
+grant execute on function public.v1_discord_hook_check(text) to service_role;

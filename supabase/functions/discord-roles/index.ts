@@ -1,9 +1,8 @@
 // Классическая эра · выдача ролей в Discord-сервере проекта.
 // Вызывается только из базы (триггер на v1_discord), по общему секрету.
-// Секреты функции: DISCORD_BOT_TOKEN, DISCORD_HOOK_SECRET.
+// Секрет функции: DISCORD_BOT_TOKEN. Секрет вызова сверяется с Vault (discord_hook_secret).
 
 const TOKEN = Deno.env.get('DISCORD_BOT_TOKEN') ?? '';
-const HOOK = Deno.env.get('DISCORD_HOOK_SECRET') ?? '';
 const SB_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SB_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const ID = /^\d{5,25}$/;
@@ -36,7 +35,13 @@ async function fail(r: Response): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  if (!HOOK || req.headers.get('x-hook-secret') !== HOOK) return new Response('forbidden', { status: 403 });
+  const secret = req.headers.get('x-hook-secret') ?? '';
+  const chk = secret && SB_URL && SB_KEY ? await fetch(`${SB_URL}/rest/v1/rpc/v1_discord_hook_check`, {
+    method: 'POST',
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_secret: secret }),
+  }).then((r) => r.json()).catch(() => false) : false;
+  if (chk !== true) return new Response('forbidden', { status: 403 });
   const b = await req.json().catch(() => null);
   if (!b || !ID.test(String(b.discord_id)) || !ID.test(String(b.guild))) return Response.json({ status: 'bad_request' }, { status: 400 });
 
