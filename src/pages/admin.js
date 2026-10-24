@@ -181,20 +181,60 @@ const RENDER = {
   async factions(sec, q = '') {
     const items = await list('factions', q || null, 200);
     split(sec, 'Управление фракциями', items,
-      (f) => html`<b>${f.name}</b><span>${f.owner_name} · колоний: ${num(f.colonies)}</span>`,
-      (det, f) => {
-        det.innerHTML = html`<div class="det-head"><span class="crest sm">${crest(f.herald_url)}</span><h3>${f.name}</h3></div>
+      (f) => html`<b>${f.name === f.faction_id ? `Без анкеты · ${f.faction_id}` : f.name}</b><span>${f.owner_name} · колоний: ${num(f.colonies)}</span>`,
+      async (det, f) => {
+        det.innerHTML = '<p class="hint">Загружаю державу…</p>';
+        const [d, tech] = await Promise.all([rpc('v1_admin_faction', { p_fid: f.faction_id }).catch(() => null), sb.from('v1_tech').select('id,name,branch').order('sort')]);
+        if (!d) { det.innerHTML = '<p class="empty warn">Нужна миграция 21.</p>'; return; }
+        const T = tech.data || [];
+        const res = Object.entries(d.resources || {}).filter(([, v]) => Number(v) > 0).sort((x, y) => y[1] - x[1]);
+        const doneSet = new Set(d.research || []);
+        const reload = () => RENDER.factions(sec, q);
+        const run = async (action, payload, msg, note = null) => { const r = await act(action, f.faction_id, payload, note).catch(() => null); if (r) { if (msg) toast(msg); reload(); } };
+        det.innerHTML = html`<div class="det-head"><span class="crest sm">${crest(f.herald_url)}</span><div><h3>${d.app?.name || f.faction_id}</h3><small class="hint">${[d.app?.gov, d.app?.race, d.app?.ideology].filter(Boolean).join(' · ')}${d.app?.status && d.app.status !== 'approved' ? ` · анкета: ${d.app.status}` : ''}</small></div></div>
+          <div class="grp"><h4>Правитель</h4>
+            <p>${d.owner ? raw(html`<b>${d.owner.name}</b>${d.owner.email ? raw(html` <small>${d.owner.email}</small>`) : ''}`) : raw('<span class="hint">Без правителя</span>')}${(d.members || []).length ? ` · соправителей: ${d.members.length}` : ''}</p>
+            <div class="give"><input id="fa-mail" type="email" placeholder="Почта нового правителя" aria-label="Почта"><button type="button" class="btn sm" id="fa-transfer">Передать державу</button>${d.owner ? raw('<button type="button" class="btn sm danger" id="fa-kick">Снять игрока</button>') : ''}</div>
+            <div class="give"><input id="fa-name" type="text" maxlength="80" value="${d.app?.name || ''}" aria-label="Название державы"><button type="button" class="btn sm" id="fa-rename">Переименовать</button></div></div>
           <div class="grp"><h4>Казна</h4>
-            <div class="row"><span>ГС <b>${num(f.gc)}</b></span><span>ОН <b>${num(f.science)}</b></span></div>
+            <div class="row"><span>ГС <b>${num(d.gc)}</b></span><span>ОН <b>${num(d.science)}</b></span></div>
             <div class="give"><input id="d-gc" type="number" step="1000" placeholder="± ГС" aria-label="Изменение ГС"><input id="d-sc" type="number" step="10" placeholder="± ОН" aria-label="Изменение ОН">
-              <input id="d-note" type="text" placeholder="Причина (видна в журнале)" aria-label="Причина"><button type="button" class="btn gold sm" id="d-apply">Применить</button></div>
-            <p class="hint">${isSuperadmin() ? 'Выполнится сразу.' : 'Изменение казны уйдёт суперадмину на одобрение.'}</p></div>
-          <div class="grp"><h4>Скоро</h4><p class="hint">Выдача ресурсов, юнитов и агентов, снять игрока и удалить державу переносим следующими шагами.</p></div>`;
+              <input id="d-note" type="text" placeholder="Причина (видна в журнале)" aria-label="Причина"><button type="button" class="btn gold sm" id="d-apply">Применить</button></div></div>
+          <div class="grp"><h4>Ресурсы</h4>
+            <p class="hint">${res.length ? res.slice(0, 30).map(([k, v]) => `${k}: ${num(v)}`).join(' · ') : 'Склады пусты.'}</p>
+            <div class="give"><input id="fr-name" list="fr-list" placeholder="Ресурс" aria-label="Ресурс"><datalist id="fr-list">${res.map(([k]) => raw(html`<option value="${k}">`))}</datalist>
+              <input id="fr-amt" type="number" step="100" placeholder="± количество" aria-label="Количество"><button type="button" class="btn sm" id="fr-apply">Выдать / забрать</button></div></div>
+          <div class="grp"><h4>Технологии</h4><p class="hint">Изучено: ${doneSet.size}.</p>
+            <div class="give"><select id="ft-node" aria-label="Технология">${T.map((t) => raw(html`<option value="${t.id}">${doneSet.has(t.id) ? '✓ ' : ''}${t.branch} — ${t.name}</option>`))}</select>
+              <button type="button" class="btn sm" id="ft-grant">Выдать</button><button type="button" class="btn sm" id="ft-revoke">Забрать</button></div></div>
+          <div class="grp"><h4>Территория</h4><p class="hint">Систем: ${d.systems.length} · колоний: ${d.colonies.length} · флотов: ${d.fleets} · кораблей: ${num(d.ships)}</p>
+            <details><summary>Системы</summary><ul class="op-list">${d.systems.map((x) => raw(html`<li>${x.name}<button type="button" class="btn sm ghost" data-sys="${x.id}" data-name="${x.name}">Освободить</button></li>`))}</ul></details>
+            <details><summary>Колонии</summary><ul class="op-list">${d.colonies.map((x) => raw(html`<li>${x.name}${x.capital ? raw(' <small>столица</small>') : raw(html`<button type="button" class="btn sm ghost" data-col="${x.id}" data-name="${x.name}">Удалить</button>`)}</li>`))}</ul></details></div>
+          <div class="grp danger-zone"><h4>Опасная зона</h4>
+            <div class="give"><label class="check"><input type="checkbox" id="fz-res"> <span>и технологии тоже</span></label><button type="button" class="btn sm danger" id="fz-reset">Обнулить экономику</button></div>
+            <p class="hint">Обнуление: казна, наука, склады, очереди исследований, стройка и производство.</p>
+            ${isSuperadmin() ? raw(html`<div class="give"><input id="fz-confirm" placeholder="Введите название державы" aria-label="Подтверждение"><button type="button" class="btn sm danger" id="fz-nuke">Снести державу</button></div>
+              <p class="hint">Ядерный вариант: исчезнут колонии, флоты, армии и производство, системы станут ничьими, войны и договоры закроются. Отменить нельзя.</p>`) : ''}</div>`;
         $('#d-apply', det).onclick = async () => {
           const gc = Number($('#d-gc', det).value || 0), sc = Number($('#d-sc', det).value || 0);
           if (!gc && !sc) { toast('Укажите изменение ГС или ОН', 'err'); return; }
-          await act('faction.treasury', f.faction_id, { gc, science: sc }, $('#d-note', det).value.trim() || null);
-          RENDER.factions(sec, q);
+          run('faction.treasury', { gc, science: sc }, null, $('#d-note', det).value.trim() || null);
+        };
+        $('#fr-apply', det).onclick = () => { const n = $('#fr-name', det).value.trim(), a = Number($('#fr-amt', det).value || 0); if (!n || !a) { toast('Укажите ресурс и количество', 'err'); return; } run('faction.resource', { name: n, amount: a }, 'Готово'); };
+        $('#ft-grant', det).onclick = () => run('faction.research', { node: $('#ft-node', det).value, grant: true }, 'Технология выдана');
+        $('#ft-revoke', det).onclick = () => run('faction.research', { node: $('#ft-node', det).value, grant: false }, 'Технология забрана');
+        $('#fa-rename', det).onclick = () => run('faction.rename', { name: $('#fa-name', det).value.trim() }, 'Переименовано');
+        $('#fa-transfer', det).onclick = async () => { const m = $('#fa-mail', det).value.trim(); if (!m) return; if (await confirmBox(`Передать державу владельцу ${m}?`, 'Передать')) run('faction.transfer', { email: m }, 'Держава передана'); };
+        $('#fa-kick', det)?.addEventListener('click', async () => { if (await confirmBox('Снять игрока с державы? Держава останется без правителя.', 'Снять')) run('faction.kick_owner', {}, 'Игрок снят'); });
+        $('#fz-reset', det).onclick = async () => { if (await confirmBox('Обнулить экономику державы?', 'Обнулить')) run('faction.reset_economy', { research: $('#fz-res', det).checked }, 'Экономика обнулена'); };
+        $('#fz-nuke', det)?.addEventListener('click', async () => {
+          if ($('#fz-confirm', det).value.trim() !== (d.app?.name || f.faction_id)) { toast('Введите точное название державы', 'err'); return; }
+          if (await confirmBox('Снести державу целиком? Это нельзя отменить.', 'Снести')) run('faction.nuke', {}, 'Держава снесена');
+        });
+        det.onclick = async (e) => {
+          const sb2 = e.target.closest('[data-sys]'), cb = e.target.closest('[data-col]');
+          if (sb2 && await confirmBox(`Освободить систему «${sb2.dataset.name}»?`, 'Освободить')) run('faction.system_release', { system: sb2.dataset.sys }, 'Система освобождена');
+          if (cb && await confirmBox(`Удалить колонию «${cb.dataset.name}»?`, 'Удалить')) run('faction.colony_delete', { colony: cb.dataset.col }, 'Колония удалена');
         };
       },
       html`<input class="search" type="search" id="fac-q" placeholder="Поиск державы" aria-label="Поиск державы" value="${q}">`);
@@ -224,8 +264,9 @@ const RENDER = {
       ${rows.map((u) => raw(html`<tr data-id="${u.id}">
         <td><b>${u.name}</b> <button type="button" class="link-btn" data-rename>изменить</button>${ds[u.id] ? discordBadge(ds[u.id]) : ''}${u.email ? raw(html`<small>${u.email}</small>`) : ''}</td>
         <td>${isSuperadmin()
-          ? raw(html`<select data-staff aria-label="Роль">
-              <option value="" ${raw(!u.staff_level ? 'selected' : '')}>${ROLE_LABEL[u.role === 'team' ? 'player' : u.role]}</option>
+          ? raw(html`<select data-staff data-was="${u.staff_level || u.role}" aria-label="Роль">
+              <option value="guest" ${raw(!u.staff_level && u.role === 'guest' ? 'selected' : '')}>Гость</option>
+              <option value="player" ${raw(!u.staff_level && u.role === 'player' ? 'selected' : '')}>Игрок</option>
               <option value="admin" ${raw(u.staff_level === 'admin' ? 'selected' : '')}>Команда · Админ</option>
               <option value="superadmin" ${raw(u.staff_level === 'superadmin' ? 'selected' : '')}>Команда · Суперадмин</option></select>`)
           : raw(html`<span class="role-badge" data-role="${u.role}">${u.role === 'team' ? `Команда · ${LEVEL_LABEL[u.staff_level] || ''}` : ROLE_LABEL[u.role]}</span>`)}</td>
@@ -265,19 +306,36 @@ const RENDER = {
         return;
       }
       const b = e.target.closest('[data-ban]'); if (!b) return;
-      const id = b.closest('tr').dataset.id;
-      if (b.dataset.ban === 'ban' && !(await confirmBox('Забанить пользователя? Он потеряет доступ к кабинету, держава останется.', 'Забанить'))) return;
-      await act(b.dataset.ban === 'ban' ? 'user.ban' : 'user.unban', id).catch(() => {});
-      RENDER.users(sec, q);
+      const tr = b.closest('tr'), id = tr.dataset.id;
+      if (b.dataset.ban === 'unban') { await act('user.unblock', id).catch(() => {}); RENDER.users(sec, q); return; }
+      const cell = b.parentElement;
+      cell.innerHTML = html`<div class="give ban-form"><input type="text" maxlength="500" placeholder="Причина (увидит игрок)" aria-label="Причина">
+        <select aria-label="Срок"><option value="1">1 день</option><option value="3">3 дня</option><option value="7" selected>7 дней</option><option value="30">30 дней</option><option value="0">навсегда</option></select>
+        <button type="button" class="btn sm danger" data-ban-go>Заблокировать</button></div>`;
+      cell.querySelector('[data-ban-go]').onclick = async () => {
+        const reason = cell.querySelector('input').value.trim();
+        if (!reason) { toast('Напишите причину — её увидит игрок', 'err'); return; }
+        await act('user.block', id, { reason, days: Number(cell.querySelector('select').value) }).catch(() => {});
+        RENDER.users(sec, q);
+      };
     };
     sec.onchange = async (e) => {
       const tr = e.target.closest('tr'); if (!tr) return;
       const id = tr.dataset.id;
       if (e.target.matches('[data-lvl]')) await act('user.set_level', id, { level: Number(e.target.value || 0) }).catch(() => {});
       if (e.target.matches('[data-staff]')) {
-        const v = e.target.value;
-        if (!(await confirmBox(v ? `Назначить в команду проекта (${LEVEL_LABEL[v]})?` : 'Убрать из команды проекта?', 'Да'))) { RENDER.users(sec, q); return; }
-        await act(v ? 'staff.grant' : 'staff.revoke', id, v ? { level: v } : {}).catch(() => {});
+        const v = e.target.value, was = e.target.dataset.was;
+        if (v === 'guest') {
+          if (!(await confirmBox('Сделать гостем? Пользователь уйдёт из команды проекта и будет снят с державы (держава останется без правителя).', 'Сделать гостем'))) { RENDER.users(sec, q); return; }
+          await act('user.guest', id).catch(() => {});
+        } else if (v === 'player') {
+          if (was === 'guest') { toast('Игроком становятся через одобренную заявку на державу.', 'err'); RENDER.users(sec, q); return; }
+          if (!(await confirmBox('Убрать из команды проекта? Держава остаётся за ним.', 'Да'))) { RENDER.users(sec, q); return; }
+          await act('staff.revoke', id).catch(() => {});
+        } else {
+          if (!(await confirmBox(`Назначить в команду проекта (${LEVEL_LABEL[v]})?`, 'Да'))) { RENDER.users(sec, q); return; }
+          await act('staff.grant', id, { level: v }).catch(() => {});
+        }
         RENDER.users(sec, q);
       }
     };

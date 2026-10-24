@@ -807,3 +807,7 @@ textarea.mono{width:100%;font:12.5px/1.5 var(--mono);background:var(--bg);color:
 .ip-upkeep small{color:var(--faint)}
 @media (max-width:900px){.ip-branch{grid-template-columns:minmax(0,1fr)}.ip-lvls{overflow-x:auto}}
 .ip-sys .b-n em{align-self:flex-start;font-style:normal;margin:2px 0}
+.adm input[type=email],.adm input:not([type]),.adm input[list]{background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:9px 11px;font-size:14px}
+.give input[type=email],.give input:not([type]),.give input[list]{flex:1;min-width:160px;margin:0!important;width:auto!important}
+.danger-zone h4{color:#c9a27a}
+.ban-form{flex-wrap:wrap}
