@@ -47,7 +47,7 @@ function draw(root, s, ui = { q: '', free: true, open: new Set() }) {
   const envs = r.native_all ? 'все миры' : (r.envs || []).map((g) => GROUP[g] || g).join(', ');
   const stations = [r.belt && `пояса (${r.belt} яч.)`, r.giant && `гиганты (${r.giant} яч.)`, r.anomaly && `аномалии (${r.anomaly} яч.)`].filter(Boolean);
   const systems = s.systems || [];
-  const freeIn = (sys) => sys.bodies.filter((b) => !b.colony && (b.mode === 'colony' || b.mode === 'station')).length;
+  const freeIn = (sys) => sys.bodies.filter((b) => !b.colony && (b.mode === 'colony' || b.mode === 'station' || b.mode === 'terraform')).length;
   const totalFree = systems.reduce((a, x) => a + freeIn(x), 0);
 
   root.innerHTML = html`<div class="col-wrap">
@@ -110,6 +110,18 @@ function draw(root, s, ui = { q: '', free: true, open: new Set() }) {
   $('.col-wrap', root).onclick = async (e) => {
     const cl = e.target.closest('[data-claim]');
     const co = e.target.closest('[data-col]');
+    const tf = e.target.closest('[data-tf]');
+    if (tf) {
+      if (!(await confirmBox(`Начать терраформ «${tf.dataset.name}» за ${num(tf.dataset.cost)} ГС${Number(tf.dataset.sci) ? ` и ${tf.dataset.sci} ОН` : ''}? Колония появится через ${tf.dataset.days} дн.`, 'Начать'))) return;
+      tf.disabled = true;
+      try {
+        await rpc('v1_terraform', { p_system_id: tf.dataset.sys, p_pid: Number(tf.dataset.tf) });
+        toast(`Терраформ «${tf.dataset.name}» начат`);
+        ui.open.add(tf.dataset.sys);
+        draw(root, await rpc('v1_colonize_state'), ui);
+      } catch (err) { toast(err.message, 'err'); tf.disabled = false; }
+      return;
+    }
     if (!cl && !co) return;
     const btn = cl || co;
     let ok;
@@ -145,7 +157,9 @@ function body(sys, b, s, gc) {
   } else if (b.mode === 'need_station') {
     state = html`<span class="cbadge dim">Нужна технология «${b.tech}»</span>`;
   } else if (b.mode === 'terraform') {
-    state = html`<span class="cbadge dim">Не родной — нужен терраформ</span>`;
+    const t = b.tf || {};
+    state = html`<span class="cbadge dim">Не родной · терраформ ${t.days || '?'} дн.</span>`;
+    act = s.can_manage && t.gc ? html`<button type="button" class="btn sm" data-tf="${b.pid}" data-sys="${sys.id}" data-name="${b.name}" data-cost="${t.gc}" data-sci="${t.sci || 0}" data-days="${t.days}" ${raw(gc >= Number(t.gc) ? '' : 'disabled title="Не хватает ГС"')}>Терраформ · ${num(t.gc)}</button>` : '';
   } else {
     state = html`<span class="cbadge dim">Мёртвый мир</span>`;
   }

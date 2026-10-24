@@ -54,7 +54,7 @@ function draw(root, s, ui) {
       <div class="st-title">
         <a class="st-back" href="#/cabinet">${icon('i-back')}Кабинет</a>
         <h1>Исследования</h1>
-        <p>Изучено <b>${doneN} из ${total}</b> доступных технологий · исследование завершается на суточном тике${s.mult && Number(s.mult) !== 1 ? ` · цены ×${Number(s.mult).toFixed(2)} от доктрины` : ''}</p>
+        <p>Изучено <b>${doneN} из ${total}</b> доступных технологий · исследование завершается на суточном тике${s.mult && Number(s.mult) !== 1 ? ` · цены ×${Number(s.mult).toLocaleString('ru-RU', { maximumFractionDigits: 2 })} от доктрины` : ''}</p>
       </div>
       <div class="col-treasury"><small>Очки науки</small><b>${num(sci)} ОН</b>${s.income ? raw(html`<em class="rs-inc">+${num(s.income)} ОН за сутки</em>`) : ''}</div>
     </section>

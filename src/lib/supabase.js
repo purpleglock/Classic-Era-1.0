@@ -27,6 +27,20 @@ const MESSAGES = {
   body_closed: 'Этот мир нельзя заселить.',
   need_terraform: 'Мир не родной для вашей расы — нужен терраформ.',
   tech_unknown: 'Такой технологии нет.',
+  colony_foreign: 'Это не ваша колония.',
+  building_foreign: 'Это не ваша постройка.',
+  building_unknown: 'Такой постройки нет.',
+  building_tech: 'Для этой постройки нужна технология.',
+  building_world: 'Эта постройка не подходит для этого мира.',
+  temple_no_faith: 'Храм можно строить, только если у державы есть вера.',
+  no_cells: 'В колонии нет свободных ячеек.',
+  slots_max: 'Все слоты уже открыты.',
+  slot_busy: 'Слот уже строится.',
+  habitat_busy: 'Обустройство уже идёт.',
+  terraform_busy: 'Терраформ уже идёт.',
+  terraform_not_needed: 'Этот мир можно заселить без терраформа.',
+  capital_abandon: 'Столицу покинуть нельзя.',
+  project_foreign: 'Проект не найден.',
   tech_frozen: 'Эта технология сейчас заморожена.',
   tech_done: 'Технология уже изучена.',
   tech_running: 'Технология уже изучается.',
@@ -68,9 +82,9 @@ export function humanError(error) {
   const key = Object.keys(MESSAGES).find((k) => raw.includes(k));
   // причины с текстом из базы: «name_rejected: …», «name_cooldown: 31.10 00:59»
   const nr = raw.match(/name_rejected: (.+)/), nc = raw.match(/name_cooldown: (.+)/);
-  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/);
+  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/);
   const text = nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
-    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.`
+    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.` : bf ? `Строить нельзя: ${bf[1].toLowerCase()}.`
     : key ? MESSAGES[key] : raw;
   const err = new Error(text);
   err.raw = raw;
