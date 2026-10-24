@@ -27,6 +27,45 @@ const MESSAGES = {
   body_closed: 'Этот мир нельзя заселить.',
   need_terraform: 'Мир не родной для вашей расы — нужен терраформ.',
   tech_unknown: 'Такой технологии нет.',
+  war_self: 'Нельзя объявить войну самим себе.',
+  faction_unknown: 'Такой державы нет.',
+  union_junior: 'Внешнюю политику ведёт старший партнёр унии.',
+  war_union: 'Нельзя воевать с партнёром по унии.',
+  war_exists: 'Война с этой державой уже идёт.',
+  war_ally: 'Нельзя напасть на союзника — сначала выйдите из союза.',
+  war_vassal: 'Нельзя воевать с вассалом или сюзереном, пока договор действует.',
+  war_not_found: 'Война не найдена.',
+  war_over: 'Война уже окончена.',
+  war_not_leader: 'Мир и капитуляцию подписывают только зачинщики сторон.',
+  war_not_member: 'Вы не участвуете в этой войне.',
+  note_pending: 'Такая нота уже отправлена — ждите ответа.',
+  note_foreign: 'Это предложение адресовано не вам.',
+  note_done: 'На это уже ответили.',
+  ally_in_war: 'Эта держава уже участвует в войне.',
+  bad_union: 'Неизвестный вид союза.',
+  union_name: 'Название союза — от 3 до 60 знаков.',
+  union_member: 'Держава уже состоит в союзе.',
+  union_target_member: 'Эта держава уже состоит в союзе.',
+  union_not_leader: 'Приглашать может только глава союза.',
+  union_none: 'Держава не состоит в союзе.',
+  union_taken: 'Эта держава уже в унии.',
+  bad_tribute: 'Дань — от 0 до 30 %.',
+  vassal_taken: 'У этой державы уже есть сюзерен.',
+  vassal_self: 'Вассал не может брать своих вассалов.',
+  merge_pending: 'Объединение с участием этих держав уже обсуждается.',
+  merge_not_ready: 'Объединение ещё не согласовано сторонами.',
+  loan_amount: 'Кредит — от 1 000 ГС.',
+  loan_pct: 'Процент — от 0 до 30.',
+  loan_days: 'Срок — от 7 до 60 дней.',
+  loan_lender_poor: 'У кредитора больше нет этой суммы.',
+  rep_missing: 'Сначала назначьте представителя в Сообществе.',
+  rep_name: 'Имя представителя — от 2 до 60 знаков.',
+  council_cooldown: 'Держава может вносить одну резолюцию раз в 3 дня.',
+  council_duplicate: 'Такая резолюция уже на голосовании.',
+  council_closed: 'Голосование уже закрыто.',
+  bad_resolution: 'Неизвестная резолюция.',
+  bad_side: 'Выберите сторону войны.',
+  bad_target: 'Неверная цель.',
   colony_foreign: 'Это не ваша колония.',
   building_foreign: 'Это не ваша постройка.',
   building_unknown: 'Такой постройки нет.',
@@ -82,9 +121,9 @@ export function humanError(error) {
   const key = Object.keys(MESSAGES).find((k) => raw.includes(k));
   // причины с текстом из базы: «name_rejected: …», «name_cooldown: 31.10 00:59»
   const nr = raw.match(/name_rejected: (.+)/), nc = raw.match(/name_cooldown: (.+)/);
-  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/);
+  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/);
   const text = nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
-    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.` : bf ? `Строить нельзя: ${bf[1].toLowerCase()}.`
+    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.` : bf ? `Строить нельзя: ${bf[1].toLowerCase()}.` : cl ? `Капитуляцию можно потребовать, когда занято не меньше 80 % систем врага (сейчас ${cl[1]} %).`
     : key ? MESSAGES[key] : raw;
   const err = new Error(text);
   err.raw = raw;
