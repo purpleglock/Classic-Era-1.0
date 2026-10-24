@@ -1,7 +1,8 @@
 import { SPRITE } from './ui/icons.svg.js';
 import { html, icon } from './lib/dom.js';
 import { initSession, onSession, session } from './lib/session.js';
-import { route, startRouter, render, setRouteListener, currentPath } from './lib/router.js';
+import { route, startRouter, render, setRouteListener, currentPath, setGuard } from './lib/router.js';
+import { renderBanned } from './pages/banned.js';
 import { renderHeader, renderFooter } from './ui/header.js';
 import { renderHome } from './pages/home.js';
 import { renderCabinet } from './pages/cabinet.js';
@@ -39,6 +40,13 @@ document.getElementById('app').innerHTML = `
   </div>`;
 
 const view = () => document.getElementById('view');
+
+// заблокированным — экран блокировки; правила и документы остаются доступны
+setGuard(async (path) => {
+  if (!session.user || !session.banned || session.role === 'team' || ['/rules', '/legal'].includes(path)) return false;
+  await renderBanned(view());
+  return true;
+});
 
 route('/', () => renderHome(view()));
 route('/cabinet', () => renderCabinet(view()));
