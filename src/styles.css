@@ -781,3 +781,4 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .ip-courses{grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr))}
 .ip-mod.bad{color:var(--mute);border-style:dashed;border-color:#6b4a3a}
 .ip-ax span small{display:block;font-size:11px;color:var(--faint)}
+textarea.mono{width:100%;font:12.5px/1.5 var(--mono);background:var(--bg);color:var(--text);border:1px solid var(--line2);border-radius:10px;padding:10px;resize:vertical}

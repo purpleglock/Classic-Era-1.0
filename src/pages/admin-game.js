@@ -198,3 +198,61 @@ export async function lore(sec, openId = null) {
   const first = pages.find((p) => p.id === openId);
   if (first) open(first);
 }
+
+// ═ Политика держав: объединения, порядок колоний, цены ═
+export async function politics(sec) {
+  const s = await settings(true);
+  const pol = s.politics || {};
+  const [{ data: merges }, { data: apps }] = await Promise.all([
+    sb.from('v1_merge_requests').select('*').in('status', ['agreed', 'proposed']).order('created_at', { ascending: false }),
+    sb.from('faction_applications').select('faction_id,name').eq('status', 'approved'),
+  ]);
+  const nm = Object.fromEntries((apps || []).map((a) => [a.faction_id, a.name]));
+  const EDIT = [
+    ['colonize', 'Колонизация', 'system_cost, planet_cost, station_cost, claim_cd_days'],
+    ['colonies', 'Управление колониями', 'habitat_cost, terraform (цены по сложности), refund_share'],
+    ['course', 'Курсы', 'cd_days, axes, points'],
+    ['politics', 'Порядок и волнения', 'пороги, решения, служба безопасности'],
+    ['war', 'Война', 'capitulation_share — порог капитуляции'],
+    ['council', 'Межгалактическое сообщество', 'длительность голосования, последствия резолюций'],
+  ];
+  sec.innerHTML = html`
+    <div class="sec-h"><h2>Политика держав</h2></div>
+    <div class="grp"><h4>Объединения держав (старшая уния)</h4>
+      ${(merges || []).length ? raw(html`<ul class="op-list">${merges.map((m) => raw(html`<li><span class="b-n"><b>${nm[m.minor_fid] || m.minor_fid} → ${nm[m.lead_fid] || m.lead_fid}</b>
+        <small>${m.status === 'agreed' ? 'обе стороны согласны — ждёт утверждения' : 'ждёт согласия младшей стороны'}</small></span>
+        ${m.status === 'agreed' ? raw(html`<button type="button" class="btn sm gold" data-mg="approve" data-id="${m.id}" data-name="${nm[m.minor_fid] || ''}">Утвердить слияние</button><button type="button" class="btn sm" data-mg="decline" data-id="${m.id}">Отклонить</button>`) : ''}</li>`))}</ul>`)
+        : raw('<p class="hint">Заявок на объединение нет.</p>')}
+      <p class="hint">Слияние необратимо: всё имущество младшей державы переходит старшей, её правитель становится соправителем. Утверждает только суперадмин.</p></div>
+    <div class="grp"><h4>Порядок колоний и восстания</h4>
+      <div class="give"><label class="check"><input type="checkbox" id="pl-live" ${raw(pol.live ? 'checked' : '')}> <span>Боевой режим: восставшие колонии отделяются</span></label>
+        <button type="button" class="btn sm" id="pl-tick">Прогнать суточный тик сейчас</button></div>
+      <p class="hint">Сейчас ${pol.live ? 'включён боевой режим' : 'режим просмотра: порядок, волнения и решения работают, но колонии не отделяются'}. Тик сам идёт каждый день в 00:20 по UTC.</p></div>
+    <div class="grp"><h4>Числа механик</h4>
+      <p class="hint">Цены и пороги лежат в настройках сайта. Изменения действуют сразу.</p>
+      <div class="give"><select id="pl-key" aria-label="Настройка">${EDIT.map(([k, l, d]) => raw(html`<option value="${k}">${l} — ${d}</option>`))}</select></div>
+      <textarea id="pl-json" rows="12" spellcheck="false" class="mono" aria-label="Настройка в JSON"></textarea>
+      <div class="acts"><button type="button" class="btn sm gold" id="pl-save">Сохранить</button></div></div>`;
+  const keySel = $('#pl-key', sec), area = $('#pl-json', sec);
+  const fill = () => { area.value = JSON.stringify(s[keySel.value] || {}, null, 2); };
+  keySel.onchange = fill; fill();
+  $('#pl-save', sec).onclick = async () => {
+    let v;
+    try { v = JSON.parse(area.value); } catch { toast('Неверный JSON', 'err'); return; }
+    const r = await act('settings.save', keySel.value, v).catch(() => null);
+    if (r) { dropSettings(); toast('Сохранено'); politics(sec); }
+  };
+  $('#pl-live', sec).onchange = async (e) => {
+    if (e.target.checked && !(await confirmBox('Включить боевой режим? Колонии, где восстание не подавлено за 5 дней, будут отделяться от держав.', 'Включить'))) { e.target.checked = false; return; }
+    const r = await act('settings.save', 'politics', { ...pol, live: e.target.checked }).catch(() => null);
+    if (r) { dropSettings(); politics(sec); }
+  };
+  $('#pl-tick', sec).onclick = async () => { const r = await act('politics.tick', 'all', {}).catch(() => null); if (r) toast('Тик выполнен'); };
+  sec.onclick = async (e) => {
+    const b = e.target.closest('[data-mg]');
+    if (!b) return;
+    if (b.dataset.mg === 'approve' && !(await confirmBox(`Утвердить слияние? Держава «${b.dataset.name}» перестанет существовать.`, 'Утвердить'))) return;
+    const r = await act(b.dataset.mg === 'approve' ? 'diplo.merge_approve' : 'diplo.merge_decline', b.dataset.id, {}).catch(() => null);
+    if (r) politics(sec);
+  };
+}
