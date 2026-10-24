@@ -51,3 +51,10 @@ export function untilText(ms) {
   const m = Math.floor((ms % 36e5) / 6e4);
   return `до начисления ${h} ч ${m} мин`;
 }
+
+/** Сколько осталось: «2 д 4 ч», «17 ч 46 мин», «12 мин». */
+export function leftText(ms) {
+  if (ms <= 0) return 'скоро';
+  const d = Math.floor(ms / 864e5), h = Math.floor((ms % 864e5) / 36e5), m = Math.floor((ms % 36e5) / 6e4);
+  return d ? `${d} д ${h} ч` : h ? `${h} ч ${m} мин` : `${m} мин`;
+}
