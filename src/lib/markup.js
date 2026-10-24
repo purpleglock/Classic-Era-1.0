@@ -39,6 +39,15 @@ export function markup(src = '') {
         body.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);
       continue;
     }
+    if (/^\d+\.\d+\.\s/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\d+\.\d+\.\s/.test(lines[i].trim())) {
+        const m = lines[i].trim().match(/^(\d+\.\d+)\.\s(.*)$/);
+        items.push(`<li id="p${m[1].replace('.', '-')}"><span class="art-n">${m[1]}</span><span>${inline(m[2])}</span></li>`); i++;
+      }
+      out.push(`<ol class="arts">${items.join('')}</ol>`);
+      continue;
+    }
     if (/^(-|\d+\.)\s/.test(line)) {
       const ordered = /^\d+\./.test(line);
       const items = [];
@@ -48,7 +57,7 @@ export function markup(src = '') {
       continue;
     }
     const buf = [];
-    while (i < lines.length && lines[i].trim() && !/^(##\s|>|\||-\s|\d+\.\s|!\[)/.test(lines[i].trim())) { buf.push(lines[i].trim()); i++; }
+    while (i < lines.length && lines[i].trim() && !/^(##\s|>|\||-\s|\d+\.\s|\d+\.\d+\.\s|!\[)/.test(lines[i].trim())) { buf.push(lines[i].trim()); i++; }
     out.push(`<p>${inline(buf.join(' '))}</p>`);
   }
   return out.join('');

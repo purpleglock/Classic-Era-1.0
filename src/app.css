@@ -80,6 +80,9 @@ details.full summary{cursor:pointer;color:var(--mute);font-size:13px;margin-bott
 .md h3{margin:26px 0 10px;font-size:17px;font-weight:800;color:var(--gold)}
 .md ul,.md ol{margin:0 0 14px;padding-left:22px;display:grid;gap:6px}
 .md li::marker{color:var(--gold)}
+.md ol.arts{list-style:none;padding:0;gap:8px}
+.md ol.arts li{display:grid;grid-template-columns:2.6em 1fr;gap:8px;align-items:baseline}
+.md .art-n{color:var(--gold);font-weight:800;font-variant-numeric:tabular-nums;font-size:13px}
 .md b{color:var(--text);font-weight:700}
 .md .tbl{margin:0 0 16px;max-width:100%}
 .md table{width:100%;border-collapse:collapse;font-size:14px}
