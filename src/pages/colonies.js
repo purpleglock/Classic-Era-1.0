@@ -82,7 +82,7 @@ function draw(root, s, ui) {
             ${['pop', 'work', 'sci', 'build'].map((k) => raw(html`<span>${{ pop: 'рост', work: 'работа', sci: 'наука', build: 'стройка' }[k]} <b class="${(k === 'build' ? c.world[k] < 1 : c.world[k] > 1) ? 'good' : c.world[k] === 1 ? '' : 'bad'}">×${Number(c.world?.[k] ?? 1).toLocaleString('ru-RU')}</b></span>`))}
           </div>
           <ul class="cl-blds">${c.buildings.map((b) => raw(bld(b, cat[b.btype], s.can_manage, gc)))}
-            ${c.projects.map((p) => raw(html`<li class="proj"><span class="b-n"><b>${PROJ[p.kind] || p.label}${p.btype ? `: ${cat[p.btype]?.name || p.btype}` : ''}</b><small>готово через ${leftText(new Date(p.ready_at) - Date.now())}</small></span>
+            ${c.projects.map((p) => raw(html`<li class="proj"><span class="b-n"><b>${PROJ[p.kind] || p.label}${p.btype ? `: ${cat[p.btype]?.name || p.btype}` : p.building_id ? `: ${cat[c.buildings.find((x) => x.id === p.building_id)?.btype]?.name || ''}` : ''}</b><small>готово через ${leftText(new Date(p.ready_at) - Date.now())}</small></span>
               ${s.can_manage ? raw(html`<button type="button" class="btn sm" data-cancel="${p.id}" data-label="${PROJ[p.kind] || p.label}">Отменить</button>`) : ''}</li>`))}
             ${!c.buildings.length && !c.projects.length ? raw('<li class="empty-li">Колония не застроена.</li>') : ''}</ul>
           ${s.can_manage ? raw(html`<div class="cl-acts">
