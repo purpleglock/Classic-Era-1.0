@@ -207,7 +207,7 @@ begin
   pool := (rules->>'pool')::int;
   select * into eco from faction_economy where faction_id = v_fid for update;
   if eco.last_system_claim is not null and eco.last_system_claim > now() - make_interval(days => (rules->>'claim_cd_days')::int) then
-    raise exception 'claim_cooldown: %', to_char(eco.last_system_claim + make_interval(days => (rules->>'claim_cd_days')::int), 'DD.MM HH24:MI');
+    raise exception 'claim_cooldown: %', to_char((eco.last_system_claim + make_interval(days => (rules->>'claim_cd_days')::int)) at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"');
   end if;
   if not exists (select 1 from map_systems where id = p_system_id) then raise exception 'system_not_found'; end if;
   if not exists (select 1 from map_hyperlanes h join map_systems o on o.id = case when h.a_id = p_system_id then h.b_id else h.a_id end

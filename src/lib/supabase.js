@@ -14,6 +14,18 @@ export async function rpc(name, args = {}) {
 
 const MESSAGES = {
   not_staff: 'Это действие доступно только команде проекта.',
+  no_faction: 'У вас пока нет державы.',
+  not_yours: 'Это не ваша держава.',
+  not_allowed: 'У вас нет права колонизировать от имени державы.',
+  not_adjacent: 'Система должна граничить по гиперпути с вашей территорией.',
+  not_enough_gc: 'Не хватает ГС в казне.',
+  system_taken: 'Систему уже кто-то занял.',
+  system_foreign: 'Система принадлежит другой державе.',
+  system_not_found: 'Система не найдена.',
+  body_not_found: 'Планета не найдена.',
+  body_taken: 'Здесь уже есть колония.',
+  body_closed: 'Этот мир нельзя заселить.',
+  need_terraform: 'Мир не родной для вашей расы — нужен терраформ.',
   bad_avatar: 'Аватар можно загрузить только через кнопку на этой странице.',
   bad_version: 'Неизвестная редакция документов.',
   superadmin_only: 'Это действие может выполнить только суперадмин.',
@@ -48,7 +60,10 @@ export function humanError(error) {
   const key = Object.keys(MESSAGES).find((k) => raw.includes(k));
   // причины с текстом из базы: «name_rejected: …», «name_cooldown: 31.10 00:59»
   const nr = raw.match(/name_rejected: (.+)/), nc = raw.match(/name_cooldown: (.+)/);
-  const text = nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.` : key ? MESSAGES[key] : raw;
+  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/);
+  const text = nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
+    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».`
+    : key ? MESSAGES[key] : raw;
   const err = new Error(text);
   err.raw = raw;
   err.missingSchema = /function .*v1_|relation .*v1_|Could not find the function/i.test(raw);
