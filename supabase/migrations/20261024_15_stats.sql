@@ -19,7 +19,7 @@ returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare
   fid text := coalesce(nullif(p_fid, ''), v1_my_faction());
-  days int := greatest(7, least(coalesce(p_days, 30), 90));
+  n_days int := greatest(7, least(coalesce(p_days, 30), 90));
   r jsonb;
 begin
   if auth.uid() is null then raise exception 'not_signed_in'; end if;
@@ -41,8 +41,8 @@ begin
                   'build', h.gc_build, 'trade', h.gc_trade, 'market', h.gc_market, 'export', h.gc_export,
                   'policy', h.gc_policy, 'faith', coalesce(h.gc_temple,0) + coalesce(h.gc_tithe,0) + coalesce(h.gc_sects,0),
                   'mined_lost', h.mined_lost) order by h.tick_at)
-                from (select * from income_history where faction_id = fid and tick_at > now() - make_interval(days => days)
-                      order by tick_at desc limit days * 2) h), '[]'::jsonb),
+                from (select * from income_history where faction_id = fid and tick_at > now() - make_interval(days => n_days)
+                      order by tick_at desc limit n_days * 2) h), '[]'::jsonb),
 
     'territory', jsonb_build_object(
        'systems', (select count(*) from map_systems s where s.faction = fid),
