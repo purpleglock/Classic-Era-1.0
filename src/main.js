@@ -20,12 +20,12 @@ import { renderColonize } from './pages/colonize.js';
 import { renderResearch } from './pages/research.js';
 import { renderColonies } from './pages/colonies.js';
 import { renderOuter } from './pages/outer.js';
+import { renderInner } from './pages/inner.js';
 import { checkConsent } from './ui/consent.js';
 
 const SOON = {
   wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', help: 'Помощь',
-  inner: 'Внутренняя политика',
- fleet: 'Флот и войска',
+  fleet: 'Флот и войска',
   designs: 'Конструкторы', techs: 'Конструктор технологий', war: 'Война', intel: 'Разведка', mining: 'Добыча ресурсов', trade: 'Торговля',
   arena: 'Арена', bar: 'Ресторан-бар «Классикал»',
 };
@@ -60,6 +60,7 @@ route('/colonize', () => renderColonize(view()));
 route('/research', () => renderResearch(view()));
 route('/colonies', () => renderColonies(view()));
 route('/outer', () => renderOuter(view()));
+route('/inner', () => renderInner(view()));
 route('/soon', () => {
   const key = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
   const title = SOON[key] || 'Раздел';

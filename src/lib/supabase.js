@@ -27,6 +27,21 @@ const MESSAGES = {
   body_closed: 'Этот мир нельзя заселить.',
   need_terraform: 'Мир не родной для вашей расы — нужен терраформ.',
   tech_unknown: 'Такой технологии нет.',
+  unrest_none: 'В колонии спокойно — решение не нужно.',
+  unrest_no_garrison: 'Нужен флот в системе или армия на планете.',
+  unrest_no_faith: 'У державы нет веры для проповеди.',
+  unrest_martial_late: 'При восстании военное положение уже не поможет.',
+  bad_choice: 'Неизвестное решение.',
+  course_unknown: 'Неизвестный курс.',
+  course_council: 'Своя доктрина открывается технологией «Экономический совет».',
+  course_axis: 'Ось доктрины — от −2 до +2.',
+  faith_name: 'Название веры — от 3 до 60 знаков.',
+  faith_has: 'У державы уже есть вера — сначала отрекитесь от неё.',
+  faith_taken: 'Вера с таким названием уже есть.',
+  faith_unknown: 'Такой веры нет.',
+  faith_closed: 'Вход в эту веру закрыт основателем.',
+  faith_founder: 'Основатель не может уйти, пока у веры есть другие последователи.',
+  faith_not_founder: 'Это может только основатель веры.',
   war_self: 'Нельзя объявить войну самим себе.',
   faction_unknown: 'Такой державы нет.',
   union_junior: 'Внешнюю политику ведёт старший партнёр унии.',
@@ -121,9 +136,9 @@ export function humanError(error) {
   const key = Object.keys(MESSAGES).find((k) => raw.includes(k));
   // причины с текстом из базы: «name_rejected: …», «name_cooldown: 31.10 00:59»
   const nr = raw.match(/name_rejected: (.+)/), nc = raw.match(/name_cooldown: (.+)/);
-  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/);
+  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/), cc2 = raw.match(/course_cooldown: (.+)/), cb = raw.match(/course_budget: (\d+)/);
   const text = nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
-    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.` : bf ? `Строить нельзя: ${bf[1].toLowerCase()}.` : cl ? `Капитуляцию можно потребовать, когда занято не меньше 80 % систем врага (сейчас ${cl[1]} %).`
+    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.` : bf ? `Строить нельзя: ${bf[1].toLowerCase()}.` : cc2 ? `Курс можно сменить ${new Date(cc2[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : cb ? `Не больше ${cb[1]} очков доктрины.` : cl ? `Капитуляцию можно потребовать, когда занято не меньше 80 % систем врага (сейчас ${cl[1]} %).`
     : key ? MESSAGES[key] : raw;
   const err = new Error(text);
   err.raw = raw;
