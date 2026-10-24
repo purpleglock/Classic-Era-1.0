@@ -26,6 +26,14 @@ const MESSAGES = {
   body_taken: 'Здесь уже есть колония.',
   body_closed: 'Этот мир нельзя заселить.',
   need_terraform: 'Мир не родной для вашей расы — нужен терраформ.',
+  tech_unknown: 'Такой технологии нет.',
+  tech_frozen: 'Эта технология сейчас заморожена.',
+  tech_done: 'Технология уже изучена.',
+  tech_running: 'Технология уже изучается.',
+  tech_queued: 'Технология уже в очереди.',
+  slots_full: 'Все слоты исследований заняты — поставьте в очередь.',
+  queue_full: 'Очередь заполнена: не больше 12 технологий.',
+  not_enough_science: 'Не хватает очков науки.',
   bad_avatar: 'Аватар можно загрузить только через кнопку на этой странице.',
   bad_version: 'Неизвестная редакция документов.',
   superadmin_only: 'Это действие может выполнить только суперадмин.',
@@ -60,9 +68,9 @@ export function humanError(error) {
   const key = Object.keys(MESSAGES).find((k) => raw.includes(k));
   // причины с текстом из базы: «name_rejected: …», «name_cooldown: 31.10 00:59»
   const nr = raw.match(/name_rejected: (.+)/), nc = raw.match(/name_cooldown: (.+)/);
-  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/);
+  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/);
   const text = nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
-    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».`
+    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.`
     : key ? MESSAGES[key] : raw;
   const err = new Error(text);
   err.raw = raw;
