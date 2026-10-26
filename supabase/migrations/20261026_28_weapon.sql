@@ -34,11 +34,11 @@ grant select on public.v1_weapon_parts to anon, authenticated;
 -- profile: dmg, rate, rng, acc, pen, en.
 insert into public.v1_weapon_parts(kind, id, name, descr, tech, params, sort) values
   ('type', 'kinetic', 'Снарядное',   'Пороховое или электрохимическое орудие. Просто, надёжно, почти не ест энергию.', null,
-   '{"dmg":1.0,"en":0.2,"rng":4,"acc":75,"pen":0.10,"rel":92,"heat":0.6,"rate":2,"mass":1.0,"cost":1.0,"kind":"kinetic","bill":{"Железо":6,"Медь":2}}', 10),
+   '{"dmg":1.0,"en":0.2,"rng":4,"acc":75,"pen":0.10,"rel":92,"heat":0.6,"rate":1,"mass":1.0,"cost":1.0,"kind":"kinetic","bill":{"Железо":6,"Медь":2}}', 10),
   ('type', 'rail',    'Рельсовое',   'Ускоритель масс разгоняет болванку магнитным полем. Бьёт далеко и пробивает броню, но жадно тянет энергию.', 'comp.ship.reactor',
    '{"dmg":1.25,"en":0.6,"rng":8,"acc":80,"pen":0.30,"rel":82,"heat":0.9,"rate":1,"mass":1.2,"cost":1.6,"kind":"kinetic","bill":{"Титан":4,"Медь":4,"Редкоземельные руды":2}}', 20),
   ('type', 'laser',   'Лазерное',    'Луч бьёт мгновенно и без боезапаса. Точнее всего, слабее против толстой брони.', 'wpn.ship.ЭНЕРГЕТИЧЕСКОЕ ВООРУЖЕНИЕ',
-   '{"dmg":0.9,"en":1.0,"rng":6,"acc":92,"pen":0.05,"rel":85,"heat":1.1,"rate":2,"mass":0.8,"cost":1.5,"kind":"energy","bill":{"Силикаты":3,"Редкоземельные руды":3,"Гелий-3":1}}', 30),
+   '{"dmg":0.9,"en":1.0,"rng":6,"acc":92,"pen":0.05,"rel":85,"heat":1.1,"rate":1,"mass":0.8,"cost":1.5,"kind":"energy","bill":{"Силикаты":3,"Редкоземельные руды":3,"Гелий-3":1}}', 30),
   ('type', 'plasma',  'Плазменное',  'Сгусток плазмы прожигает броню насквозь. Огромный урон вблизи и сильный нагрев.', 'rg.school.mgd',
    '{"dmg":1.6,"en":1.2,"rng":3,"acc":70,"pen":0.35,"rel":72,"heat":1.5,"rate":1,"mass":1.1,"cost":2.0,"kind":"energy","bill":{"Ионит":3,"Медь":3,"Дейтерий":2}}', 40),
   ('type', 'missile', 'Ракетное',    'Пусковая установка: самая большая дальность, урон по площади, почти без энергии. Ракеты можно сбить.', 'wpn.ship.ВЗРЫВНОЕ ВООРУЖЕНИЕ',
@@ -53,7 +53,7 @@ insert into public.v1_weapon_parts(kind, id, name, descr, tech, params, sort) va
   ('size', 'L',  'L — тяжёлое',     'Крейсеры: средний и главный калибр.', null,
    '{"dmg":9000,"mass":30,"slots":3,"rng":2,"cost":25000,"k":2.5}', 30),
   ('size', 'XL', 'XL — главный калибр', 'Линкоры и дредноуты.', 'cls.ship.battleship',
-   '{"dmg":28000,"mass":80,"slots":5,"rng":3,"cost":70000,"k":6}', 40),
+   '{"dmg":22000,"mass":80,"slots":5,"rng":3,"cost":70000,"k":6}', 40),
 
   ('mount', 'single', 'Одиночное',     'Один ствол: легко и экономно.', null,
    '{"barrels":1,"dmg":1.0,"mass":1.0,"en":1.0,"acc":0}', 10),
@@ -161,7 +161,7 @@ begin
 
   -- оценка: польза (урон с учётом точности, пробития, дальности) против цены (масса и энергия)
   useful := dmg * acc / 100 * (1 + pen) * (1 + least(rng, 30) / 40);
-  burden := (ps->>'dmg')::numeric * 3 * (1 + en / ((ps->>'dmg')::numeric * 4)) * (mass / (ps->>'mass')::numeric) ^ 0.3;
+  burden := (ps->>'dmg')::numeric * 1.8 * (1 + en / ((ps->>'dmg')::numeric * 1.5)) * (mass / (ps->>'mass')::numeric) ^ 0.8;
   grade := least(100, round(100 * sqrt(least(1, useful / burden) * rel / 100)));
 
   if rel < coalesce((cfg->>'min_reliability')::numeric, 10) then
