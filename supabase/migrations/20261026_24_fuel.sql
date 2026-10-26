@@ -225,16 +225,16 @@ grant execute on function public.v1_fuel_calc(jsonb) to anon, authenticated;
 -- ════════ 5. Состояние конструктора ════════
 create or replace function public.v1_fuel_state() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
-declare v_fid text := v1_my_faction(); stock jsonb;
+declare v_fid text := v1_my_faction(); v_stock jsonb;
 begin
   if v_fid is null then raise exception 'no_faction'; end if;
-  select coalesce(resources, '{}'::jsonb) into stock from faction_economy where faction_id = v_fid;
+  select coalesce(resources, '{}'::jsonb) into v_stock from faction_economy where faction_id = v_fid;
   return jsonb_build_object(
     'can_edit', v1_can_manage(v_fid, 'produce'),
     'settings', coalesce((select value from v1_settings where key = 'fuel'), '{}'::jsonb),
     'components', (select coalesce(jsonb_agg(jsonb_build_object(
         'res', c.res, 'role', c.role, 'grp', c.grp, 'e', c.e, 't', c.t, 's', c.s, 'eff', c.eff, 'note', c.note,
-        'rarity', r.rarity, 'price', m.base_price, 'stock', coalesce((stock->>c.res)::numeric, 0)) order by c.sort), '[]'::jsonb)
+        'rarity', r.rarity, 'price', m.base_price, 'stock', coalesce((v_stock->>c.res)::numeric, 0)) order by c.sort), '[]'::jsonb)
       from v1_fuel_components c left join resource_rarity r on r.name = c.res left join market_resources m on m.name = c.res),
     'fuels', (select coalesce(jsonb_agg(jsonb_build_object('id', id, 'name', name, 'recipe', recipe, 'stats', stats,
         'created_at', created_at, 'updated_at', updated_at) order by created_at), '[]'::jsonb)
