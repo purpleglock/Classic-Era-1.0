@@ -1045,3 +1045,77 @@ textarea.mono{width:100%;font:12.5px/1.5 var(--mono);background:var(--bg);color:
 .rx-seg.three{grid-template-columns:repeat(3,1fr)}
 .wp-turn{font-size:12px;font-weight:500;color:var(--mute)}
 @media (max-width:560px){.rx-seg.three{grid-template-columns:repeat(3,1fr)}}
+
+/* ══ Конструктор кораблей ══ */
+.sy-classes{padding:14px}
+.sy-cls-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.sy-cls{flex:0 0 132px;font:inherit;color:inherit;display:grid;gap:4px;justify-items:center;text-align:center;padding:10px 8px;border:1px solid var(--line2);border-radius:12px;background:var(--panel2);cursor:pointer}
+.sy-cls b{font-size:13px;line-height:1.25}
+.sy-cls small{font-size:11px;color:var(--mute)}
+.sy-cls[aria-checked="true"]{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold);background:linear-gradient(180deg,#e9b9491f,#e9b94908)}
+.sy-cls:disabled{opacity:.45;cursor:not-allowed}
+.sy-sil{width:96px;height:auto;max-height:48px}
+.sy-sil path{fill:#e9b94955}
+.sy-cls[aria-checked="true"] .sy-sil path{fill:var(--gold)}
+.sy-deck{padding:16px;display:grid;gap:10px}
+.sy-bar{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.sy-sel{flex:1;min-width:220px;display:grid;gap:2px}
+.sy-sel b{font-size:15px}
+.sy-sel small{font-size:12.5px;color:var(--mute)}
+.sy-tools{display:flex;gap:6px;flex-wrap:wrap}
+.sy-grid-wrap{overflow:auto;border:1px solid var(--line2);border-radius:12px;background:#050504;padding:10px;display:grid;justify-items:center}
+.sy-svg{display:block;user-select:none;height:auto}
+.sy-svg .c{fill:#0f0d09;stroke:#2c2820;stroke-width:.6;cursor:crosshair}
+.sy-svg .c.e{fill:#14110b}
+.sy-svg .c.hint{fill:#e9b94922;stroke:#e9b94966}
+.sy-svg .d{fill:#e9b94940;pointer-events:none}
+.sy-svg .ax{font-size:9px;fill:var(--faint);letter-spacing:.1em;text-transform:uppercase}
+.sy-svg .it{cursor:pointer}
+.sy-svg .it rect{stroke-width:1.6}
+.sy-svg .it text{font-size:11px;font-weight:800;pointer-events:none}
+.sy-svg .it.sel rect{stroke:#fff3c8;stroke-width:2.6}
+.sy-svg .it.err rect{stroke:#e0573f;stroke-dasharray:4 2}
+.sy-svg .ghost{fill:#e9b94933;stroke:var(--gold);stroke-width:1.6;stroke-dasharray:4 3;pointer-events:none}
+.sy-svg .ghost.bad{fill:#e0573f33;stroke:#e0573f}
+/* оттенки золота по видам предметов */
+.sy-k-reactor rect,i.sy-k-reactor{fill:#e9b949;stroke:#ffe08a;background:#e9b949;color:#120e05}
+.sy-svg .sy-k-reactor text{fill:#120e05}
+.sy-k-weapon rect,i.sy-k-weapon{fill:#2a210d;stroke:#e9b949;background:#2a210d;color:#ffd97a;border:1.5px solid #e9b949}
+.sy-svg .sy-k-weapon text{fill:#ffd97a}
+.sy-k-engine rect,i.sy-k-engine{fill:#94702a;stroke:#e9b949;background:#94702a;color:#120e05}
+.sy-svg .sy-k-engine text{fill:#120e05}
+.sy-k-shield rect,i.sy-k-shield{fill:#1a160c;stroke:#ffd97a;stroke-dasharray:3 2;background:#1a160c;color:#ffd97a;border:1.5px dashed #ffd97a}
+.sy-svg .sy-k-shield text{fill:#ffd97a}
+.sy-k-bridge rect,i.sy-k-bridge{fill:#fff3c8;stroke:#e9b949;background:#fff3c8;color:#120e05}
+.sy-svg .sy-k-bridge text{fill:#120e05}
+.sy-k-fuel_tank rect,i.sy-k-fuel_tank{fill:#3a2e14;stroke:#c9a14a;background:#3a2e14;color:#e6d3a1;border:1.5px solid #c9a14a}
+.sy-svg .sy-k-fuel_tank text{fill:#e6d3a1}
+.sy-k-quarters rect,.sy-k-cargo rect,.sy-k-sensor rect,.sy-k-hangar rect,i.sy-k-quarters,i.sy-k-cargo,i.sy-k-sensor,i.sy-k-hangar{fill:#211b10;stroke:#94702a;background:#211b10;color:#c9a14a;border:1.5px solid #94702a}
+.sy-svg .sy-k-quarters text,.sy-svg .sy-k-cargo text,.sy-svg .sy-k-sensor text,.sy-svg .sy-k-hangar text{fill:#c9a14a}
+.sy-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mute)}
+.sy-legend span{display:inline-flex;align-items:center;gap:6px}
+.sy-legend i,.sy-item i{font-style:normal;width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-size:11px;font-weight:800;flex:none;box-sizing:border-box}
+.sy-cols{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+.sy-palette{padding:16px;display:grid;gap:12px}
+.sy-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.sy-list{display:grid;gap:6px;max-height:420px;overflow:auto;padding-right:2px}
+.sy-list .empty a{color:var(--gold)}
+.sy-item{font:inherit;color:inherit;text-align:left;display:flex;gap:10px;align-items:center;padding:9px 11px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);cursor:pointer}
+.sy-item:hover:not(:disabled){border-color:var(--gold-dim)}
+.sy-item.on{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.sy-item:disabled{opacity:.45;cursor:not-allowed}
+.sy-item span{display:grid;gap:2px;min-width:0}
+.sy-item b{font-size:14px}
+.sy-item small{font-size:12px;color:var(--mute)}
+.sy-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sy-opts label{display:grid;gap:4px;font-size:12px;color:var(--mute)}
+.sy-opts select{height:40px;padding:0 10px;border:1px solid var(--line2);border-radius:10px;background:var(--bg);color:var(--text);font:inherit;min-width:0;width:100%}
+.sy-card{position:sticky;top:16px}
+.sy-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sy-head b{font-size:17px}
+.sy-head small{font-size:12px;color:var(--mute);margin-left:auto}
+.sy-stats dd{font-size:14px}
+.sy-errs li{color:#e07a6a}
+.sy-ship .sy-sil{width:100%;max-height:70px}
+@media (max-width:1100px){.sy-cols{grid-template-columns:minmax(0,1fr)}.sy-card{position:static}}
+@media (max-width:560px){.sy-opts{grid-template-columns:1fr}.sy-deck,.sy-palette{padding:12px}}
