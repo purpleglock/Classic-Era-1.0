@@ -138,6 +138,17 @@ const MESSAGES = {
   fuel_unstable: 'Смесь слишком нестабильна: добавьте стабилизатор.',
   fuel_limit: 'Достигнут предел марок топлива у державы — удалите старую.',
   fuel_not_found: 'Марка не найдена.',
+  reactor_name_taken: 'Реактор с таким названием у державы уже есть.',
+  reactor_name: 'Название реактора — от 3 до 48 знаков.',
+  reactor_incomplete: 'Соберите все узлы реактора.',
+  reactor_mode: 'Такой режим этому реактору недоступен.',
+  reactor_fuel_missing: 'Выберите топливо для реактора.',
+  reactor_fuel_unstable: 'Топливо слишком нестабильно для реактора.',
+  reactor_fuel_class: 'Это топливо реактор не примет.',
+  reactor_locked: 'Для части узлов не изучены технологии.',
+  reactor_unreliable: 'Реактор слишком ненадёжен: снизьте режим или улучшите охлаждение.',
+  reactor_limit: 'Достигнут предел реакторов у державы — удалите старый.',
+  reactor_not_found: 'Реактор не найден.',
 };
 
 export function humanError(error) {
@@ -145,9 +156,9 @@ export function humanError(error) {
   const key = Object.keys(MESSAGES).find((k) => raw.includes(k));
   // причины с текстом из базы: «name_rejected: …», «name_cooldown: 31.10 00:59»
   const nr = raw.match(/name_rejected: (.+)/), nc = raw.match(/name_cooldown: (.+)/);
-  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/), cc2 = raw.match(/course_cooldown: (.+)/), cb = raw.match(/course_budget: (\d+)/);
+  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/), cc2 = raw.match(/course_cooldown: (.+)/), cb = raw.match(/course_budget: (\d+)/), fiu = raw.match(/fuel_in_use: (\d+)/);
   const text = nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
-    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.` : bf ? `Строить нельзя: ${bf[1].toLowerCase()}.` : cc2 ? `Курс можно сменить ${new Date(cc2[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : cb ? `Не больше ${cb[1]} очков доктрины.` : cl ? `Капитуляцию можно потребовать, когда занято не меньше 80 % систем врага (сейчас ${cl[1]} %).`
+    : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.` : bf ? `Строить нельзя: ${bf[1].toLowerCase()}.` : cc2 ? `Курс можно сменить ${new Date(cc2[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : cb ? `Не больше ${cb[1]} очков доктрины.` : fiu ? `На этой марке работают реакторы (${fiu[1]}) — сначала переведите их на другое топливо.` : cl ? `Капитуляцию можно потребовать, когда занято не меньше 80 % систем врага (сейчас ${cl[1]} %).`
     : key ? MESSAGES[key] : raw;
   const err = new Error(text);
   err.raw = raw;
