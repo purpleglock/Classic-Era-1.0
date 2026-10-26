@@ -36,6 +36,7 @@ export function renderHeader() {
         <button type="button" class="dd" id="lore-btn" aria-expanded="false" aria-controls="lore-menu">${icon('i-lore')}<span>Лор</span>${icon('i-down')}</button>
         <ul class="menu" id="lore-menu" hidden>
           <li><a href="#/wiki">Вики фракций</a></li>
+          <li><a href="#/arsenal">Арсенал</a></li>
           <li><a href="#/history">История</a></li>
           <li><a href="#/soon?s=characters">Персонажи</a></li>
         </ul>
