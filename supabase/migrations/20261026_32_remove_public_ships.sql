@@ -6,7 +6,7 @@
 --   • за заказы в очереди верфей (queued/damaged) — цена × количество, заказ снимается.
 -- Ресурсы не возвращаются. Флоты, оставшиеся пустыми, не удаляются: у них есть
 -- история сражений; держава может распустить их сама.
--- Копии проектов и все выплаты записываются в журналы. Повторный запуск ничего не делает.
+-- Копии проектов (с историей постройки) и все выплаты записываются в журналы. Повторный запуск ничего не делает.
 
 set lock_timeout = '15s';
 
@@ -76,8 +76,12 @@ begin
   end loop;
 
   -- 4. архив и удаление проектов
+  -- выполненные заказы — история постройки; сохраняем её в архиве вместе с проектом
   insert into v1_removed_units(id, unit, reason)
-  select id, to_jsonb(u), why from faction_units u where id = any(ids) on conflict (id) do nothing;
+  select u.id, to_jsonb(u) || jsonb_build_object('production_history',
+           (select coalesce(jsonb_agg(to_jsonb(x)), '[]'::jsonb) from unit_production x where x.unit_id = u.id)), why
+    from faction_units u where u.id = any(ids) on conflict (id) do nothing;
+  delete from unit_production where unit_id = any(ids);
   delete from faction_units where id = any(ids);
 
   perform v1_bulletin('Пан-колониальная серия снята с вооружения',
