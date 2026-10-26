@@ -224,8 +224,8 @@ create or replace function public.v1_bmap_preview(p_system text, p_seed bigint d
 returns jsonb
 language sql stable security definer set search_path = public as $$
   select v1_bmap_gen(p_system, p_seed, p_site, p_size)
-    || jsonb_build_object('bodies', (select coalesce(jsonb_agg(jsonb_build_object('pid', x->'pid', 'name', x->>'name', 'type', x->>'type', 'kind', x->>'kind')), '[]'::jsonb)
-                                     from map_systems s, jsonb_array_elements(coalesce(s.planets, '[]'::jsonb)) x where s.id = p_system));
+    || jsonb_build_object('bodies', (select coalesce(jsonb_agg(jsonb_build_object('pid', bd.value->'pid', 'name', bd.value->>'name', 'type', bd.value->>'type', 'kind', bd.value->>'kind')), '[]'::jsonb)
+                                     from map_systems s, jsonb_array_elements(coalesce(s.planets, '[]'::jsonb)) bd where s.id = p_system));
 $$;
 revoke execute on function public.v1_bmap_preview(text, bigint, int, text) from public, anon;
 grant execute on function public.v1_bmap_preview(text, bigint, int, text) to authenticated;
