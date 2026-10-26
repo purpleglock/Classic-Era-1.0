@@ -67,7 +67,7 @@ update public.v1_modules set params = params || '{"w":2,"h":2}' where id = 'tank
 
 -- w, h — клетки; energy — потребление ЭЕ; mass — т; cost — ГС; остальное — по виду модуля.
 insert into public.v1_modules(id, kind, name, size, params, descr, sort, tech) values
-  ('bridge',    'bridge',   'Командный мостик',       'M', '{"w":2,"h":1,"crew":12,"energy":200,"mass":8,"cost":4000}',
+  ('bridge',    'bridge',   'Командный мостик',       'S', '{"w":2,"h":1,"crew":12,"energy":200,"mass":8,"cost":4000}',
    'Обязателен: ровно один на корабль.', 100, null),
   ('eng_s',     'engine',   'Маршевый двигатель S',   'S', '{"w":1,"h":1,"thrust":400,"energy":300,"mass":6,"cost":2500}',
    'Ставится у кормы.', 110, null),
