@@ -594,3 +594,53 @@ a.rx-fac{text-decoration:none;color:inherit}a.rx-fac:hover{filter:brightness(1.2
 @media (max-width:760px){.lb-info{float:none;margin:0 0 16px}.lb-cols{grid-template-columns:1fr}}
 
 @media (max-width:760px){.guide-head .search{grid-column:1/-1;width:100%;min-width:0}}
+
+/* ── Флот и войска (#/fleet) ── */
+.fl-kpi{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+.fl-body{padding:0 16px 18px}
+.fl-order .btn{justify-self:start}
+.fl-pane{padding-top:14px;display:grid;gap:14px}
+.fl-sum{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;color:var(--mute);font-size:14px}
+.fl-sum b{color:var(--text);font-variant-numeric:tabular-nums}
+.fl-new{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.fl-new input{min-width:200px}
+.fl-new input,.fl-new select,.fl-order input,.fl-order select,.fl-mv input,.fl-mv select,.fl-rn input{background:var(--panel2);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:7px 10px;font:inherit;font-size:14px;min-width:0}
+.fl-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr))}
+.fl-card{padding:14px 16px;display:grid;gap:8px;align-content:start;background:linear-gradient(180deg,#e9b94908,transparent 60%),var(--panel)}
+.fl-card.war{border-color:#d98c8088}
+.fl-h{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.fl-h h3{margin:0 0 3px;font-size:16px}
+.fl-h small{display:flex;align-items:center;gap:5px;color:var(--mute);font-size:13px}
+.fl-h small .i{width:13px;height:13px}
+.fl-act{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.fl-rn{display:flex;gap:6px}
+.fl-sub{margin:4px 0 0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:800}
+.fl-sub.old{color:var(--faint)}
+.fl-list,.fl-queue,.fl-done{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.fl-ship,.fl-queue li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 10px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2)}
+.fl-list.old .fl-ship{opacity:.72}
+.fl-q{font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;min-width:38px}
+.fl-n{display:grid;flex:1 1 140px;min-width:0}
+.fl-n b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl-n small{color:var(--faint);font-size:12px}
+.fl-st{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--mute)}
+.fl-st i{font-style:normal;font-variant-numeric:tabular-nums}
+.fl-mv{display:flex;gap:6px;flex-basis:100%;flex-wrap:wrap}
+.fl-mv input{width:72px}.fl-mv select{flex:1 1 140px}
+.fl-order{display:grid;gap:10px 14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));align-items:end;padding:14px;border:1px solid var(--line2);border-radius:14px;background:linear-gradient(180deg,#e9b9490c,transparent)}
+.fl-order label{display:grid;gap:5px;font-size:12px;color:var(--mute)}
+.fl-est{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 22px;align-items:flex-end}
+.fl-est span{display:grid}
+.fl-est small{font-size:12px;color:var(--faint)}
+.fl-est b{font-size:17px;font-variant-numeric:tabular-nums}
+.fl-est b.good{color:#9fd39a}.fl-est b.bad{color:#ff8a7a}.fl-est b.warn{color:var(--gold)}
+.fl-est em{flex-basis:100%;font-size:13px;color:var(--mute);font-style:normal}
+.fl-note{margin:0;font-size:13px;color:var(--mute);line-height:1.5}
+.fl-h3{margin:4px 0 0;font-size:15px}
+.fl-t{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.fl-t .i{width:13px;height:13px}
+.fl-c{font-weight:700;font-variant-numeric:tabular-nums}
+.fl-done li{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--mute);padding:4px 2px;border-bottom:1px solid var(--line)}
+.fl-done small{color:var(--faint)}
+@media (max-width:640px){.fl-kpi{margin-left:0}.fl-new{margin-left:0;width:100%}.fl-new input{flex:1 1 100%}}
+.fl-h .pill{font-size:11px;padding:1px 8px;border:1px solid var(--gold-dim);border-radius:999px;color:var(--gold);vertical-align:middle;font-weight:700}

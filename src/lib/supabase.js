@@ -175,6 +175,18 @@ const MESSAGES = {
   ship_too_many: 'Слишком много предметов на палубе.',
   ship_limit: 'Достигнут предел проектов у державы — удалите старый.',
   ship_not_found: 'Проект не найден.',
+  prod_qty: 'Количество — от 1 до 50.',
+  prod_design_broken: 'В проекте есть ошибки — исправьте его в конструкторе кораблей.',
+  prod_no_shipyard: 'В этой системе у державы нет открытых слотов верфи.',
+  prod_not_found: 'Заказ не найден или уже сдан.',
+  fleet_not_found: 'Флот не найден.',
+  fleet_name: 'Название флота — от 2 до 48 знаков.',
+  fleet_not_together: 'Перевод возможен только между флотами на стоянке в одной системе.',
+  fleet_in_battle: 'Флот в бою — перевод недоступен.',
+  fleet_ship_missing: 'Этих кораблей во флоте уже нет.',
+  fleet_bad_system: 'Флот можно создать только там, где у державы есть флот или верфь.',
+  fleet_not_empty: 'Распустить можно только пустой флот.',
+  fleet_has_orders: 'На этот флот назначены заказы верфи — сначала дождитесь их или отмените.',
 };
 
 export function humanError(error) {
@@ -182,8 +194,8 @@ export function humanError(error) {
   const key = Object.keys(MESSAGES).find((k) => raw.includes(k));
   // причины с текстом из базы: «name_rejected: …», «name_cooldown: 31.10 00:59»
   const nr = raw.match(/name_rejected: (.+)/), nc = raw.match(/name_cooldown: (.+)/);
-  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/), cc2 = raw.match(/course_cooldown: (.+)/), cb = raw.match(/course_budget: (\d+)/), fiu = raw.match(/fuel_in_use: (\d+)/), aiu = raw.match(/alloy_in_use: (\d+)/), pis = raw.match(/part_in_ships: (\d+)/), shi = raw.match(/ship_invalid: (.+)/);
-  const text = nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
+  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/), cc2 = raw.match(/course_cooldown: (.+)/), cb = raw.match(/course_budget: (\d+)/), fiu = raw.match(/fuel_in_use: (\d+)/), aiu = raw.match(/alloy_in_use: (\d+)/), pis = raw.match(/part_in_ships: (\d+)/), shi = raw.match(/ship_invalid: (.+)/), pnm = raw.match(/prod_no_money: (\d+)/);
+  const text = pnm ? `Не хватает денег: заказ стоит ${Number(pnm[1]).toLocaleString('ru-RU')} ГС.` : nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
     : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.` : bf ? `Строить нельзя: ${bf[1].toLowerCase()}.` : cc2 ? `Курс можно сменить ${new Date(cc2[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : cb ? `Не больше ${cb[1]} очков доктрины.` : pis ? `Это стоит на проектах кораблей (${pis[1]}) — сначала уберите оттуда.` : shi ? `Проект не готов: ${shi[1]}` : aiu ? `Из этого сплава сделаны орудия (${aiu[1]}) — сначала смените им материал ствола.` : fiu ? `На этой марке работают реакторы (${fiu[1]}) — сначала переведите их на другое топливо.` : cl ? `Капитуляцию можно потребовать, когда занято не меньше 80 % систем врага (сейчас ${cl[1]} %).`
     : key ? MESSAGES[key] : raw;
   const err = new Error(text);

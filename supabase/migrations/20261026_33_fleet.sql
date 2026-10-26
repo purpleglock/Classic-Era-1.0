@@ -98,7 +98,7 @@ begin
         'legacy', (select coalesce(jsonb_agg(jsonb_build_object('unit_id', e->>'unit_id', 'name', coalesce(e->>'unit_name', u.name), 'qty', (e->>'qty')::int,
                     'class', u.summary->>'className', 'hp', u.summary->'hp', 'damage', u.summary->'dmg', 'speed', u.summary->'speed')), '[]'::jsonb)
                    from jsonb_array_elements(f.composition) e left join faction_units u on u.id::text = e->>'unit_id'),
-        'ships', (select coalesce(jsonb_agg(jsonb_build_object('ship_id', x.ship_id, 'name', x.name, 'class', x.class, 'size', x.size, 'qty', x.qty,
+        'ships', (select coalesce(jsonb_agg(jsonb_build_object('ship_id', x.ship_id, 'name', x.name, 'class', x.class, 'class_name', x.stats->>'class_name', 'size', x.size, 'qty', x.qty,
                     'hp', x.stats->'hp', 'damage', x.stats->'damage', 'speed', x.stats->'speed', 'jumps', x.stats->'jumps', 'shield', x.stats->'shield') order by x.created_at), '[]'::jsonb)
                    from v1_fleet_ships x where x.fleet_id = f.id),
         'in_battle', exists (select 1 from battle_fleets bf join battles b on b.id = bf.battle_id where bf.fleet_id = f.id and b.status = 'active')
