@@ -131,71 +131,108 @@ export class GalaxyView {
     const { systems, byId, lanes, sectors, factions } = this.data;
     const zoomed = this.k / this.k0;
 
-    // секторы: ячейки звёзд, залитые цветом сектора; граница — только там, где сектор кончается
+    // фон: звёздная пыль, привязанная к координатам карты
+    this.drawDust(ctx, r);
+
+    // ── Секторы — «острова» из ячеек звёзд ──
+    // Заливка, внутренняя кайма по краю, территории держав, контур со свечением.
     if (!this.cells) this.cells = cellsOf(systems);
     const secs = this.draft ? [...sectors.filter((s) => s.id !== this.draft.id), this.draft] : sectors;
     const secOf = new Map();
     for (const sec of secs) for (const id of sec.system_ids || []) secOf.set(id, sec);
     const pt = (p) => this.toScreen(p[0], p[1]);
-    for (const sec of secs) {
-      const ids = (sec.system_ids || []).filter((id) => this.cells.has(id));
-      if (!ids.length) continue;
-      const isDraft = sec === this.draft, col = solid(sec.color);
+    const cellPath = (ids) => {
       ctx.beginPath();
       for (const id of ids) {
         const poly = this.cells.get(id);
         poly.forEach((p, i) => { const [x, y] = pt(p); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
         ctx.closePath();
       }
-      ctx.fillStyle = withAlpha(col, isDraft ? 0.16 : 0.08);
-      ctx.fill();
+    };
+    const edgePath = (ids, keep) => {
       ctx.beginPath();
       for (const id of ids) {
         const poly = this.cells.get(id);
         for (let i = 0; i < poly.length; i++) {
-          const tag = poly[i][2];
-          if (tag && secOf.get(tag) === sec) continue; // сосед из того же сектора — внутреннее ребро
+          if (!keep(id, poly[i][2])) continue;
           const [ax, ay] = pt(poly[i]), [bx, by] = pt(poly[(i + 1) % poly.length]);
           ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
         }
       }
-      ctx.strokeStyle = withAlpha(col, isDraft ? 0.95 : 0.55);
-      ctx.lineWidth = isDraft ? 1.8 : 1.2;
-      ctx.setLineDash(isDraft ? [6, 4] : []);
-      ctx.stroke(); ctx.setLineDash([]);
-      if (zoomed < 3 && this.o.labels !== 'none') {
-        let cx = 0, cy = 0;
-        for (const id of ids) { cx += byId[id].x; cy += byId[id].y; }
-        const [lx, ly] = this.toScreen(cx / ids.length, cy / ids.length);
-        ctx.fillStyle = withAlpha(col, 0.75);
-        ctx.font = '700 11px Manrope, system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(String(sec.name || '').toUpperCase(), lx, ly);
+    };
+    const layout = [];
+    for (const sec of secs) {
+      const ids = (sec.system_ids || []).filter((id) => this.cells.has(id));
+      if (!ids.length) continue;
+      const isDraft = sec === this.draft, col = mapColor(sec.color);
+      const outer = (id, tag) => !(tag && secOf.get(tag) === sec);
+      cellPath(ids);
+      ctx.fillStyle = withAlpha(col, isDraft ? 0.2 : 0.1);
+      ctx.fill();
+      // внутренняя кайма: широкий мягкий край, обрезанный по форме сектора
+      ctx.save();
+      cellPath(ids); ctx.clip();
+      edgePath(ids, outer);
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = withAlpha(col, 0.2); ctx.lineWidth = 16; ctx.stroke();
+      ctx.strokeStyle = withAlpha(col, 0.18); ctx.lineWidth = 6; ctx.stroke();
+      ctx.restore();
+      layout.push({ sec, ids, col, isDraft, outer });
+    }
+    // территории держав поверх секторов: заливка цветом державы и пунктир по её границе
+    const byFac = new Map();
+    for (const s of systems) {
+      if (!s.faction || !factions[s.faction] || !this.cells.has(s.id)) continue;
+      if (!byFac.has(s.faction)) byFac.set(s.faction, []);
+      byFac.get(s.faction).push(s.id);
+    }
+    for (const [fid, ids] of byFac) {
+      const col = mapColor(factions[fid].color);
+      cellPath(ids);
+      ctx.fillStyle = withAlpha(col, 0.2); ctx.fill();
+      edgePath(ids, (id, tag) => !tag || byId[tag]?.faction !== fid);
+      ctx.strokeStyle = withAlpha(col, 0.75); ctx.lineWidth = 1; ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // контур секторов: свечение + чёткая линия + золотой пунктир по кромке
+    for (const L of layout) {
+      edgePath(L.ids, L.outer);
+      ctx.save();
+      ctx.shadowColor = withAlpha(L.col, 0.8); ctx.shadowBlur = 10;
+      ctx.strokeStyle = withAlpha(L.col, L.isDraft ? 1 : 0.75); ctx.lineWidth = L.isDraft ? 2 : 1.4; ctx.lineJoin = 'round';
+      ctx.setLineDash(L.isDraft ? [6, 4] : []);
+      ctx.stroke();
+      ctx.restore();
+      if (!L.isDraft) {
+        ctx.strokeStyle = 'rgba(233,185,73,0.3)'; ctx.lineWidth = 0.8; ctx.setLineDash([1.5, 5]);
+        ctx.stroke(); ctx.setLineDash([]);
       }
     }
 
-    // гиперпути — дорожная сеть: ореол у несущих трасс → тёмный кожух → ядро → светлая жила магистралей
+    // ── Гиперпути: прямые; местные — светлые нити, трассы ярче, магистрали — золото со свечением ──
     {
       const geo = this.lanesGeo();
-      const z = Math.min(1, Math.max(0, (zoomed - 1) / 3));      // 0 — обзор, 1 — вблизи
-      const LW = [0.9, 1.5, 2.4], LA = [0.2 + 0.62 * z, 0.55 + 0.33 * z, 0.9];
-      const GW = [0, 5, 9], GA = [0, 0.05, 0.09];
-      const BLUE = 'hsl(206 92% 64%)';
-      const path = (g) => {
-        const [ax, ay] = this.toScreen(g.a.x, g.a.y), [cx, cy] = this.toScreen(g.cx, g.cy), [bx, by] = this.toScreen(g.b.x, g.b.y);
-        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(cx, cy, bx, by);
-      };
-      ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      for (const g of geo) { if (!GW[g.rank]) continue; ctx.globalAlpha = GA[g.rank] * LA[g.rank]; ctx.lineWidth = GW[g.rank]; ctx.strokeStyle = g.tint || BLUE; path(g); ctx.stroke(); }
-      ctx.strokeStyle = 'rgba(5,8,14,0.8)';
-      for (const g of geo) { ctx.globalAlpha = LA[g.rank] * 0.8; ctx.lineWidth = LW[g.rank] + 1.7; path(g); ctx.stroke(); }
-      for (const g of geo) {
-        const hot = this.hotLane === g.lane.id;
-        ctx.globalAlpha = hot ? 1 : LA[g.rank]; ctx.lineWidth = hot ? 3 : LW[g.rank]; ctx.strokeStyle = hot ? '#ff6b5e' : g.tint || BLUE;
-        path(g); ctx.stroke();
+      const z = Math.min(1, Math.max(0, (zoomed - 1) / 3));
+      const W = [0.7, 1, 1.6], A = [0.28 + 0.4 * z, 0.45 + 0.35 * z, 0.85];
+      const BASE = ['#9d9580', '#d4c49a', '#e9b949'];
+      const seg = (g) => { const [ax, ay] = this.toScreen(g.a.x, g.a.y), [bx, by] = this.toScreen(g.b.x, g.b.y); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); };
+      ctx.save(); ctx.lineCap = 'round';
+      for (const rank of [0, 1, 2]) {
+        const groups = new Map();
+        for (const g of geo) {
+          if (g.rank !== rank || this.hotLane === g.lane.id) continue;
+          const c = g.tint || BASE[rank];
+          if (!groups.has(c)) groups.set(c, []);
+          groups.get(c).push(g);
+        }
+        if (rank === 2) { ctx.shadowColor = 'rgba(233,185,73,0.7)'; ctx.shadowBlur = 6; }
+        for (const [c, gs] of groups) {
+          ctx.beginPath(); gs.forEach(seg);
+          ctx.globalAlpha = A[rank]; ctx.lineWidth = W[rank]; ctx.strokeStyle = c; ctx.stroke();
+        }
+        ctx.shadowBlur = 0;
       }
-      ctx.strokeStyle = 'rgba(225,242,255,0.9)'; ctx.lineWidth = 0.6;
-      for (const g of geo) { if (g.rank !== 2) continue; ctx.globalAlpha = 0.35 + 0.35 * z; path(g); ctx.stroke(); }
+      const hot = geo.find((g) => g.lane.id === this.hotLane);
+      if (hot) { ctx.globalAlpha = 1; ctx.lineWidth = 3; ctx.strokeStyle = '#ff6b5e'; ctx.beginPath(); seg(hot); ctx.stroke(); }
       ctx.restore();
     }
     if (this.linkFrom && this.mouse) {
@@ -218,9 +255,10 @@ export class GalaxyView {
       const st = this.o.style?.(s) || {};
       const owner = s.faction && factions[s.faction];
       const size = (st.size || (s.is_giant ? 3.6 : 2.6)) * Math.min(2.2, Math.max(1, zoomed * 0.55));
-      if (owner && !st.dim) {
-        ctx.fillStyle = withAlpha(solid(owner.color), 0.22);
-        ctx.beginPath(); ctx.arc(x, y, size + 5, 0, 7); ctx.fill();
+      if (!st.dim) {
+        const halo = st.fill || STAR_COLOR[s.star_type] || '#fff';
+        ctx.fillStyle = withAlpha(halo, 0.14); ctx.beginPath(); ctx.arc(x, y, size * 2.8, 0, 7); ctx.fill();
+        ctx.fillStyle = withAlpha(halo, 0.26); ctx.beginPath(); ctx.arc(x, y, size * 1.7, 0, 7); ctx.fill();
       }
       ctx.globalAlpha = st.dim ? 0.28 : 1;
       const slot = `star:${s.star_type}`;
@@ -239,6 +277,40 @@ export class GalaxyView {
         ctx.textAlign = 'center';
         ctx.fillText(s.name, x, y - size - 7);
       }
+      if (owner && owner.capital === s.id && !st.dim) {
+        const d = size + 6;
+        ctx.strokeStyle = '#e9b949'; ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.moveTo(x, y - d); ctx.lineTo(x + d, y); ctx.lineTo(x, y + d); ctx.lineTo(x - d, y); ctx.closePath(); ctx.stroke();
+      }
+    }
+
+    // ── Плашки секторов — поверх всего, гаснут при сильном приближении ──
+    if (this.o.labels !== 'none' && zoomed < 3.2) {
+      ctx.globalAlpha = zoomed < 2.2 ? 1 : Math.max(0, 3.2 - zoomed);
+      for (const L of layout) {
+        let cx = 0, cy = 0;
+        for (const id of L.ids) { cx += byId[id].x; cy += byId[id].y; }
+        const [lx, ly] = this.toScreen(cx / L.ids.length, cy / L.ids.length);
+        sectorBadge(ctx, lx, ly, String(L.sec.name || ''), L.col, Math.max(0.62, Math.min(1, (r.width / 900) * Math.max(1, zoomed))));
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  /** Звёздная пыль: точки по псевдослучайной сетке мира, не дрожат при панораме. */
+  drawDust(ctx, r) {
+    const [x0, y0] = this.toWorld(0, 0), [x1, y1] = this.toWorld(r.width, r.height);
+    const step = 60;
+    if (((x1 - x0) / step) * ((y1 - y0) / step) > 6000) return;
+    for (let gx = Math.floor(x0 / step); gx <= Math.ceil(x1 / step); gx++) {
+      for (let gy = Math.floor(y0 / step); gy <= Math.ceil(y1 / step); gy++) {
+        const h = hash(gx, gy);
+        if (h > 0.55) continue;
+        const [sx, sy] = this.toScreen((gx + hash(gy, gx)) * step, (gy + hash(gx + 7, gy - 3)) * step);
+        const d = h < 0.08 ? 1.6 : 1;
+        ctx.fillStyle = `rgba(243,236,220,${(0.12 + h * 0.5).toFixed(2)})`;
+        ctx.fillRect(sx, sy, d, d);
+      }
     }
   }
 
@@ -247,6 +319,50 @@ export class GalaxyView {
   lanesGeo() { return (this.geo ||= laneGeometry(this.data)); }
   setMouse(e) { const r = this.cv.getBoundingClientRect(); this.mouse = [e.clientX - r.left, e.clientY - r.top]; }
   destroy() { this.ro.disconnect(); clearInterval(this.anim); this.anim = 0; }
+}
+
+const hash = (x, y) => { const v = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return v - Math.floor(v); };
+
+/** Цвет для карты: слишком тёмные цвета держав и секторов осветляются, иначе их не видно на чёрном. */
+function mapColor(c) {
+  const col = solid(c);
+  const m = String(col).match(/rgba?\(([^)]+)\)/);
+  let rgb = null;
+  if (m) rgb = m[1].split(',').slice(0, 3).map((x) => parseFloat(x));
+  else if (/^#[0-9a-f]{6}$/i.test(col)) { const n = parseInt(col.slice(1), 16); rgb = [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  if (!rgb) return col;
+  const lum = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
+  if (lum >= 0.22) return `rgb(${rgb.join(',')})`;
+  const k = ((0.22 - lum) / 0.22) * 0.6;
+  return `rgb(${rgb.map((v) => Math.round(v + (185 - v) * k)).join(',')})`;
+}
+
+/** Плашка сектора: тёмная пластина со срезанными углами, ромбы цвета сектора, золотая кромка, подпись «сектор». */
+function sectorBadge(ctx, x, y, name, col, k = 1) {
+  const text = name.toUpperCase();
+  ctx.font = `800 ${Math.round(12 * k)}px Manrope, system-ui, sans-serif`;
+  const tw = ctx.measureText(text).width, w = tw + 36 * k, h = 22 * k, c = 6 * k;
+  const l = x - w / 2, t = y - h / 2;
+  ctx.beginPath();
+  ctx.moveTo(l + c, t); ctx.lineTo(l + w - c, t); ctx.lineTo(l + w, t + c); ctx.lineTo(l + w, t + h - c);
+  ctx.lineTo(l + w - c, t + h); ctx.lineTo(l + c, t + h); ctx.lineTo(l, t + h - c); ctx.lineTo(l, t + c); ctx.closePath();
+  ctx.fillStyle = 'rgba(8,7,5,0.9)'; ctx.fill();
+  ctx.strokeStyle = withAlpha(col, 0.9); ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(l + c + 2, t + 0.5); ctx.lineTo(l + w - c - 2, t + 0.5);
+  ctx.strokeStyle = 'rgba(233,185,73,0.6)'; ctx.stroke();
+  const q = 3.5 * k;
+  for (const dx of [l + 10 * k, l + w - 10 * k]) {
+    ctx.beginPath(); ctx.moveTo(dx, y - q); ctx.lineTo(dx + q, y); ctx.lineTo(dx, y + q); ctx.lineTo(dx - q, y); ctx.closePath();
+    ctx.fillStyle = col; ctx.fill();
+  }
+  ctx.fillStyle = '#f3ecdc'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y + 0.5);
+  if (k >= 0.8) {
+    ctx.font = '700 8px Manrope, system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(233,185,73,0.85)';
+    ctx.fillText('С Е К Т О Р', x, t - 7);
+  }
+  ctx.textBaseline = 'alphabetic';
 }
 
 function withAlpha(color, a) {

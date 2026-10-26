@@ -192,12 +192,12 @@ export function laneGeometry(g) {
     const rank = max > 0 ? (u >= trunk ? 2 : u > 0 ? 1 : 0) : (md >= 3 ? 2 : md >= 2 ? 1 : 0);
     const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
     const h = hash01(Math.min(a.x, b.x) + Math.max(a.x, b.x) * 0.31, Math.min(a.y, b.y) + Math.max(a.y, b.y) * 0.47);
-    const bend = (h - 0.5) * 2 * Math.min(len * 0.11, 55);
+    const bend = 0 * h; // пути прямые; изгиб оставлен на будущее
     const cx = (a.x + b.x) / 2 + (-dy / len) * bend, cy = (a.y + b.y) / 2 + (dx / len) * bend;
     let tint = null;
     if (a.faction && a.faction === b.faction && factions?.[a.faction]) {
       const c = rgbOf(solid(factions[a.faction].color));
-      if (c) tint = `rgb(${[120, 200, 255].map((v, i) => Math.round(v * 0.6 + c[i] * 0.4)).join(',')})`;
+      if (c) tint = `rgb(${[240, 214, 150].map((v, i) => Math.round(v * 0.55 + c[i] * 0.45)).join(',')})`;
     }
     out.push({ lane: l, a, b, cx, cy, rank, tint });
   }
