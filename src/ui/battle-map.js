@@ -145,7 +145,7 @@ export class BattleMap {
 
     // 1. глубина космоса с оттенком звезды
     const g0 = ctx.createLinearGradient(0, starTop ? 0 : H, 0, starTop ? H : 0);
-    g0.addColorStop(0, rgba(mix(P.tint, P.glow, 0.18), 1));
+    g0.addColorStop(0, rgba(mix(P.tint, P.glow, 0.12), 1));
     g0.addColorStop(0.45, rgba(P.tint, 1));
     g0.addColorStop(1, '#010101');
     ctx.fillStyle = g0; ctx.fillRect(0, 0, W, H);
@@ -168,7 +168,7 @@ export class BattleMap {
     // 3. звезда за краем поля
     const scx = W * (0.3 + rnd() * 0.4), scy = starTop ? -s * 9 : H + s * 9, sr = s * 7;
     const halo = ctx.createRadialGradient(scx, scy, sr * 0.6, scx, scy, sr * 6);
-    halo.addColorStop(0, rgba(P.glow, 0.55)); halo.addColorStop(0.25, rgba(P.glow, 0.16)); halo.addColorStop(1, rgba(P.glow, 0));
+    halo.addColorStop(0, rgba(P.glow, 0.42)); halo.addColorStop(0.25, rgba(P.glow, 0.1)); halo.addColorStop(1, rgba(P.glow, 0));
     ctx.fillStyle = halo; ctx.fillRect(0, 0, W, H);
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < 26; i++) { // лучи короны
@@ -186,8 +186,10 @@ export class BattleMap {
 
     // 4. планета на фоне (если бой не у самой планеты)
     if (!m.planet && m.backdrop) {
-      const bx = W * (rnd() < 0.5 ? 0.16 : 0.84), by = starTop ? H * 0.82 : H * 0.18, br = s * (3 + rnd() * 2.5);
-      this.drawPlanet(ctx, bx, by, br, m.backdrop.type, m.backdrop.rings, rnd, 0.75);
+      // далеко за полем: в углу, наполовину за краем, приглушённо
+      const br = s * (7 + rnd() * 3), left = rnd() < 0.5;
+      const bx = left ? -br * 0.35 : W + br * 0.35, by = starTop ? H + br * 0.2 : -br * 0.2;
+      this.drawPlanet(ctx, bx, by, br, m.backdrop.type, m.backdrop.rings, rnd, 0.55);
     }
 
     // 5. место боя — планета у края поля
@@ -292,7 +294,7 @@ export class BattleMap {
       const nb = [[1, odd ? 1 : 0], [0, 1], [-1, odd ? 1 : 0], [-1, odd ? 0 : -1], [0, -1], [1, odd ? 0 : -1]];
       for (let e = 0; e < 6; e++) {
         const n = this.cell(x + nb[e][0], y + nb[e][1]);
-        if (n === type) continue;
+        if (n === type || n === null) continue; // край поля не обводим
         const a0 = Math.PI / 3 * e, a1 = Math.PI / 3 * (e + 1);
         ctx.moveTo(cx + s * Math.cos(a0), cy + s * Math.sin(a0)); ctx.lineTo(cx + s * Math.cos(a1), cy + s * Math.sin(a1));
       }
@@ -378,7 +380,7 @@ export class BattleMap {
     this.zoneEdges(ctx, 'i', 'rgba(130,195,255,.6)', [2, 4], 1.2);
     this.zoneEdges(ctx, 'n', rgba(P.neb, 0.35), [1, 5], 1);
     this.zoneEdges(ctx, 'd', 'rgba(170,160,140,.4)', [1, 4], 1);
-    this.zoneEdges(ctx, 'P', rgba(planetLook(m.site?.type).atm, 0.7), [], 1.4);
+    this.zoneEdges(ctx, 'P', rgba(planetLook(m.site?.type).atm, 0.45), [4, 3], 1);
   }
 
   drawGrid(ctx) {

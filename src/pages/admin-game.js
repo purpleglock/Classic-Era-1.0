@@ -59,7 +59,7 @@ export async function battles(sec) {
   try { [cands, list] = await Promise.all([rpc('v1_battle_candidates'), rpc('v1_battle_list')]); }
   catch (e) { sec.innerHTML = html`<p class="empty warn">${e.missingSchema ? 'Новая база сражений ещё не подключена: примените миграцию 20261023_11_battles.sql.' : e.message}</p>`; return; }
   sec.innerHTML = html`
-    <div class="sec-h"><h2>Сражения</h2><small>новая база боя</small></div>
+    <div class="sec-h"><h2>Сражения</h2><small>новая база боя</small><a class="btn sm gold" href="#/battlemap">Карты сражений</a></div>
     <div class="grp"><h4>Тестовый бой</h4>
       <p class="hint">Флоты двух держав, стоящие в одной системе, выходят на поле. Тестовый бой ничего не меняет во флотах: потери и отступление не записываются. Команда проекта может ходить за обе стороны.</p>
       ${cands.length ? raw(html`<div class="give"><select id="bt-sys" aria-label="Система">${cands.map((c, i) => raw(html`<option value="${i}">${c.name} · флотов ${c.fleets.length}</option>`))}</select></div><div id="bt-fl"></div>
