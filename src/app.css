@@ -696,3 +696,9 @@ a.rx-fac{text-decoration:none;color:inherit}a.rx-fac:hover{filter:brightness(1.2
 .bm-rules li{font-size:13px;color:var(--mute);line-height:1.5}.bm-rules b{color:var(--text)}
 .bm-rules .note{margin-top:10px}
 @media (max-width:900px){.bm-cols{grid-template-columns:minmax(0,1fr)}}
+.bm-3d canvas{display:block;width:100%;cursor:grab;touch-action:none}
+.bm-3d canvas:active{cursor:grabbing}
+.bm-mode{display:inline-flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.bm-mode button{background:var(--panel2);border:0;color:var(--mute);padding:7px 14px;font:inherit;font-weight:800;font-size:13px;cursor:pointer}
+.bm-mode button[aria-pressed="true"]{background:var(--gold);color:#120e05}
+.bm-3dnote{margin:0}

@@ -8,7 +8,7 @@
  * Центр клетки (x, y) в единицах радиуса: (1.5·x, √3·(y + ½·(x mod 2))).
  */
 
-const SQ3 = Math.sqrt(3);
+import { SQ3, visibleCells } from '../lib/hexmap.js';
 
 export const STAR = {
   white:  { name: 'Белая звезда',   core: '#f6f8ff', glow: [214, 228, 255], tint: [10, 13, 20],  neb: [170, 190, 230], light: [235, 240, 255] },
@@ -43,7 +43,7 @@ const mix = (c1, c2, k) => c1.map((v, i) => Math.round(v + (c2[i] - v) * k));
 const hex2rgb = (h) => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
 
 /** Облик планеты по её типу из данных системы. */
-function planetLook(type = '') {
+export function planetLook(type = '') {
   const t = type.toLowerCase();
   if (/горяч/.test(t)) return { bands: ['#d4683c', '#8a2c18', '#f09a58', '#5c1c10', '#b84a28'], atm: [255, 120, 70], storm: '#ffd0a0' };
   if (/ледян.*гигант|ледяные гиганты/.test(t)) return { bands: ['#86c9dc', '#4f8fb0', '#b0e6f0', '#3d7395', '#6fb2cc'], atm: [140, 220, 255], storm: '#e4fbff' };
@@ -407,30 +407,8 @@ export class BattleMap {
   }
 
   // ── туман войны (показ правил: что видит выбранная сторона) ──
-  visibleFor(side) {
-    const m = this.map, own = this.o.units.filter((u) => u.side === side), vis = new Set();
-    for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
-      const t = this.cell(x, y);
-      for (const u of own) {
-        let r = (u.radar || 4) * (m.radar || 1);
-        if (this.cell(u.x, u.y) === 'i') r *= 0.5;
-        if (t === 'a') r *= 0.7;
-        const d = BattleMap.dist([u.x, u.y], [x, y]);
-        if (t === 'n' ? d <= 2 : d <= r) { if (!this.blocked([u.x, u.y], [x, y])) { vis.add(`${x},${y}`); break; } }
-      }
-    }
-    return vis;
-  }
-  /** Планета закрывает радар: линия между центрами проходит через клетку P. */
-  blocked(a, b) {
-    const d = BattleMap.dist(a, b); if (d < 2) return false;
-    const A = this.center(...a), B = this.center(...b);
-    for (let i = 1; i < d; i++) {
-      const t = i / d, c = this.cellAt(A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t);
-      if (c && this.cell(...c) === 'P') return true;
-    }
-    return false;
-  }
+  visibleFor(side) { return visibleCells(this.map, this.o.units, side); }
+
   drawFog(ctx) {
     const m = this.map, vis = this.visibleFor(this.o.fog);
     this.vis = vis;
