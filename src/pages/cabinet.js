@@ -2,7 +2,8 @@ import { html, raw, icon, $, $$ } from '../lib/dom.js';
 import { sb } from '../lib/supabase.js';
 import { session, isTeam, roleTitle } from '../lib/session.js';
 import { openLogin } from '../ui/login.js';
-import { num, signed, plain, dateShort, untilText } from '../lib/format.js';
+import { num, signed, plain, dateShort, untilText, starDate } from '../lib/format.js';
+import { rich } from '../lib/rich.js';
 import { crest } from './home.js';
 import { applyArt, settings } from '../lib/settings.js';
 
@@ -180,26 +181,78 @@ export async function renderCabinet(root) {
   loadFeed(root, fid);
 }
 
+/** Вид сводки по заголовку: значок и подпись слева в ленте. */
+const KIND = [
+  [/Достижение/i, 'i-crown', 'Достижение'],
+  [/Биржа/i, 'i-trend', 'Биржа'],
+  [/Арена|Бойцовский клуб/i, 'i-arena', 'Арена'],
+  [/войн|сражен|капитуляц|оккупац/i, 'i-sword', 'Война'],
+  [/вер[аы]\b|храм|секта/i, 'i-spark', 'Вера'],
+  [/флот|корабл|вооружени|верф/i, 'i-ship', 'Флот'],
+  [/колонизац|колони[яи]\b|заселен|систем[аыу]\b/i, 'i-planet', 'Колонии'],
+];
+const kindOf = (title) => { const k = KIND.find(([re]) => re.test(title)); return k ? [k[1], k[2]] : ['i-news', 'Хроника']; };
+// старое название «Бойцовский клуб» в сводках показываем как «Арена»
+const clean = (t) => plain(t || '').replace(/Бойцовский клуб/gi, 'Арена').replace(/клуба\b/gi, 'арены').replace(/^[^\p{L}\p{N}«]+/u, '');
+
 async function loadFeed(root, fid) {
-  const item = (n, gold) => html`<li><span class="dot ${gold ? 'gold' : ''}"></span><p>${n.title}</p><time>${dateShort(n.published_at || n.created_at)}</time></li>`;
   const [sec, you, ach] = await Promise.all([
-    sb.from('faction_news').select('title,published_at,created_at').eq('status', 'approved').eq('kind', 'bulletin').order('created_at', { ascending: false }).limit(8),
-    sb.from('faction_news').select('title,published_at,created_at,faction_id').eq('status', 'approved').contains('mentions', [fid]).order('created_at', { ascending: false }).limit(8),
+    sb.from('faction_news').select('id,title,body,excerpt,faction_id,faction_name,published_at,created_at').eq('status', 'approved').eq('kind', 'bulletin').order('created_at', { ascending: false }).limit(8),
+    sb.from('faction_news').select('id,kind,title,body,excerpt,faction_id,faction_name,published_at,created_at').eq('status', 'approved').contains('mentions', [fid]).order('created_at', { ascending: false }).limit(8),
     sb.from('faction_achievements').select('ach_id,reward,earned_at').eq('faction_id', fid).order('earned_at', { ascending: false }).limit(8),
   ]);
-  const [cat, st] = await Promise.all([
-    sb.from('v1_achievements').select('id,name,old_name').then((r) => Object.fromEntries((r.data || []).map((x) => [x.id, x]))),
-    settings().then((s) => s.achievements?.status || 'rework'),
-  ]);
+  const [catRes, cfg] = await Promise.all([sb.from('v1_achievements').select('id,name,old_name,description'), settings().catch(() => ({}))]);
+  const cat = Object.fromEntries((catRes?.data || []).map((x) => [x.id, x]));
+  const st = cfg?.achievements?.status || 'rework';
   const achName = (id) => cat[id]?.name || cat[id]?.old_name || id;
-  // старое название «Бойцовский клуб» в сводках показываем как «Арена»
-  const fix = (r) => ({ ...r, title: plain(r.title).replace(/^🥊\s*/, '').replace(/Бойцовский клуб/gi, 'Арена').replace(/^[^\p{L}\p{N}]+/u, '') });
-  const secRows = (sec.data || []).filter((r) => !/^.?\s*Биржа/i.test(plain(r.title))).map(fix);
-  $('#p-sec', root).innerHTML = secRows.map((r) => item(r)).join('') || '<li><p>В секторе тихо.</p></li>';
-  $('#p-you', root).innerHTML = (you.data || []).map((r) => item(fix(r), r.faction_id !== fid)).join('') || '<li><p>О вашей державе пока не писали.</p></li>';
-  const a = ach.data || [];
+
+  const secRows = (sec.data || []).filter((r) => !/^.?\s*Биржа/i.test(plain(r.title)));
+  const youRows = you.data || [];
+  const achRows = ach.data || [];
+  const row = (key, i, title, at, [ic, label], gold = false) => html`<li><button type="button" class="ev-i${gold ? ' gold' : ''}" data-ev="${key}:${i}">
+    <span class="ev-ic">${icon(ic)}</span><span class="ev-t"><small>${label}</small><b>${title}</b></span><time>${dateShort(at)}</time>${icon('i-down', 'i ev-go')}</button></li>`;
+
+  $('#p-sec', root).innerHTML = secRows.map((r, i) => row('sec', i, clean(r.title), r.published_at || r.created_at, kindOf(r.title))).join('') || '<li class="ev-none"><p>В секторе тихо.</p></li>';
+  $('#p-you', root).innerHTML = youRows.map((r, i) => row('you', i, clean(r.title), r.published_at || r.created_at,
+    r.kind === 'news' ? ['i-news', r.faction_name || 'Вестник'] : kindOf(r.title), r.faction_id && r.faction_id !== fid)).join('') || '<li class="ev-none"><p>О вашей державе пока не писали.</p></li>';
   const banner = st === 'live' ? '' : html`<p class="note ach-note">${st === 'off' ? 'Достижения временно выключены.' : 'Система достижений на переработке: новые названия и награды скоро. Полученные достижения сохранены.'}</p>`;
-  $('#p-ach', root).innerHTML = banner + (a.length
-    ? html`<ol class="ev">${a.map((x) => raw(html`<li><span class="dot gold"></span><p>«${achName(x.ach_id)}»${x.reward ? ` · +${num(x.reward)} ГС` : ''}</p><time>${dateShort(x.earned_at)}</time></li>`))}</ol>`
+  $('#p-ach', root).innerHTML = banner + (achRows.length
+    ? html`<ol class="ev">${achRows.map((x, i) => raw(row('ach', i, `«${achName(x.ach_id)}»`, x.earned_at, ['i-crown', x.reward ? `+${num(x.reward)} ГС` : 'Достижение'], true)))}</ol>`
     : html`<div class="ev-empty">${icon('i-crown')}<p>Достижений пока нет. Первое появится здесь.</p></div>`);
+
+  $('.feedbox', root).onclick = (e) => {
+    const b = e.target.closest('[data-ev]'); if (!b) return;
+    const [key, i] = b.dataset.ev.split(':');
+    if (key === 'ach') {
+      const x = achRows[i], a = cat[x.ach_id] || {};
+      readBox({ label: 'Достижение державы', tag: x.reward ? `+${num(x.reward)} ГС` : '', at: x.earned_at, title: achName(x.ach_id),
+        body: a.description || 'Описание достижения появится вместе с обновлённой системой достижений.',
+        foot: a.old_name && a.name && a.old_name !== a.name ? `Прежнее название: «${a.old_name}».` : '' });
+      return;
+    }
+    const r = (key === 'sec' ? secRows : youRows)[i];
+    const [, label] = r.kind === 'news' ? [null, 'Вестник'] : kindOf(r.title);
+    readBox({ label: r.kind === 'news' ? (r.faction_name || 'Вестник') : 'Хроника сектора', tag: label, at: r.published_at || r.created_at,
+      title: clean(r.title), body: clean(r.body || r.excerpt || ''), rich: r.kind === 'news', link: r.kind === 'news' ? `#/news?id=${r.id}` : '' });
+  };
+}
+
+/** Окно чтения сводки поверх кабинета. */
+function readBox({ label, tag, at, title, body, foot = '', rich: isRich = false, link = '' }) {
+  const veil = document.createElement('div');
+  veil.className = 'veil';
+  veil.innerHTML = html`<article class="panel modal wide rule-modal ev-read" role="dialog" aria-label="${title}">
+    <button type="button" class="ib x" data-close aria-label="Закрыть">${icon('i-x')}</button>
+    <div class="meta"><b>${label}</b>${tag ? raw(html`<span class="tag">${tag}</span>`) : ''}<time>${starDate(at)}</time></div>
+    <h2>${title}</h2>
+    <div class="rich">${raw(isRich ? rich(body) : body.split(/\n{2,}/).map((p) => html`<p>${p}</p>`).join(''))}</div>
+    ${foot ? raw(html`<p class="note">${foot}</p>`) : ''}
+    ${link ? raw(html`<a class="btn sm" href="${link}">Открыть страницей</a>`) : ''}
+  </article>`;
+  document.body.appendChild(veil);
+  const close = () => { veil.remove(); removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  addEventListener('keydown', onKey);
+  veil.addEventListener('click', (e) => { if (e.target === veil || e.target.closest('[data-close]') || e.target.closest('a[href]')) close(); });
+  veil.querySelector('[data-close]').focus();
 }
