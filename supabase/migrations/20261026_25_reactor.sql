@@ -121,7 +121,7 @@ language plpgsql stable security definer set search_path = public as $$
 declare
   cfg  jsonb := coalesce((select value from v1_settings where key = 'reactor'), '{}'::jsonb);
   ty v1_reactor_parts; sz v1_reactor_parts; co v1_reactor_parts; cv v1_reactor_parts;
-  T jsonb; S jsonb; C jsonb; V jsonb;
+  pt jsonb; ps jsonb; pc jsonb; pv jsonb;
   done jsonb := '[]'::jsonb;
   mode numeric := coalesce((p_cfg->>'mode')::numeric, 100);
   m numeric;
@@ -138,11 +138,11 @@ begin
   if ty.id is null or sz.id is null or co.id is null or cv.id is null then
     return jsonb_build_object('ok', false, 'error', 'reactor_incomplete');
   end if;
-  T := ty.params; S := sz.params; C := co.params; V := cv.params;
+  pt := ty.params; ps := sz.params; pc := co.params; pv := cv.params;
 
   if mode < coalesce((cfg->>'mode_min')::numeric, 60) or mode > coalesce((cfg->>'mode_max')::numeric, 140)
-     or mode > coalesce((T->>'max_mode')::numeric, 999) then
-    return jsonb_build_object('ok', false, 'error', 'reactor_mode', 'max', least(coalesce((cfg->>'mode_max')::numeric, 140), coalesce((T->>'max_mode')::numeric, 999)));
+     or mode > coalesce((pt->>'max_mode')::numeric, 999) then
+    return jsonb_build_object('ok', false, 'error', 'reactor_mode', 'max', least(coalesce((cfg->>'mode_max')::numeric, 140), coalesce((pt->>'max_mode')::numeric, 999)));
   end if;
   m := mode / 100;
 
@@ -175,23 +175,23 @@ begin
     return jsonb_build_object('ok', false, 'error', 'reactor_fuel_unstable', 'fuel', fname);
   end if;
   fcls := fstats->>'class';
-  if not (T->'fuels') ? fcls then
-    return jsonb_build_object('ok', false, 'error', 'reactor_fuel_class', 'fuel', fname, 'class', fcls, 'need', T->'fuels');
+  if not (pt->'fuels') ? fcls then
+    return jsonb_build_object('ok', false, 'error', 'reactor_fuel_class', 'fuel', fname, 'class', fcls, 'need', pt->'fuels');
   end if;
 
   -- мощность: размер × принцип × преобразователь × качество топлива × режим − своё потребление охлаждения
-  fuel_k := greatest(0.5, least(1.6, (fstats->>'energy')::numeric / (T->>'ref')::numeric));
-  pwr := (S->>'power')::numeric * (T->>'power')::numeric * (V->>'power')::numeric * fuel_k * m;
-  pwr := pwr * (1 - (C->>'self')::numeric);
+  fuel_k := greatest(0.5, least(1.6, (fstats->>'energy')::numeric / (pt->>'ref')::numeric));
+  pwr := (ps->>'power')::numeric * (pt->>'power')::numeric * (pv->>'power')::numeric * fuel_k * m;
+  pwr := pwr * (1 - (pc->>'self')::numeric);
 
-  mass := (S->>'mass')::numeric * (T->>'mass')::numeric * (1 + (C->>'mass')::numeric + (V->>'mass')::numeric);
+  mass := (ps->>'mass')::numeric * (pt->>'mass')::numeric * (1 + (pc->>'mass')::numeric + (pv->>'mass')::numeric);
 
   -- нагрев: что выделяется против того, что отводится
-  heat := (T->>'heat')::numeric * (V->>'heat')::numeric * m * m;
-  margin := (C->>'cap')::numeric - heat;
+  heat := (pt->>'heat')::numeric * (pv->>'heat')::numeric * m * m;
+  margin := (pc->>'cap')::numeric - heat;
 
-  rel := (T->>'rel')::numeric + ((fstats->>'stability')::numeric - 50) * 0.3
-         + (C->>'rel')::numeric + (V->>'rel')::numeric
+  rel := (pt->>'rel')::numeric + ((fstats->>'stability')::numeric - 50) * 0.3
+         + (pc->>'rel')::numeric + (pv->>'rel')::numeric
          - greatest(0, mode - 100) * 0.6 + greatest(0, 100 - mode) * 0.1;
   if margin < 0 then
     rel := rel + margin * 40;
@@ -199,15 +199,15 @@ begin
   end if;
   rel := round(greatest(0, least(100, rel)), 1);
 
-  sig := round(greatest(0, least(100, ((T->>'sig')::numeric + (C->>'sig')::numeric) * (S->>'sig')::numeric + greatest(0, mode - 100) * 0.3)), 1);
-  use := round((S->>'use')::numeric * (T->>'use')::numeric * m / greatest(0.5, (fstats->>'efficiency')::numeric), 2);
-  cost := round((S->>'cost')::numeric * (T->>'cost')::numeric * ((C->>'cost')::numeric + (V->>'cost')::numeric) / 2);
+  sig := round(greatest(0, least(100, ((pt->>'sig')::numeric + (pc->>'sig')::numeric) * (ps->>'sig')::numeric + greatest(0, mode - 100) * 0.3)), 1);
+  use := round((ps->>'use')::numeric * (pt->>'use')::numeric * m / greatest(0.5, (fstats->>'efficiency')::numeric), 2);
+  cost := round((ps->>'cost')::numeric * (pt->>'cost')::numeric * ((pc->>'cost')::numeric + (pv->>'cost')::numeric) / 2);
   risk := round(50 * power((100 - rel) / 100, 2), 1);
   dens := pwr / mass;
 
   -- сырьё на постройку: узлы × масштаб размера
-  scale := (S->>'k')::numeric;
-  for k, v in select * from jsonb_each((T->'bill') ) union all select * from jsonb_each(C->'bill') union all select * from jsonb_each(V->'bill') loop
+  scale := (ps->>'k')::numeric;
+  for k, v in select * from jsonb_each((pt->'bill') ) union all select * from jsonb_each(pc->'bill') union all select * from jsonb_each(pv->'bill') loop
     bill := jsonb_set(bill, array[k], to_jsonb(coalesce((bill->>k)::numeric, 0) + ceil((v #>> '{}')::numeric * scale)));
   end loop;
   bill := jsonb_set(bill, '{Титан}', to_jsonb(coalesce((bill->>'Титан')::numeric, 0) + ceil(4 * scale)));
@@ -224,8 +224,8 @@ begin
 
   return jsonb_build_object(
     'ok', true,
-    'power', round(pwr), 'mass', round(mass, 1), 'slots', (S->>'slots')::int,
-    'density', round(dens, 1), 'heat', round(heat, 2), 'cooling', (C->>'cap')::numeric, 'margin', round(margin, 2),
+    'power', round(pwr), 'mass', round(mass, 1), 'slots', (ps->>'slots')::int,
+    'density', round(dens, 1), 'heat', round(heat, 2), 'cooling', (pc->>'cap')::numeric, 'margin', round(margin, 2),
     'reliability', rel, 'risk', risk, 'signature', sig, 'fuel_use', use, 'cost', cost, 'bill', bill,
     'fuel_name', fname, 'fuel_class', fcls, 'fuel_k', round(fuel_k, 2),
     'grade', grade,
