@@ -40,7 +40,7 @@ declare
   sys map_systems;
   w int := case when p_size = 's' then 23 else 29 end;
   h int := case when p_size = 's' then 13 else 17 end;
-  mid int; seed bigint := coalesce(p_seed, floor(random() * 2147483647)::bigint);
+  mid int; seed0 bigint := coalesce(p_seed, floor(random() * 2147483647)::bigint); seed bigint;
   g text[]; sx double precision := sqrt(3);
   bodies jsonb; site jsonb; bg jsonb; cat text := 'void'; tot numeric := 0; pick numeric; wt numeric; e jsonb;
   edge text; star_edge text; corona boolean; star text;
@@ -54,6 +54,7 @@ begin
   select * into sys from map_systems where id = p_system;
   if sys.id is null then raise exception 'system_not_found'; end if;
   mid := (w - 1) / 2;
+  seed := seed0 # hashtext(p_system)::bigint;   -- одно зерно в разных системах даёт разные карты
   hmax := sx * (h - 0.5);
   star := coalesce(sys.star_type, 'yellow');
   g := array_fill('.'::text, array[w * h]);
@@ -206,7 +207,7 @@ begin
   select jsonb_object_agg(c, n2) into cnt from (select c, count(*) n2 from unnest(g) c group by c) z;
 
   return jsonb_build_object(
-    'v', 1, 'w', w, 'h', h, 'seed', seed, 'size', case when p_size = 's' then 's' else 'm' end,
+    'v', 1, 'w', w, 'h', h, 'seed', seed0, 'size', case when p_size = 's' then 's' else 'm' end,
     'grid', array_to_string(g, ''),
     'system', jsonb_build_object('id', sys.id, 'name', sys.name, 'star', star, 'stars', sys.stars),
     'site', case when site is null then null else jsonb_build_object('pid', site->'pid', 'name', site->>'name', 'type', site->>'type', 'kind', site->>'kind',
