@@ -1186,3 +1186,14 @@ textarea.mono{width:100%;font:12.5px/1.5 var(--mono);background:var(--bg);color:
 .ar-cmp-art{display:block;width:56px;height:56px;margin-bottom:6px}
 .ar-cmp-tbl td.best{color:var(--gold)}
 @media (max-width:760px){.ar-head{grid-template-columns:1fr}.ar-head-art{height:130px}}
+.sy-item{align-items:flex-start}
+.sy-item b em{font-style:normal;font-size:12px;color:var(--gold);font-weight:700;margin-left:4px}
+.sy-item .sy-sub{color:var(--faint);font-size:11.5px}
+.sy-item .sy-desc{color:var(--mute);font-size:12.5px;line-height:1.4}
+.sy-item .sy-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.sy-item .sy-chips i{font-style:normal;font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line2);color:var(--mute);width:auto;height:auto;display:inline;background:none}
+.sy-item .sy-chips i.good{border-color:var(--gold-dim);color:var(--gold)}
+.sy-item .sy-chips i.bad{border-style:dashed;color:#d9a37a}
+.sy-lh{margin:6px 0 2px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);display:flex;justify-content:space-between}
+.sy-lh a{text-transform:none;letter-spacing:0;color:var(--mute);font-weight:500}
+.sy-list{max-height:560px}

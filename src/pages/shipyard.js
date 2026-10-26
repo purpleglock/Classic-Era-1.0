@@ -49,13 +49,22 @@ function draw(root, s) {
 
   // каталог предметов: всё, что можно поставить на сетку
   const catalog = [
-    ...reactors.map((r) => ({ t: 'reactor', id: r.id, name: r.name, size: r.size, kind: 'reactor', open: !r.broken, info: `${num(r.power)} ЭЕ · ${fmt(r.mass)} т`, w: FOOT[r.size][0], h: FOOT[r.size][1] })),
-    ...weapons.map((w) => ({ t: 'weapon', id: w.id, name: w.name, size: w.size, kind: 'weapon', open: true, info: `${w.kind === 'repair' ? `ремонт ${num(w.heal)}` : `${num(w.damage)} урона`} · ${num(w.energy)} ЭЕ`, w: FOOT[w.size][0], h: FOOT[w.size][1] })),
-    ...modules.map((m) => ({ t: 'module', id: m.id, name: m.name, size: m.size, kind: m.kind, open: m.open, tech: m.tech_name, info: modInfo(m), w: m.params.w || 1, h: m.params.h || 1, descr: m.descr })),
+    ...reactors.map((r) => ({ t: 'reactor', id: r.id, name: r.name, size: r.size, kind: 'reactor', open: !r.broken, own: true,
+      descr: r.broken ? 'Марка топлива изменилась — пересоберите реактор.' : `${r.type_name || 'Реактор'} на топливе «${r.fuel_name || '—'}», надёжность ${fmt(r.reliability)}. Даёт энергию всем системам корабля.`,
+      chips: [[`+${num(r.power)} ЭЕ`, 'good'], [`${fmt(r.mass)} т`, ''], [`${num(r.cost)} ГС`, ''], [`${fmt(r.fuel_use, 2)} ед./сут.`, '']],
+      info: `${num(r.power)} ЭЕ · ${fmt(r.mass)} т`, w: FOOT[r.size][0], h: FOOT[r.size][1] })),
+    ...weapons.map((w) => ({ t: 'weapon', id: w.id, name: w.name, size: w.size, kind: 'weapon', open: true, own: true,
+      descr: `${w.type_name || 'Орудие'}${w.barrels ? `, ${w.barrels} ств.` : ''}, точность ${w.accuracy ?? '—'} %. Ставится у борта.`,
+      chips: [[w.kind === 'repair' ? `ремонт ${num(w.heal)}` : `${num(w.damage)} урона`, 'good'], [`−${num(w.energy)} ЭЕ`, 'bad'], [`дальн. ${fmt(w.dalnost)}`, ''], [`${fmt(w.mass)} т`, ''], [`${num(w.cost)} ГС`, '']],
+      info: `${w.kind === 'repair' ? `ремонт ${num(w.heal)}` : `${num(w.damage)} урона`} · ${num(w.energy)} ЭЕ`, w: FOOT[w.size][0], h: FOOT[w.size][1] })),
+    ...modules.map((m) => ({ t: 'module', id: m.id, name: m.nick ? `«${m.nick}»` : m.name, code: m.code, sub: m.base_name, size: m.size, kind: m.kind, open: m.open, tech: m.tech_name,
+      descr: m.descr, chips: modChips(m), info: modInfo(m), w: m.params.w || 1, h: m.params.h || 1 })),
   ];
   const byRef = (t, id) => catalog.find((c) => c.t === t && c.id === id);
   const TABS = [['reactor', 'Реакторы'], ['weapon', 'Орудия'], ['engine', 'Двигатели'], ['sys', 'Системы'], ['fuel_tank', 'Баки']];
-  const inTab = (c) => (st.tab === 'sys' ? c.t === 'module' && !['engine', 'fuel_tank'].includes(c.kind) : st.tab === 'reactor' || st.tab === 'weapon' ? c.t === st.tab : c.kind === st.tab);
+  const isGun = (c) => c.t === 'weapon' || c.kind === 'weapon';
+  const inTab = (c) => (st.tab === 'sys' ? c.t === 'module' && !['engine', 'fuel_tank', 'weapon'].includes(c.kind)
+    : st.tab === 'weapon' ? isGun(c) : st.tab === 'reactor' ? c.t === 'reactor' : c.kind === st.tab);
 
   root.innerHTML = html`<div class="sy-wrap rx-wrap">
     <section class="panel st-hero">
@@ -148,7 +157,7 @@ function draw(root, s) {
       if (!isHull(x - 1, y)) { stern = true; edge = true; }
       if (!isHull(x + 1, y) || !isHull(x, y - 1) || !isHull(x, y + 1)) edge = true;
     }
-    if (ref.t === 'weapon' && !edge) return 'орудие ставится у борта';
+    if ((ref.t === 'weapon' || ref.kind === 'weapon') && !edge) return 'орудие ставится у борта';
     if (ref.kind === 'engine' && !stern) return 'двигатель ставится у кормы';
     return '';
   };
@@ -162,7 +171,7 @@ function draw(root, s) {
     for (let y = 0; y < c.h; y++) for (let x = 0; x < c.w; x++) {
       if (c.mask[y][x] !== '#') continue;
       const sternCell = !isHull(x - 1, y), edgeCell = sternCell || !isHull(x + 1, y) || !isHull(x, y - 1) || !isHull(x, y + 1);
-      const hint = st.pick ? (st.pick.t === 'weapon' && edgeCell ? ' hint' : st.pick.kind === 'engine' && sternCell ? ' hint' : '') : '';
+      const hint = st.pick ? ((st.pick.t === 'weapon' || st.pick.kind === 'weapon') && edgeCell ? ' hint' : st.pick.kind === 'engine' && sternCell ? ' hint' : '') : '';
       cells += `<rect x="${x * CELL}" y="${y * CELL}" width="${CELL}" height="${CELL}" class="c${edgeCell ? ' e' : ''}${hint}" data-x="${x}" data-y="${y}"/><circle cx="${x * CELL + CELL / 2}" cy="${y * CELL + CELL / 2}" r="1.6" class="d"/>`;
     }
     const items = st.layout.map((it, i) => {
@@ -207,14 +216,26 @@ function draw(root, s) {
     const c = C();
     const list = catalog.filter(inTab);
     const empty = { reactor: html`Своих реакторов пока нет. <a href="#/reactor">Собрать реактор →</a>`, weapon: html`Своих орудий пока нет. <a href="#/weapon">Собрать орудие →</a>` }[st.tab];
-    listEl.innerHTML = list.length ? list.map((ref) => {
+    const item = (ref) => {
       const tooBig = c && RANK[ref.size] > RANK[c.size] && ref.kind !== 'bridge';
       const off = !can || !ref.open || tooBig;
       const isPick = st.pick && st.pick.t === ref.t && st.pick.id === ref.id;
+      const k = ref.t === 'module' ? ref.kind : ref.t;
       return html`<button type="button" class="sy-item${isPick ? ' on' : ''}" data-t="${ref.t}" data-id="${ref.id}" ${off ? 'disabled' : ''}>
-        <i class="sy-k-${ref.t === 'module' ? ref.kind : ref.t}">${TAG[ref.t === 'module' ? ref.kind : ref.t]}</i>
-        <span><b>${ref.name}</b><small>${ref.size} · ${ref.w}×${ref.h} · ${ref.info}${!ref.open && ref.tech ? ` · нужна «${ref.tech}»` : ''}${tooBig ? ' · велик для класса' : ''}</small></span></button>`;
-    }).join('') : html`<p class="empty">${raw(empty || 'Пусто.')}</p>`;
+        <i class="sy-k-${k}">${TAG[k]}</i>
+        <span><b>${ref.name}${ref.code ? raw(html` <em>${ref.code}</em>`) : ''}</b>
+          ${ref.sub ? raw(html`<small class="sy-sub">${ref.sub}</small>`) : ''}
+          <small class="sy-desc">${ref.descr || ''}</small>
+          <span class="sy-chips"><i>${ref.size} · ${ref.w}×${ref.h} кл.</i>${raw((ref.chips || []).map(([t, cl]) => html`<i class="${cl}">${t}</i>`).join(''))}${!ref.open && ref.tech ? raw(html`<i class="bad">нужна «${ref.tech}»</i>`) : ''}${tooBig ? raw('<i class="bad">велик для класса</i>') : ''}</span>
+        </span></button>`;
+    };
+    if (st.tab === 'weapon') {
+      const own = list.filter((r) => r.own), cat = list.filter((r) => !r.own);
+      listEl.innerHTML = html`<h4 class="sy-lh">Свои проекты</h4>${raw(own.length ? own.map(item).join('') : html`<p class="empty">${raw(empty)}</p>`)}
+        <h4 class="sy-lh">Арсенал <a href="#/arsenal">справочник →</a></h4>${raw(cat.map(item).join(''))}`;
+      return;
+    }
+    listEl.innerHTML = list.length ? list.map(item).join('') : html`<p class="empty">${raw(empty || 'Пусто.')}</p>`;
   };
 
   // ── расчёт ──
@@ -352,6 +373,28 @@ function draw(root, s) {
 
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
 
+function modChips(m) {
+  const p = m.params || {};
+  const out = [];
+  if (m.kind === 'weapon') {
+    out.push([p.type === 'repair' ? `ремонт ${num(p.heal)}` : p.dmg ? `${num(p.dmg)} урона` : 'без урона', 'good']);
+    if (p.pd) out.push([`перехват ${Math.round(p.pd * 100)} %`, 'good']);
+    if (p.rng) out.push([`дальн. ${p.rng}`, '']);
+  }
+  if (p.thrust) out.push([`тяга ${num(p.thrust)}`, 'good']);
+  if (p.shield) out.push([`щит ${num(p.shield)}`, 'good']);
+  if (p.crew) out.push([`экипаж +${p.crew}`, 'good']);
+  if (p.radar) out.push([`радар +${p.radar}`, 'good']);
+  if (p.cargo) out.push([`груз ${p.cargo}`, 'good']);
+  if (p.craft) out.push([`${p.craft} звена`, 'good']);
+  if (p.capacity) out.push([`${p.capacity} ед. топлива`, 'good']);
+  if (p.stealth) out.push([`маскировка ${Math.round(p.stealth * 100)} %`, 'good']);
+  if (p.energy) out.push([`−${num(p.energy)} ЭЕ`, 'bad']);
+  if (p.mass) out.push([`${fmt(p.mass)} т`, '']);
+  if (p.cost) out.push([`${num(p.cost)} ГС`, '']);
+  return out;
+}
+
 function modInfo(m) {
   const p = m.params || {};
   const bits = [];
@@ -389,7 +432,7 @@ function passport(c) {
       <div><dt>Прочность</dt><dd>${num(c.hp)}</dd></div>
       <div><dt>Щит</dt><dd>${num(c.shield)}</dd></div>
       <div><dt>Урон за ход</dt><dd>${num(c.damage)}${c.heal ? raw(html`<small>ремонт ${num(c.heal)}</small>`) : ''}</dd></div>
-      <div><dt>Дальность огня</dt><dd>${fmt(c.dalnost)}</dd></div>
+      <div><dt>Дальность огня</dt><dd>${fmt(c.dalnost)}${c.pd ? raw(html`<small>перехват ракет ${Math.round(c.pd * 100)} %</small>`) : ''}</dd></div>
       <div><dt>Скорость</dt><dd>${fmt(c.speed)}</dd></div>
       <div><dt>Масса</dt><dd>${num(c.mass)} т</dd></div>
       <div><dt>Броня</dt><dd>К ${pct(r.kinetic)} · Э ${pct(r.energy)} · Р ${pct(r.missile)}<small>${c.alloy_name}</small></dd></div>
