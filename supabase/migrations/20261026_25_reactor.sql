@@ -50,7 +50,7 @@ grant select on public.v1_reactor_parts to anon, authenticated;
 --   heat — тепловыделение; sig — заметность; use — расход топлива; cost — цена;
 --   fuels — какие семейства топлива принимает; ref — энергия «нормального» топлива;
 --   bill — сырьё на постройку (на размер M, масштабируется размером).
--- size: power, mass, slots, use (ед. топлива в сутки), cost (ГС), k (масштаб сырья), sig.
+-- size: power (в масштабе старых реакторов: термоядерный M ≈ эсминец, L ≈ крейсер, XL ≈ линкор), mass, slots, use (ед. топлива в сутки), cost (ГС), k (масштаб сырья), sig.
 -- cool: cap — сколько тепла отводит; mass, sig, rel, cost, self — своё потребление.
 -- conv: power, mass, rel, heat, cost.
 insert into public.v1_reactor_parts(kind, id, name, descr, tech, params, sort) values
@@ -66,13 +66,13 @@ insert into public.v1_reactor_parts(kind, id, name, descr, tech, params, sort) v
    'rg.school.kvg',   '{"power":3.2,"mass":1.5,"rel":65,"heat":0.9,"sig":30,"use":0.5,"cost":3.5,"ref":90,"fuels":["nuclear","fusion","exotic"],"bill":{"Гравиядро":1,"Редкоземельные руды":3}}', 50),
 
   ('size', 'S',  'S — малый',        'Корветы, катера и тяжёлая наземная техника.', null,
-   '{"power":100,"mass":8,"slots":1,"use":1,"cost":2000,"k":0.35,"sig":0.6}', 10),
+   '{"power":4500,"mass":8,"slots":1,"use":1,"cost":2000,"k":0.35,"sig":0.6}', 10),
   ('size', 'M',  'M — средний',      'Фрегаты и эсминцы.', null,
-   '{"power":300,"mass":22,"slots":2,"use":3,"cost":6000,"k":1,"sig":0.8}', 20),
+   '{"power":13500,"mass":22,"slots":2,"use":3,"cost":6000,"k":1,"sig":0.8}', 20),
   ('size', 'L',  'L — большой',      'Крейсеры и авианосцы.', null,
-   '{"power":800,"mass":55,"slots":4,"use":7,"cost":15000,"k":2.5,"sig":1.0}', 30),
+   '{"power":36000,"mass":55,"slots":4,"use":7,"cost":15000,"k":2.5,"sig":1.0}', 30),
   ('size', 'XL', 'XL — сверхбольшой', 'Линкоры и дредноуты.', 'comp.ship.reactor',
-   '{"power":2000,"mass":130,"slots":7,"use":16,"cost":40000,"k":6,"sig":1.3}', 40),
+   '{"power":90000,"mass":130,"slots":7,"use":16,"cost":40000,"k":6,"sig":1.3}', 40),
 
   ('cool', 'radiator', 'Радиаторы',       'Широкие панели отводят тепло излучением. Просто и надёжно, но корабль светится на сенсорах.', null,
    '{"cap":1.0,"mass":0.10,"sig":12,"rel":0,"cost":1.0,"self":0,"bill":{"Медь":2}}', 10),
@@ -222,7 +222,7 @@ begin
   bill := jsonb_set(bill, '{Титан}', to_jsonb(coalesce((bill->>'Титан')::numeric, 0) + ceil(4 * scale)));
 
   -- оценка: удельная мощность × надёжность, с бонусом за запас по теплу
-  grade := least(100, round(100 * sqrt(least(1, dens / 40) * rel / 100) * (0.9 + 0.1 * least(1, greatest(0, margin) / 0.5))));
+  grade := least(100, round(100 * sqrt(least(1, dens / 1800) * rel / 100) * (0.9 + 0.1 * least(1, greatest(0, margin) / 0.5))));
 
   if rel < coalesce((cfg->>'min_reliability')::numeric, 10) then
     warns := warns || '["Установка разрушится на первых же испытаниях: зарегистрировать нельзя"]';
