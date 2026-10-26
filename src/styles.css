@@ -1042,3 +1042,6 @@ textarea.mono{width:100%;font:12.5px/1.5 var(--mono);background:var(--bg);color:
 .hl-tri .t{fill:var(--mute)}
 .hl-tri .v{fill:var(--gold);font-weight:800;font-size:10px}
 @media (max-width:560px){.hl-props{display:none}}
+.rx-seg.three{grid-template-columns:repeat(3,1fr)}
+.wp-turn{font-size:12px;font-weight:500;color:var(--mute)}
+@media (max-width:560px){.rx-seg.three{grid-template-columns:repeat(3,1fr)}}
