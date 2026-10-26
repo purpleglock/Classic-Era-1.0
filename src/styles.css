@@ -939,3 +939,12 @@ textarea.mono{width:100%;font:12.5px/1.5 var(--mono);background:var(--bg);color:
   .fu-props{display:none}
   .fu-note{display:none}
 }
+/* плитка с раскрывающимся списком (Конструкторы) */
+.tile-drop{font:inherit;text-align:left;cursor:pointer;width:100%}
+.tile-drop .chev{width:18px!important;height:18px!important;margin-left:auto;color:var(--mute)!important;transition:transform .2s}
+.tile-drop[aria-expanded="true"]{border-color:var(--gold-dim);background:var(--panel2)}
+.tile-drop[aria-expanded="true"] .chev{transform:rotate(180deg);color:var(--gold)!important}
+.tile-menu:not([hidden]){grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;padding:10px;border:1px solid var(--gold-dim);border-radius:14px;background:var(--gold-soft)}
+.tile-menu .tile{min-height:0;padding:12px 14px}
+.tile-menu .tile b{font-size:14px}
+.tile-menu a.tile{border-color:var(--gold-dim)}

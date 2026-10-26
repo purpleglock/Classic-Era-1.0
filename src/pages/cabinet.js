@@ -9,6 +9,16 @@ import { applyArt, settings } from '../lib/settings.js';
 /** Редкие ресурсы подсвечиваются ярким золотом. */
 const RARE = new Set(['Старвис', 'Реликтовое дерево', 'Стелларит', 'Хтонит', 'Ионит', 'Гравиядро', 'Рагенод', 'Ихор', 'Программируемая материя', 'Странный фрагмент']);
 
+// Раскрывающийся список в плитке «Конструкторы»: без адреса — на переработке.
+const CONSTRUCTORS = [
+  ['i-ship', 'Конструктор кораблей', 'Корпус, модули, вооружение'],
+  ['i-cube', 'Конструктор наземной техники', 'Танки, шагоходы, транспорт'],
+  ['i-shield', 'Конструктор корпусов', 'Сплавы брони и корпуса'],
+  ['i-fuel', 'Конструктор топлива', 'Свои марки топлива для кораблей', '#/fuel'],
+  ['i-spark', 'Конструктор реактора', 'Энергия для систем и орудий'],
+  ['i-sword', 'Конструктор орудий', 'Пушки, лучи и ракеты'],
+];
+
 const GROUPS = [
   ['Земля и власть', [
     ['stats', 'i-stat', 'Статистика державы', 'Казна, доходы, армия и достижения', '#/stats'],
@@ -23,7 +33,7 @@ const GROUPS = [
     ['map', 'i-map', 'Карта галактики', 'Системы, границы и маршруты', '#/map'],
     ['fleet', 'i-ship', 'Флот и войска', 'Флоты, армии и производство'],
     ['registry', 'i-list', 'Реестр', 'Свои и общедоступные проекты', '#/registry'],
-    ['fuel', 'i-fuel', 'Конструктор топлива', 'Свои марки топлива для кораблей', '#/fuel'],
+    ['constructors', 'i-wrench', 'Конструкторы', 'Корабли, техника, корпуса, топливо, реакторы, орудия', null, 'drop'],
     ['war', 'i-sword', 'Война', 'Ноты, сражения, оккупация'],
     ['intel', 'i-eye', 'Разведка', 'Агенты и тайные операции'],
   ]],
@@ -36,7 +46,7 @@ const GROUPS = [
     ['bar', 'i-glass', 'Ресторан-бар «Классикал»', 'Встречи, игры на удачу и слухи сектора'],
   ]],
 ];
-const SOON = [['i-wrench', 'Конструкторы', 'Корабли и техника — пересобираем с нуля'], ['i-flask', 'Конструктор технологий', 'Свои технологии державы — в разработке'], ['i-trend', 'Биржа', 'На переработке, вернётся в патче'], ['i-planet', 'Георазведка', 'На переработке']];
+const SOON = [['i-flask', 'Конструктор технологий', 'Свои технологии державы — в разработке'], ['i-trend', 'Биржа', 'На переработке, вернётся в патче'], ['i-planet', 'Георазведка', 'На переработке']];
 
 export async function renderCabinet(root) {
   if (!session.user) {
@@ -106,7 +116,12 @@ export async function renderCabinet(root) {
     <div class="cab-cols">
       <div class="groups">
         ${GROUPS.map(([title, tiles], gi) => raw(html`<section aria-labelledby="g${gi}"><h2 class="g-h" id="g${gi}">${title}</h2><div class="tiles">
-          ${tiles.map(([key, ic, t, s, href]) => raw(html`<a class="tile" href="${href || `#/soon?s=${key}`}">${icon(ic)}<span><b>${t}</b><small>${s}</small></span></a>`))}
+          ${tiles.map(([key, ic, t, s, href, kind]) => raw(kind === 'drop'
+            ? html`<button type="button" class="tile tile-drop" aria-expanded="false" aria-controls="drop-${key}">${icon(ic)}<span><b>${t}</b><small>${s}</small></span>${icon('i-down', 'i chev')}</button>
+              <div class="tile-menu" id="drop-${key}" hidden>${CONSTRUCTORS.map(([cic, ct, cs, chref], i) => raw(chref
+                ? html`<a class="tile" href="${chref}">${icon(cic)}<span><b>${i + 1}. ${ct}</b><small>${cs}</small></span></a>`
+                : html`<div class="tile off" title="Пересобираем с нуля">${icon(cic)}<span><b>${i + 1}. ${ct}</b><small>${cs} · на переработке</small></span></div>`))}</div>`
+            : html`<a class="tile" href="${href || `#/soon?s=${key}`}">${icon(ic)}<span><b>${t}</b><small>${s}</small></span></a>`))}
         </div></section>`))}
         <section aria-labelledby="g-soon"><h2 class="g-h" id="g-soon">В разработке</h2><div class="tiles">
           ${SOON.map(([ic, t, s]) => raw(html`<div class="tile off">${icon(ic)}<span><b>${t}</b><small>${s}</small></span></div>`))}
@@ -149,6 +164,13 @@ export async function renderCabinet(root) {
       el.textContent = untilText(nextTick - Date.now());
     }, 30000);
   }
+
+  // раскрывающиеся плитки («Конструкторы»)
+  $$('.tile-drop', root).forEach((b) => b.addEventListener('click', () => {
+    const open = b.getAttribute('aria-expanded') !== 'true';
+    b.setAttribute('aria-expanded', String(open));
+    $('#' + b.getAttribute('aria-controls'), root).hidden = !open;
+  }));
 
   // вкладки ленты
   const tabs = $$('.tabs [role=tab]', root);
