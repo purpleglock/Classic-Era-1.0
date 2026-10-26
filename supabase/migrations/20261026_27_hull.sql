@@ -231,7 +231,7 @@ begin
   end loop;
 
   -- оценка: защита × лёгкость — тяжёлая броня держит удар, но тормозит корабль
-  prot := least(1, ((rk + ren + rmi) / 3 + hpp * 0.5) / 0.6);
+  prot := least(1, ((rk + ren + rmi) / 3 + hpp * 0.5) / 0.8);
   light := least(1, 4 / greatest(dn, 0.5));
   grade := least(100, round(100 * sqrt(greatest(prot, 0) * light) * (1 + least(regen, 8) / 80)));
 
