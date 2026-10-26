@@ -114,6 +114,17 @@ insert into public.v1_settings(key, value) values
 on conflict (key) do nothing;
 
 -- ════════ 4. Расчёт ════════
+-- Чистый ресурс как реакторное топливо: свойства компонента без правил смеси
+-- (перегрев без рабочего тела — это про двигатели, у реактора свой контур).
+create or replace function public.v1_fuel_raw(p_res text) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object('energy', c.e, 'stability', greatest(0, least(100, 50 + c.s)),
+         'efficiency', c.eff, 'class', c.grp,
+         'registrable', 50 + c.s >= coalesce((select (value->>'min_stability')::numeric from v1_settings where key = 'fuel'), 5))
+    from v1_fuel_components c where c.res = p_res;
+$$;
+grant execute on function public.v1_fuel_raw(text) to authenticated;
+
 -- p_fid нужен, чтобы найти марку топлива державы и проверить технологии;
 -- null — без проверки технологий (служебный пересчёт).
 create or replace function public.v1_reactor_calc(p_cfg jsonb, p_fid text default null) returns jsonb
@@ -163,10 +174,8 @@ begin
      where f.id::text = fu->>'id' and (p_fid is null or f.faction_id = p_fid);
     if fstats is null then return jsonb_build_object('ok', false, 'error', 'reactor_fuel_missing'); end if;
   elsif fu->>'kind' = 'res' then
-    if not exists (select 1 from v1_fuel_components where res = fu->>'res') then
-      return jsonb_build_object('ok', false, 'error', 'reactor_fuel_missing');
-    end if;
-    fstats := v1_fuel_calc(jsonb_build_object(fu->>'res', 100));
+    fstats := v1_fuel_raw(fu->>'res');
+    if fstats is null then return jsonb_build_object('ok', false, 'error', 'reactor_fuel_missing'); end if;
     fname := fu->>'res';
   else
     return jsonb_build_object('ok', false, 'error', 'reactor_incomplete');
@@ -266,7 +275,7 @@ begin
       from v1_fuels where faction_id = v_fid),
     'raw', (select coalesce(jsonb_agg(jsonb_build_object('res', c.res, 'class', x->>'class', 'energy', x->'energy',
         'stability', x->'stability', 'ok', x->'registrable') order by c.sort), '[]'::jsonb)
-      from v1_fuel_components c cross join lateral (select v1_fuel_calc(jsonb_build_object(c.res, 100)) x) q
+      from v1_fuel_components c cross join lateral (select v1_fuel_raw(c.res) x) q
       where (x->>'class') in ('nuclear', 'fusion', 'exotic')),
     'reactors', (select coalesce(jsonb_agg(jsonb_build_object('id', id, 'name', name, 'cfg', cfg, 'stats', stats,
         'created_at', created_at) order by created_at), '[]'::jsonb)
