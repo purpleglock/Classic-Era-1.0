@@ -291,7 +291,7 @@ begin
       fst := v1_fuel_raw(fu->>'res'); fname := fu->>'res';
     end if;
     if fst is null then warns := warns || '["Выберите топливо для баков"]';
-    else jumps := floor(tank_cap * (fst->>'energy')::numeric * (fst->>'efficiency')::numeric / 300)::int; end if;
+    else jumps := greatest(case when (fst->>'energy')::numeric > 0 then 1 else 0 end, floor(tank_cap * (fst->>'energy')::numeric * (fst->>'efficiency')::numeric / 300))::int; end if;
   elsif coalesce((cp->>'engines')::boolean, true) then
     warns := warns || '["Без топливных баков корабль не сможет ходить между системами"]';
   end if;
