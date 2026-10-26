@@ -39,6 +39,7 @@ export const SPRITE = `<svg width="0" height="0" style="position:absolute" aria-
   <symbol id="i-arena" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="5"/><path d="M3 12v4c0 3 4 5 9 5s9-2 9-5v-4M9 12l6 0"/></symbol>
   <symbol id="i-glass" viewBox="0 0 24 24"><path d="M6 3h12l-1 6a5 5 0 01-10 0zM12 14v7M8 21h8"/></symbol>
   <symbol id="i-coin" viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3 3 7 3s7-1.3 7-3v-5"/></symbol>
+  <symbol id="i-fuel" viewBox="0 0 24 24"><path d="M4 21V6a2 2 0 012-2h6a2 2 0 012 2v15M3 21h12M4 10h10M14 8l3 2v7a1.5 1.5 0 003 0V9l-3-3"/><path d="M9 13.5c-1 1.2-1.5 2-1.5 2.6a1.5 1.5 0 003 0c0-.6-.5-1.4-1.5-2.6z"/></symbol>
   <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3M7 15h10"/></symbol>
   <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
