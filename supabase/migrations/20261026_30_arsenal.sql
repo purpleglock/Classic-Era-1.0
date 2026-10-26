@@ -15,6 +15,8 @@ alter table public.v1_modules
   add column if not exists nick text,
   add column if not exists base_name text,
   add column if not exists in_shipyard boolean not null default true;
+alter table public.v1_modules drop constraint if exists v1_modules_size_check;
+alter table public.v1_modules add constraint v1_modules_size_check check (size in ('S', 'M', 'L', 'XL'));
 
 create table if not exists public.v1_arsenal_groups (
   id      text primary key,
