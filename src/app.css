@@ -702,3 +702,6 @@ a.rx-fac{text-decoration:none;color:inherit}a.rx-fac:hover{filter:brightness(1.2
 .bm-mode button{background:var(--panel2);border:0;color:var(--mute);padding:7px 14px;font:inherit;font-weight:800;font-size:13px;cursor:pointer}
 .bm-mode button[aria-pressed="true"]{background:var(--gold);color:#120e05}
 .bm-3dnote{margin:0}
+.bm-kind{display:inline-flex;margin-left:auto;align-self:center}
+.bm-kind a{padding:9px 18px;font-weight:800;font-size:14px;color:var(--mute);text-decoration:none;background:var(--panel2)}
+.bm-kind a[aria-selected="true"]{background:var(--gold);color:#120e05}

@@ -17,7 +17,7 @@ import { groupOf, loadBodies } from '../lib/bodies.js';
 import { sb } from '../lib/supabase.js';
 
 let LIB = null;
-function lib() {
+export function lib() {
   LIB ||= Promise.all([
     import('three'),
     import('three/addons/controls/OrbitControls.js'),

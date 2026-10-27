@@ -38,6 +38,7 @@ export async function renderBattleMap(root) {
         <h1>Карты сражений</h1>
         <p>Карта строится из настоящей системы: цвет звезды, тело, у которого идёт бой, его кольца и луны, зона орбиты, прошлые сражения. Одно зерно — одна и та же карта.</p>
       </div>
+      <div class="seg bm-kind" role="tablist"><a href="#/battlemap" role="tab" aria-selected="true">Космос</a><a href="#/groundmap" role="tab">Земля</a></div>
     </section>
     <section class="panel bm-ctl">
       <label class="bm-f"><span>Система</span><input id="bm-sys" list="bm-syslist" placeholder="Название системы" autocomplete="off"><datalist id="bm-syslist">${systems.map((s) => raw(html`<option value="${s.name}">`))}</datalist></label>

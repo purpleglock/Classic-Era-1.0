@@ -61,3 +61,25 @@ export function visibleCells(m, units, side) {
   }
   return vis;
 }
+
+/**
+ * Обзор на земле. Радиус обзора отряда — в клетках (u.radar).
+ * С гор видно на 2 клетки дальше, с холмов — на 1. Горы закрывают линию обзора
+ * (кроме авиации и того, кто сам стоит на горе). Цель в лесу или постройках
+ * видна только с 2 клеток. Авиация видит на 1 клетку дальше и поверх всего.
+ */
+export function visibleCellsGround(m, units, side) {
+  const own = units.filter((u) => u.side === side), vis = new Set();
+  for (let y = 0; y < m.h; y++) for (let x = 0; x < m.w; x++) {
+    const t = cellOf(m, x, y);
+    for (const u of own) {
+      const at = cellOf(m, u.x, u.y);
+      const r = (u.radar || 3) + (u.air ? 1 : at === 'M' ? 2 : at === 'h' ? 1 : 0);
+      const d = dist([u.x, u.y], [x, y]);
+      if (d > ((t === 'F' || t === 'S') ? Math.min(r, 2) : r)) continue;
+      if (d > 1 && !u.air && at !== 'M' && hexLine([u.x, u.y], [x, y]).some(([cx, cy]) => cellOf(m, cx, cy) === 'M')) continue;
+      vis.add(`${x},${y}`); break;
+    }
+  }
+  return vis;
+}
