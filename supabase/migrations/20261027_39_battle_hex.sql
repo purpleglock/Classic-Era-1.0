@@ -299,13 +299,13 @@ end $$;
 -- ════════ 6. Что видит игрок ════════
 create or replace function public.v1_battle_state(p_battle uuid) returns jsonb
 language plpgsql volatile security definer set search_path = public as $$
-declare me text; staff boolean := public.v1_is_staff(); b record; seen uuid[] := '{}'; u record; full boolean;
+declare me text; staff boolean := public.v1_is_staff(); b record; seen uuid[] := '{}'; u record; v_full boolean;
 begin
   select * into b from v1_battles where id = p_battle;
   if b.id is null then raise exception 'battle_not_found'; end if;
   me := public._v1_my_side(p_battle);
   if me is null and not staff then raise exception 'not_in_battle'; end if;
-  full := me is null and staff;   -- команда проекта, не участвуя, видит всё
+  v_full := me is null and staff;   -- команда проекта, не участвуя, видит всё
   if me is not null then
     for u in select * from v1_battle_units where battle_id = p_battle and side <> me and alive and not left_field loop
       if u.revealed_turn >= b.turn_no or public._v1_side_sees(p_battle, me, u.x, u.y, u.utype) then
@@ -322,12 +322,12 @@ begin
     'sides', (select jsonb_agg(jsonb_build_object('side', s.side, 'faction_id', s.faction_id, 'role', s.role, 'status', s.status,
                 'retreat_at_turn', s.retreat_at_turn, 'name', v1_fname(s.faction_id))) from v1_battle_sides s where s.battle_id = p_battle),
     'units', (select coalesce(jsonb_agg(
-                case when full or u.side = me then to_jsonb(u) - 'battle_id'
+                case when v_full or u.side = me then to_jsonb(u) - 'battle_id'
                 else jsonb_build_object('id', u.id, 'side', u.side, 'name', u.name, 'class', u.class, 'utype', u.utype, 'size', u.size,
                        'x', u.x, 'y', u.y, 'alive', u.alive, 'left_field', u.left_field, 'qty', u.qty, 'revealed', u.revealed_turn >= b.turn_no,
                        'wear', round((1 - u.hp / nullif(u.hp_ship * u.qty_start, 0)) * 10) * 10, 'shielded', u.shield > 0)
                 end order by u.side, u.y, u.x), '[]'::jsonb)
-              from v1_battle_units u where u.battle_id = p_battle and (full or u.side = me or u.id = any(seen) or not u.alive)),
+              from v1_battle_units u where u.battle_id = p_battle and (v_full or u.side = me or u.id = any(seen) or not u.alive)),
     'contacts', (select coalesce(jsonb_agg(jsonb_build_object('unit', s.unit_id, 'x', s.x, 'y', s.y, 'turn', s.turn_no,
                    'name', (select name from v1_battle_units where id = s.unit_id))), '[]'::jsonb)
                  from v1_battle_seen s where s.battle_id = p_battle and s.side = me and not (s.unit_id = any(seen))
