@@ -11,7 +11,7 @@ import { BIOMES, cloudColors } from './ground-map.js';
 import { center, cellOf, visibleCellsGround, edgeNeighbors, SQ3 } from '../lib/hexmap.js';
 import { sb } from '../lib/supabase.js';
 
-const HGT = { '.': 0.05, F: 0.12, R: 0.22, h: 1.0, M: 2.5, W: -0.8, w: -0.3, L: -0.28, X: -4.5, S: 0.06, C: 0.1, r: 0.03 };
+const HGT = { '.': 0.05, F: 0.12, R: 0.22, h: 1.0, M: 2.5, W: -0.8, w: -0.3, L: -0.28, X: -2.4, S: 0.06, C: 0.1, r: 0.03 };
 const rgb = (h) => { const n = parseInt(h.slice(1), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; };
 const css = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 function prng(seed) {
@@ -50,7 +50,7 @@ export class Ground3D {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1500);
     this.controls = new L.OrbitControls(this.camera, r.domElement);
-    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 5, maxDistance: 80, maxPolarAngle: Math.PI * 0.47, rotateSpeed: 0.7 });
+    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 5, maxDistance: 80, maxPolarAngle: Math.PI * 0.42, rotateSpeed: 0.7 });
     this.ray = new THREE.Raycaster(); this.clock = new THREE.Clock();
     this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(this.host); this.resize();
     const loop = () => {
@@ -58,6 +58,8 @@ export class Ground3D {
       this.raf = requestAnimationFrame(loop);
       const dt = Math.min(this.clock.getDelta(), 0.05), t = this.clock.elapsedTime;
       this.controls.autoRotate = this.o.autoRotate; this.controls.update();
+      // камера не опускается под рельеф и за край чаши
+      const c = this.camera.position; if (c.y < 3.5) c.y = 3.5;
       for (const f of this.anim) f(dt, t);
       r.render(this.scene, this.camera);
     };
@@ -185,6 +187,9 @@ export class Ground3D {
     geo.computeVertexNormals();
     this.terrain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0.02 }));
     this.scene.add(this.terrain);
+    // дальняя равнина под чашей — горизонт не просвечивает небом снизу
+    const far = new THREE.Mesh(new THREE.RingGeometry(30, 700, 64, 1), new THREE.MeshStandardMaterial({ color: new THREE.Color(B.ground[0]).multiplyScalar(0.7), roughness: 1 }));
+    far.rotation.x = -Math.PI / 2; far.position.y = 2.2; this.scene.add(far);
 
     // вода и лава — плоскости над впадинами
     const hexGeo = () => { const g = new THREE.CircleGeometry(1.08, 6); g.rotateX(-Math.PI / 2); return g; };
@@ -222,7 +227,7 @@ export class Ground3D {
     { // небо над облаками — в цветах гиганта
       const sk = document.createElement('canvas'); sk.width = 4; sk.height = 256;
       const sg = sk.getContext('2d'), gr = sg.createLinearGradient(0, 0, 0, 256);
-      gr.addColorStop(0, css(cc[1].map((v) => Math.round(v * 0.55)))); gr.addColorStop(0.7, css(cc[2])); gr.addColorStop(1, css(cc[2]));
+      gr.addColorStop(0, css(cc[0].map((v) => Math.round(v * 0.8)))); gr.addColorStop(0.55, css(cc[2])); gr.addColorStop(1, css(cc[2]));
       sg.fillStyle = gr; sg.fillRect(0, 0, 4, 256);
       const st = new THREE.CanvasTexture(sk); st.colorSpace = THREE.SRGBColorSpace; this.scene.background = st;
     }
