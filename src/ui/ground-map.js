@@ -3,6 +3,7 @@
  * Цвета, названия клеток и облик (лес, дюны, лава, ледяные шпили…) зависят от среды
  * планеты; правила клеток общие. Сетка и обзор — src/lib/hexmap.js.
  */
+import { drawMarks } from './battle-marks.js';
 import { SQ3, center as hexCenter, cellOf, edgeNeighbors, visibleCellsGround } from '../lib/hexmap.js';
 
 const rgba = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
@@ -142,6 +143,7 @@ export class GroundMap {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.vis = this.o.fog ? visibleCellsGround(this.map, this.o.units, this.o.fog) : null;
     if (this.vis) this.drawFog(ctx);
+    drawMarks(this, ctx, this.o.marks);
     this.drawUnits(ctx);
     if (this.o.hover) { this.hexPath(ctx, ...this.o.hover, 0.94); ctx.strokeStyle = 'rgba(243,236,220,.95)'; ctx.lineWidth = 1.6; ctx.stroke(); }
   }
@@ -397,7 +399,7 @@ export class GroundMap {
   drawUnits(ctx) {
     const s = this.s, fog = this.o.fog;
     for (const u of this.o.units) {
-      if (fog && u.side !== fog && !this.vis?.has(`${u.x},${u.y}`)) continue; // необнаруженного нет на карте
+      if (fog && u.side !== fog && !u.seen && !this.vis?.has(`${u.x},${u.y}`)) continue; // необнаруженного нет на карте
       const [cx, cy0] = this.center(u.x, u.y), cy = cy0 - (u.air ? s * 0.45 : 0);
       const col = u.side === 'a' ? [233, 185, 73] : [232, 104, 88], dir = u.side === 'a' ? 1 : -1, r = s * 0.42;
       if (u.air) { ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(cx + s * 0.2, cy0 + s * 0.15, r * 0.8, r * 0.3, 0, 0, 7); ctx.fill(); }

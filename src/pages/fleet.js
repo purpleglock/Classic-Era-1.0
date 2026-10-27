@@ -3,19 +3,25 @@ import { rpc } from '../lib/supabase.js';
 import { session } from '../lib/session.js';
 import { openLogin } from '../ui/login.js';
 import { num } from '../lib/format.js';
+import { uploadMedia } from '../lib/upload.js';
 
 /**
- * #/fleet — «Флот и войска» на новом движке (первая версия).
- * Флоты: состав старого образца (только просмотр) и корабли нового образца.
- * Производство: заказ кораблей по своим проектам из конструктора на верфях.
- * Армии: пока только просмотр, наземная часть ждёт переработки.
- * Сервер: v1_fleet_state, v1_production_order/cancel, v1_fleet_rename/create/transfer/disband.
+ * #/fleet — «Флот и войска» на новом движке.
+ * Флоты: герб, девиз, основная база; полёт по гиперлиниям с запасом хода, стойка «Оборона»
+ * (перехват врага на пролёте), заправка на верфи, отзыв в пути. Прибытие к врагу — бой
+ * на гекс-карте, к беззащитной системе врага — оккупация.
+ * Армии: создаются из готовых войск на своей колонии, перебрасываются на 2 системы
+ * по своей и оккупированной части региона, высаживаются на планеты врага (каждую — отдельно).
+ * Производство: заказ кораблей по своим проектам на верфях.
+ * Сервер: v1_fleet_state, v1_fleet_* и v1_army_* (миграция 40), v1_production_*.
  */
 
-const STATUS = { idle: 'на стоянке', moving: 'в пути', battle: 'в бою', stalled: 'стоит без топлива' };
+const STATUS = { idle: 'на стоянке', transit: 'в пути', v1_transit: 'в пути', v1_clearing: 'зачистка планеты', battle: 'в бою' };
 const SIZE = { S: 'малый', M: 'средний', L: 'крупный', XL: 'тяжёлый' };
+const COLORS = ['#e9b949', '#d9d4c7', '#c0563f', '#7aa7d9', '#7fc79a', '#b48ad9', '#e08a3c', '#5ec4c4'];
 const fmt = (n, d = 1) => Number(n || 0).toLocaleString('ru-RU', { maximumFractionDigits: d });
-let tab = 'fleets';
+const hhmm = (t) => new Date(t).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+let tab = 'fleets', poll = 0;
 
 export async function renderFleet(root) {
   if (!session.user) {
@@ -27,37 +33,114 @@ export async function renderFleet(root) {
     root.innerHTML = html`<section class="panel gate"><span class="m-ic">${icon('i-flag')}</span><div><h1>У вас пока нет державы</h1><p>Флоты откроются вместе с кабинетом.</p></div><a class="btn gold" href="#/apply">Подать заявку</a></section>`;
     return;
   }
+  const tabQ = new URLSearchParams(location.hash.split('?')[1] || '').get('tab');
+  if (tabQ) tab = tabQ;
   if (!root.querySelector('.fl-wrap')) root.innerHTML = '<div class="skeleton">Собираю доклад адмиралтейства…</div>';
   let s;
   try { s = await rpc('v1_fleet_state'); } catch (e) {
-    root.innerHTML = html`<section class="panel gate"><div><h1>Адмиралтейство недоступно</h1><p>${e.missingSchema ? 'Новый движок флотов ещё не подключён в базе (миграция 33).' : e.message}</p></div><a class="btn" href="#/cabinet">В кабинет</a></section>`;
+    root.innerHTML = html`<section class="panel gate"><div><h1>Адмиралтейство недоступно</h1><p>${e.missingSchema ? 'Новый движок флотов ещё не подключён в базе.' : e.message}</p></div><a class="btn" href="#/cabinet">В кабинет</a></section>`;
     return;
   }
+  const keep = window.scrollY;
   draw(root, s);
+  window.scrollTo(0, keep);
+  clearInterval(poll);
+  // полёты и зачистки идут сами — раз в 30 секунд обновляем доклад, пока страница открыта
+  poll = setInterval(() => {
+    if (!root.querySelector('.fl-wrap') || !location.hash.startsWith('#/fleet')) { clearInterval(poll); return; }
+    if (document.querySelector('.veil') || root.querySelector('form:focus-within')) return;
+    renderFleet(root);
+  }, 30000);
 }
 
 const left = (t) => {
   const ms = new Date(t) - Date.now();
-  if (ms <= 0) return 'сдаётся';
+  if (ms <= 0) return 'вот-вот';
   const h = Math.floor(ms / 3600e3), m = Math.floor((ms % 3600e3) / 60e3);
-  return h >= 24 ? `${Math.floor(h / 24)} д ${h % 24} ч` : `${h} ч ${m} мин`;
+  return h >= 24 ? `${Math.floor(h / 24)} д ${h % 24} ч` : h ? `${h} ч ${m} мин` : `${Math.max(1, m)} мин`;
 };
 
+/** Герб: картинка или монограмма в цвете отряда. */
+function crest(x, big = false) {
+  const c = x.color || '#e9b949';
+  if (x.emblem) return html`<span class="fl-crest${big ? ' big' : ''}" style="--c:${c}"><img src="${x.emblem}" alt="" loading="lazy"></span>`;
+  const ini = String(x.name || '?').replace(/[«»"'\d-]/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '★';
+  return html`<span class="fl-crest mono${big ? ' big' : ''}" style="--c:${c}">${ini}</span>`;
+}
+
+function modal(title, body, wide = false) {
+  const veil = document.createElement('div');
+  veil.className = 'veil';
+  veil.innerHTML = html`<article class="panel modal ${wide ? 'wide' : ''} fl-modal" role="dialog" aria-label="${title}">
+    <button type="button" class="ib x" data-close aria-label="Закрыть">${icon('i-x')}</button><h2>${title}</h2><div class="fl-mb">${raw(body)}</div></article>`;
+  document.body.appendChild(veil);
+  const close = () => { veil.remove(); removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  addEventListener('keydown', onKey);
+  veil.addEventListener('click', (e) => { if (e.target === veil || e.target.closest('[data-close]')) close(); });
+  return { box: veil.querySelector('.fl-mb'), close };
+}
+
+/** Поля «название · герб · цвет · девиз» (создание и правка флота или армии). */
+function metaFields(x = {}, what = 'флота') {
+  const col = x.color || COLORS[0];
+  return html`<div class="fl-meta">
+    <div class="fl-crest-pick">${raw(crest({ ...x, color: col }, true))}
+      <div class="fl-cp"><label class="btn sm">${icon('i-image')}Герб или арт<input type="file" name="file" accept="image/*" hidden></label>
+      <button type="button" class="btn sm" data-noimg ${raw(x.emblem ? '' : 'hidden')}>Убрать</button>
+      <small>Квадратная картинка, до 15 МБ. Без картинки — монограмма.</small></div>
+      <input type="hidden" name="emblem" value="${x.emblem || ''}"></div>
+    <label><span>Название ${what}</span><input name="name" value="${x.name || ''}" maxlength="48" required placeholder="${what === 'флота' ? '1-я ударная эскадра' : '7-й гвардейский легион'}"></label>
+    <label><span>Девиз (необязательно)</span><input name="motto" value="${x.motto || ''}" maxlength="120" placeholder="Сквозь тьму — к победе"></label>
+    <div class="fl-colors" role="radiogroup" aria-label="Цвет">${COLORS.map((c) => raw(html`<label><input type="radio" name="color" value="${c}" ${raw(c === col ? 'checked' : '')}><i style="background:${c}"></i></label>`))}</div>
+  </div>`;
+}
+function wireMeta(form, x = {}) {
+  const prev = () => {
+    const pick = $('.fl-crest-pick', form), emb = form.emblem.value;
+    pick.querySelector('.fl-crest').outerHTML = crest({ name: form.name.value || x.name, emblem: emb, color: form.querySelector('[name=color]:checked')?.value }, true);
+    $('[data-noimg]', form).hidden = !emb;
+  };
+  form.file.onchange = async () => {
+    const f = form.file.files[0]; if (!f) return;
+    try { toast('Загружаю герб…'); const r = await uploadMedia(f, { own: true, max: 512 }); form.emblem.value = r.url; prev(); }
+    catch (e) { toast(e.message, 'err'); }
+  };
+  $('[data-noimg]', form).onclick = () => { form.emblem.value = ''; prev(); };
+  $$('[name=color]', form).forEach((r) => (r.onchange = prev));
+  form.name.addEventListener('input', () => { if (!form.emblem.value) prev(); });
+}
+const metaVals = (form) => ({ name: form.name.value, emblem: form.emblem.value || null, color: form.querySelector('[name=color]:checked')?.value || null, motto: form.motto.value || null });
+
+/** Полоса полёта: пройденные системы, текущее плечо, время прибытия. */
+function flightBar(fl) {
+  const t0 = new Date(fl.depart_at), t1 = new Date(fl.arrive_at), now = Date.now();
+  const frac = Math.max(0, Math.min(1, (now - t0) / Math.max(1, t1 - t0)));
+  const at = fl.route_at || [], route = fl.route || [fl.from, fl.to];
+  let leg = 0; at.forEach((t, i) => { if (new Date(t) <= now) leg = i; });
+  return html`<div class="fl-flight">
+    <div class="fl-route">${route.map((n, i) => raw(html`<span class="${i <= leg ? 'past' : i === leg + 1 ? 'next' : ''}">${n}</span>`))}</div>
+    <div class="fl-prog"><i style="width:${(frac * 100).toFixed(1)}%"></i></div>
+    <small>${icon('i-clock')}прибытие ${hhmm(fl.arrive_at)} · через ${left(fl.arrive_at)}${fl.old ? ' · старый маршрут' : ''}</small></div>`;
+}
+
 function draw(root, s) {
-  const can = !!s.can_edit;
+  const can = !!s.can_edit, canArmy = !!s.can_army;
   const fleets = s.fleets || [], designs = s.designs || [], yards = s.shipyards || [], queue = s.queue || [], armies = s.armies || [];
+  const battles = s.battles || [], pool = s.pool || [], colonies = s.colonies || [];
   const cfg = s.settings || {};
   const W = cfg.weight || { S: 1, M: 2, L: 4, XL: 8 }, K = cfg.market_k || 1.5, MAXQ = cfg.max_qty || 50;
   const ships = fleets.reduce((a, f) => a + f.ships.reduce((b, x) => b + x.qty, 0), 0);
   const legacy = fleets.reduce((a, f) => a + f.legacy.reduce((b, x) => b + (x.qty || 0), 0), 0);
+  const moving = fleets.filter((f) => f.flight).length + armies.filter((a) => a.status === 'v1_transit').length;
   const reload = () => renderFleet(root);
-  const run = async (fn, ok) => { try { await fn(); if (ok) toast(ok); reload(); } catch (e) { toast(e.message, 'err'); } };
+  const run = async (fn, ok) => { try { const r = await fn(); if (ok) toast(typeof ok === 'function' ? ok(r) : ok); reload(); return r; } catch (e) { toast(e.message, 'err'); } };
 
   const shipRow = (f, x) => {
     const peers = fleets.filter((g) => g.id !== f.id && g.system_id === f.system_id && g.status === 'idle' && !g.in_battle);
     return html`<li class="fl-ship">
       <span class="fl-q">×${num(x.qty)}</span>
-      <span class="fl-n"><b>${x.name}</b><small>${x.class_name || x.class} · ${SIZE[x.size] || x.size}</small></span>
+      <span class="fl-n"><b>${x.name}</b><small>${x.class_name || x.class} · ${SIZE[x.size] || x.size}${x.jumps ? ` · ход ${x.jumps} пр.` : ''}</small></span>
       <span class="fl-st"><i>${num(x.hp)} ПЗ</i><i>${num(x.damage)} урона</i><i>${fmt(x.speed)} скор.</i></span>
       ${can && peers.length && f.status === 'idle' && !f.in_battle ? raw(html`<span class="fl-mv">
         <input type="number" min="1" max="${x.qty}" value="${x.qty}" aria-label="Сколько перевести" data-q="${f.id}:${x.ship_id}">
@@ -67,23 +150,60 @@ function draw(root, s) {
   };
 
   const fleetCard = (f) => {
-    const empty = !f.ships.length && !f.legacy.length;
+    const empty = !f.ships.length && !f.legacy.length, idle = f.status === 'idle' && !f.in_battle;
     const st = f.in_battle ? 'в бою' : (STATUS[f.status] || f.status);
-    return html`<article class="panel fl-card${f.in_battle ? ' war' : ''}" data-fleet="${f.id}">
+    const cap = Number(f.fuel_cap || 0), fuel = Math.max(0, Number(f.fuel || 0));
+    return html`<article class="panel fl-card${f.in_battle ? ' war' : ''}${f.stance === 'defend' ? ' guard' : ''}" data-fleet="${f.id}" style="--c:${f.color || '#e9b949'}">
       <header class="fl-h">
-        <div><h3>${f.name}${f.is_station ? raw(' <span class="pill">станция</span>') : ''}</h3>
-          <small>${icon('i-map')}${f.system || f.system_id || '—'} · ${st}${f.fuel_cap ? ` · топливо ${fmt(f.fuel, 0)} / ${fmt(f.fuel_cap, 0)}` : ''}</small></div>
-        ${can ? raw(html`<div class="fl-act"><button type="button" class="btn sm" data-ren="${f.id}">Переименовать</button>${empty ? raw(html`<button type="button" class="btn sm" data-dis="${f.id}">Распустить</button>`) : ''}</div>`) : ''}
+        ${raw(crest(f))}
+        <div class="fl-ht"><h3>${f.name}${f.is_station ? raw(' <span class="pill">станция</span>') : ''}${f.stance === 'defend' ? raw(' <span class="pill guard">оборона</span>') : ''}</h3>
+          ${f.motto ? raw(html`<em class="fl-motto">«${f.motto}»</em>`) : ''}
+          <small>${icon('i-map')}${f.flight ? `${f.flight.from || '—'} → ${f.flight.to || '—'}` : (f.system || f.system_id || '—')} · ${st}</small>
+          <small>${icon('i-flag')}Основная база: ${f.home || '—'}</small></div>
       </header>
+      ${f.flight ? raw(flightBar(f.flight)) : ''}
+      ${f.in_battle ? raw(html`<a class="btn sm danger fl-tobattle" href="#/battle?id=${f.battle}">${icon('i-sword')}К сражению</a>`) : ''}
+      ${cap && !f.is_station ? raw(html`<div class="fl-fuel" title="Запас хода — сколько гиперпрыжков флот сделает без заправки">
+        <span>${icon('i-fuel')}Запас хода</span><div class="fl-prog fuel"><i style="width:${Math.min(100, (fuel / cap) * 100).toFixed(1)}%"></i></div><b>${fmt(fuel, 0)} / ${fmt(cap, 0)} пр.</b></div>`) : ''}
+      ${can && !f.is_station ? raw(html`<div class="fl-orders">
+        ${idle && !empty ? raw(html`<button type="button" class="btn sm gold" data-send="${f.id}">${icon('i-ship')}Отправить</button>`) : ''}
+        ${f.status === 'v1_transit' ? raw(html`<button type="button" class="btn sm" data-recall="${f.id}">${icon('i-back')}Отозвать</button>`) : ''}
+        ${idle && f.shipyard_here && fuel < cap ? raw(html`<button type="button" class="btn sm" data-refuel="${f.id}">${icon('i-fuel')}Заправить</button>`) : ''}
+        ${idle ? raw(html`<button type="button" class="btn sm" data-stance="${f.id}" aria-pressed="${f.stance === 'defend'}" title="В обороне флот перехватывает вражеские флоты, пролетающие через его систему">${icon('i-shield')}${f.stance === 'defend' ? 'В обороне' : 'Оборона'}</button>`) : ''}
+        ${idle && f.system_id && f.system_id !== f.home_sys ? raw(html`<button type="button" class="btn sm" data-base="${f.id}">${icon('i-flag')}Сделать базой</button>`) : ''}
+      </div>`) : ''}
       ${f.ships.length ? raw(html`<p class="fl-sub">Новый образец</p><ul class="fl-list">${f.ships.map((x) => raw(shipRow(f, x)))}</ul>`) : ''}
-      ${f.legacy.length ? raw(html`<p class="fl-sub old">Старый образец · до переноса только просмотр</p><ul class="fl-list old">${f.legacy.map((x) => raw(html`<li class="fl-ship">
+      ${f.legacy.length ? raw(html`<p class="fl-sub old">Старый образец</p><ul class="fl-list old">${f.legacy.map((x) => raw(html`<li class="fl-ship">
           <span class="fl-q">×${num(x.qty)}</span><span class="fl-n"><b>${x.name || 'Без названия'}</b><small>${x.class || 'корабль'}</small></span>
           <span class="fl-st">${x.hp != null ? raw(html`<i>${num(x.hp)} ПЗ</i>`) : ''}${x.damage != null ? raw(html`<i>${num(x.damage)} урона</i>`) : ''}</span></li>`))}</ul>`) : ''}
       ${empty ? raw('<p class="empty">Флот пуст. Переведите сюда корабли или назначьте его целью заказа на верфи.</p>') : ''}
+      ${can ? raw(html`<footer class="fl-foot"><button type="button" class="btn sm" data-edit="${f.id}">Герб и название</button>${empty ? raw(html`<button type="button" class="btn sm" data-dis="${f.id}">Распустить</button>`) : ''}</footer>`) : ''}
     </article>`;
   };
 
-  const sysOpts = [...new Map([...yards.map((y) => [y.system_id, y.name]), ...fleets.map((f) => [f.system_id, f.system || f.system_id])]).entries()];
+  const armyCard = (a) => {
+    const idle = a.status === 'idle' && !a.battle, enemy = (a.enemy_here || []).filter((c) => c.war && !c.taken);
+    const where = a.status === 'v1_transit' ? `${a.system || '—'} → ${a.dest || '—'}` : `${a.system || '—'}${a.colony ? ` · ${a.colony}` : ' · на орбите'}`;
+    return html`<article class="panel fl-card${a.battle ? ' war' : ''}" style="--c:${a.color || '#e9b949'}">
+      <header class="fl-h">${raw(crest(a))}
+        <div class="fl-ht"><h3>${a.name}</h3>${a.motto ? raw(html`<em class="fl-motto">«${a.motto}»</em>`) : ''}
+          <small>${icon('i-planet')}${where} · ${a.battle ? 'в бою' : STATUS[a.status] || a.status}</small>
+          <small>${icon('i-flag')}Основная база: ${a.home || '—'}</small></div></header>
+      ${a.status === 'v1_transit' && a.arrive_at ? raw(html`<p class="fl-eta">${icon('i-clock')}Переброска: прибытие ${hhmm(a.arrive_at)} · через ${left(a.arrive_at)}</p>`) : ''}
+      ${a.clearing ? raw(html`<p class="fl-eta hot">${icon('i-sword')}Зачистка «${a.clearing.colony}»: готово ${hhmm(a.clearing.ready)} · через ${left(a.clearing.ready)}</p>`) : ''}
+      ${a.battle ? raw(html`<a class="btn sm danger fl-tobattle" href="#/battle?id=${a.battle}">${icon('i-sword')}К сражению</a>`) : ''}
+      ${canArmy ? raw(html`<div class="fl-orders">
+        ${idle ? raw(html`<button type="button" class="btn sm gold" data-amove="${a.id}">${icon('i-map')}Перебросить</button>`) : ''}
+        ${idle && enemy.length ? raw(html`<button type="button" class="btn sm danger" data-aland="${a.id}">${icon('i-sword')}Высадка · ${enemy.length}</button>`) : ''}
+        ${a.status === 'v1_clearing' ? raw(html`<button type="button" class="btn sm" data-acancel="${a.id}">Прервать зачистку</button>`) : ''}
+        ${idle && a.colony_own && a.colony_id !== a.home_colony ? raw(html`<button type="button" class="btn sm" data-abase="${a.id}">${icon('i-flag')}Сделать базой</button>`) : ''}
+      </div>`) : ''}
+      <ul class="fl-list">${(a.units || []).map((u) => raw(html`<li class="fl-ship"><span class="fl-q">×${num(u.qty)}</span><span class="fl-n"><b>${u.name || 'Без названия'}</b><small>${u.category === 'aviation' ? 'авиация' : 'наземные войска'}</small></span></li>`))}</ul>
+      ${canArmy ? raw(html`<footer class="fl-foot"><button type="button" class="btn sm" data-aedit="${a.id}">Герб и название</button>${idle && a.colony_own ? raw(html`<button type="button" class="btn sm" data-adis="${a.id}">Распустить</button>`) : ''}</footer>`) : ''}
+    </article>`;
+  };
+
+  const sysOpts = [...new Map([...yards.map((y) => [y.system_id, y.name]), ...fleets.filter((f) => f.system_id).map((f) => [f.system_id, f.system || f.system_id])]).entries()];
   const okDesigns = designs.filter((d) => d.ok);
 
   root.innerHTML = html`<div class="fl-wrap rx-wrap">
@@ -91,27 +211,35 @@ function draw(root, s) {
       <div class="st-title">
         <a class="st-back" href="#/cabinet">${icon('i-back')}Кабинет</a>
         <h1>Флот и войска</h1>
-        <p>Новый движок: корабли строятся по вашим проектам из <a href="#/shipyard">конструктора кораблей</a> на верфях колоний. Перелёты и сражения подключатся вместе с новыми картами боёв.</p>
+        <p>Флоты летают по гиперлиниям региона, стоят в обороне, вступают в бой и занимают системы врага. Армии перебрасываются по своей части региона и зачищают планеты. Корабли строятся по проектам из <a href="#/shipyard">конструктора</a>.</p>
       </div>
       <div class="fl-kpi">
         <div class="col-treasury"><small>Казна</small><b>${num(s.gc)} ГС</b></div>
+        <div class="col-treasury"><small>В пути</small><b>${num(moving)}</b></div>
         <div class="col-treasury"><small>Слотов верфей</small><b>${num(s.capacity)}</b></div>
       </div>
     </section>
-    ${can ? '' : raw('<p class="panel note-bar">Смотреть можно, но заказывать корабли и распоряжаться флотами могут только правитель и члены державы с правом «Производство».</p>')}
+    ${battles.length ? raw(html`<section class="panel fl-battles"><b>${icon('i-sword')}Идут сражения</b>${battles.map((b) => raw(html`<a class="bm-chip ${b.my_turn ? 'hot' : ''}" href="#/battle?id=${b.id}">${b.kind === 'ground' ? `Высадка · ${b.colony || b.system}` : b.system} · ход ${b.turn}${b.my_turn ? ' · ваш ход' : ''}</a>`))}</section>`) : ''}
+    ${can ? '' : raw('<p class="panel note-bar">Смотреть можно, но приказы флотам отдают правитель и члены державы с правом «Флот» или «Производство».</p>')}
 
     <section class="panel fl-body">
       <div class="tabs" role="tablist">
-        ${[['fleets', `Флоты · ${fleets.length}`], ['prod', `Производство${queue.length ? ` · ${queue.length}` : ''}`], ['army', `Армии · ${armies.length}`]].map(([k, t]) => raw(html`<button type="button" role="tab" data-tab="${k}" aria-selected="${tab === k}">${t}</button>`))}
+        ${[['fleets', `Флоты · ${fleets.length}`], ['army', `Армии · ${armies.length}`], ['prod', `Производство${queue.length ? ` · ${queue.length}` : ''}`]].map(([k, t]) => raw(html`<button type="button" role="tab" data-tab="${k}" aria-selected="${tab === k}">${t}</button>`))}
       </div>
 
       <div class="fl-pane" data-pane="fleets" ${tab === 'fleets' ? '' : raw('hidden')}>
         <div class="fl-sum"><span><b>${num(ships)}</b> кораблей нового образца</span><span><b>${num(legacy)}</b> старого образца</span>
-          ${can ? raw(html`<form class="fl-new" id="fl-new"><input name="name" placeholder="Название нового флота" maxlength="48" required>
-            <select name="sys" aria-label="Система">${sysOpts.map(([id, n]) => raw(html`<option value="${id}">${n}</option>`))}</select>
-            <button class="btn sm gold">Создать флот</button></form>`) : ''}
+          ${can && sysOpts.length ? raw('<button type="button" class="btn sm gold fl-newbtn" id="fl-new">Новая флотилия</button>') : ''}
         </div>
         <div class="fl-grid">${fleets.length ? fleets.map((f) => raw(fleetCard(f))) : raw('<p class="empty">У державы пока нет флотов. Первый появится сам, когда верфь сдаст заказ.</p>')}</div>
+        <p class="fl-note">Запас хода — в гиперпрыжках: у кораблей нового образца он берётся из проекта, у старых — 8. Заправка — в своей системе с верфью: сырьё со склада, недостающее — с рынка ×${String(K).replace('.', ',')}. Через закрытые границы флот не пройдёт (кроме войны). Флот врага в стойке «Оборона» перехватывает пролёт через свою систему. Прибытие туда, где стоит флот противника, начинает сражение; беззащитная система врага оккупируется.</p>
+      </div>
+
+      <div class="fl-pane" data-pane="army" ${tab === 'army' ? '' : raw('hidden')}>
+        <div class="fl-sum"><span><b>${num(pool.reduce((a, p) => a + Number(p.qty || 0), 0))}</b> войск в резерве</span>
+          ${canArmy && colonies.length ? raw(html`<button type="button" class="btn sm gold fl-newbtn" id="ar-new" ${raw(pool.length ? '' : 'disabled title="В резерве нет готовых войск: закажите их в производстве колоний"')}>Новая армия</button>`) : ''}</div>
+        <div class="fl-grid">${armies.length ? armies.map((a) => raw(armyCard(a))) : raw('<p class="empty">Армий нет. Соберите первую из готовых войск резерва на одной из своих колоний.</p>')}</div>
+        <p class="fl-note">Армия не тратит топливо, но перебрасывается не дальше чем на ${num(cfg.army_jumps || 2)} системы за раз — только по своей части региона и по системам, которые оккупировал ваш флот. В оккупированной системе врага армия высаживается на планеты: если на планете стоят войска защитника — начнётся наземный бой, если нет — зачистка по таймеру (столица держится дольше). Каждую планету, включая столицу, нужно зачищать отдельно. Занятая колония переходит к вам через несколько дней, если армия её удержит.</p>
       </div>
 
       <div class="fl-pane" data-pane="prod" ${tab === 'prod' ? '' : raw('hidden')}>
@@ -132,15 +260,7 @@ function draw(root, s) {
           <span class="fl-t">${icon('i-clock')}${i === 0 || new Date(q.started_at) <= new Date() ? left(q.ready_at) : `ждёт · ${left(q.ready_at)}`}</span>
           <span class="fl-c">${num(q.cost)} ГС</span>
           ${can ? raw(html`<button type="button" class="btn sm" data-cancel="${q.id}">Отменить</button>`) : ''}</li>`))}</ul>`) : raw('<p class="empty">Очередь пуста.</p>')}
-        ${(s.done || []).length ? raw(html`<p class="fl-sub">Недавно сданы</p><ul class="fl-done">${s.done.map((d) => raw(html`<li>${d.name} ×${d.qty}<small>${new Date(d.done_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</small></li>`))}</ul>`) : ''}
-      </div>
-
-      <div class="fl-pane" data-pane="army" ${tab === 'army' ? '' : raw('hidden')}>
-        <p class="note">Наземные войска ждут переработки вместе с наземными сражениями. Пока армии видны здесь только для просмотра.</p>
-        <div class="fl-grid">${armies.length ? armies.map((a) => raw(html`<article class="panel fl-card">
-          <header class="fl-h"><div><h3>${a.name}</h3><small>${icon('i-planet')}${a.colony || '—'}${a.system ? ` · ${a.system}` : ''} · ${STATUS[a.status] || a.status}</small></div></header>
-          <ul class="fl-list old">${(a.units || []).map((u) => raw(html`<li class="fl-ship"><span class="fl-q">×${num(u.qty)}</span><span class="fl-n"><b>${u.name || 'Без названия'}</b></span></li>`))}</ul>
-        </article>`)) : raw('<p class="empty">Армий нет.</p>')}</div>
+        ${(s.done || []).length ? raw(html`<p class="fl-sub">Недавно сданы</p><ul class="fl-done">${s.done.map((d) => raw(html`<li>${d.name} ×${d.qty}<small>${hhmm(d.done_at)}</small></li>`))}</ul>`) : ''}
       </div>
     </section>
   </div>`;
@@ -150,15 +270,22 @@ function draw(root, s) {
     $$('[data-tab]', root).forEach((x) => x.setAttribute('aria-selected', String(x === b)));
     $$('[data-pane]', root).forEach((p) => (p.hidden = p.dataset.pane !== tab));
   }));
+  const fleetOf = (id) => fleets.find((x) => x.id === id), armyOf = (id) => armies.find((x) => x.id === id);
 
-  // ── флоты ──
-  $$('[data-ren]', root).forEach((b) => (b.onclick = () => {
-    const f = fleets.find((x) => x.id === b.dataset.ren);
-    const card = b.closest('.fl-card'), h3 = $('h3', card);
-    h3.innerHTML = html`<form class="fl-rn"><input value="${f.name}" maxlength="48" aria-label="Название флота"><button class="btn sm gold">Сохранить</button></form>`;
-    const fm = $('form', h3), inp = $('input', fm);
-    inp.focus(); inp.select();
-    fm.onsubmit = (e) => { e.preventDefault(); run(() => rpc('v1_fleet_rename', { p_fleet: f.id, p_name: inp.value }), 'Флот переименован.'); };
+  // ── флоты: создание и правка ──
+  $('#fl-new', root)?.addEventListener('click', () => {
+    const m = modal('Новая флотилия', html`<form class="fl-mform" id="mf">${raw(metaFields({}, 'флота'))}
+      <label><span>Где собрать</span><select name="sys">${sysOpts.map(([id, n]) => raw(html`<option value="${id}">${n}</option>`))}</select></label>
+      <p class="hint">Флот появится пустым — переведите в него корабли из другого флота в той же системе или назначьте его целью заказа на верфи. Система сбора станет его основной базой.</p>
+      <div class="acts"><button class="btn gold">Создать</button></div></form>`);
+    const fm = $('#mf', m.box); wireMeta(fm); fm.name.focus();
+    fm.onsubmit = (e) => { e.preventDefault(); const v = metaVals(fm); m.close(); run(() => rpc('v1_fleet_new', { p_system: fm.sys.value, p_name: v.name, p_emblem: v.emblem, p_color: v.color, p_motto: v.motto }), 'Флотилия создана.'); };
+  });
+  $$('[data-edit]', root).forEach((b) => (b.onclick = () => {
+    const f = fleetOf(b.dataset.edit);
+    const m = modal('Герб и название флота', html`<form class="fl-mform" id="mf">${raw(metaFields(f, 'флота'))}<div class="acts"><button class="btn gold">Сохранить</button></div></form>`);
+    const fm = $('#mf', m.box); wireMeta(fm, f);
+    fm.onsubmit = (e) => { e.preventDefault(); const v = metaVals(fm); m.close(); run(() => rpc('v1_fleet_meta_save', { p_fleet: f.id, p_name: v.name, p_emblem: v.emblem, p_color: v.color, p_motto: v.motto }), 'Сохранено.'); };
   }));
   $$('[data-dis]', root).forEach((b) => (b.onclick = async () => {
     if (!(await confirmBox('Распустить пустой флот?', 'Распустить'))) return;
@@ -169,8 +296,104 @@ function draw(root, s) {
     const q = $(`[data-q="${b.dataset.mv}"]`, root).value, to = $(`[data-to="${b.dataset.mv}"]`, root).value;
     run(() => rpc('v1_fleet_transfer', { p_from: from, p_to: to, p_ship: ship, p_qty: Number(q) || null }), 'Корабли переведены.');
   }));
-  const nf = $('#fl-new', root);
-  if (nf) nf.onsubmit = (e) => { e.preventDefault(); run(() => rpc('v1_fleet_create', { p_system: nf.sys.value, p_name: nf.name.value }), 'Флот создан.'); };
+
+  // ── флоты: приказы ──
+  $$('[data-send]', root).forEach((b) => (b.onclick = async () => {
+    const f = fleetOf(b.dataset.send);
+    let list;
+    try { list = await rpc('v1_fleet_targets', { p_fleet: f.id }); } catch (e) { toast(e.message, 'err'); return; }
+    const m = modal(`Куда отправить «${f.name}»`, html`
+      <p class="hint">Из системы ${f.system} · запас хода ${fmt(f.fuel, 0)} пр. Путь — кратчайший по времени; через закрытые границы флот не пройдёт.</p>
+      <input class="fl-search" type="search" placeholder="Найти систему…" aria-label="Поиск системы">
+      <ul class="fl-targets">${list.length ? list.map((t) => raw(html`<li><button type="button" data-to="${t.id}" data-name="${t.name.toLowerCase()}">
+        <b>${t.name}</b><small>${t.owner_name ? t.owner === s.fid ? 'своя система' : t.owner_name : 'ничья'}${t.war ? raw(' <span class="tag bad">война</span>') : ''}</small>
+        <span class="fl-tm">${t.jumps} пр. · ~${fmt(t.hours)} ч</span>
+        <em>${(t.path || []).join(' → ')}</em></button></li>`)) : raw('<li class="empty">С таким запасом хода лететь некуда — заправьтесь на верфи.</li>')}</ul>`, true);
+    const q = $('.fl-search', m.box); q.focus();
+    q.oninput = () => $$('[data-to]', m.box).forEach((x) => (x.parentElement.hidden = !x.dataset.name.includes(q.value.trim().toLowerCase())));
+    $$('[data-to]', m.box).forEach((x) => (x.onclick = async () => {
+      const t = list.find((y) => y.id === x.dataset.to);
+      const warn = t.war ? ' Это система противника: если там флоты врага — начнётся бой, если нет — система будет оккупирована.' : '';
+      if (!(await confirmBox(`Отправить «${f.name}» в ${t.name}? ${t.jumps} пр., ~${fmt(t.hours)} ч в пути.${warn}`, 'Отправить'))) return;
+      m.close();
+      run(() => rpc('v1_fleet_send', { p_fleet: f.id, p_dest: t.id }), (r) => `Флот в пути: прибытие через ~${fmt(r.hours)} ч.`);
+    }));
+  }));
+  $$('[data-recall]', root).forEach((b) => (b.onclick = async () => {
+    if (!(await confirmBox('Отозвать флот? Он развернётся и вернётся по пройденному пути, непройденные прыжки вернутся в баки.', 'Отозвать'))) return;
+    run(() => rpc('v1_fleet_recall', { p_fleet: b.dataset.recall }), (r) => `Флот возвращается: прибытие ${hhmm(r.arrive_at)}.`);
+  }));
+  $$('[data-refuel]', root).forEach((b) => (b.onclick = async () => {
+    if (!(await confirmBox('Заправить флот до полного запаса хода? Сырьё возьмётся со склада, недостающее — с рынка.', 'Заправить'))) return;
+    run(() => rpc('v1_fleet_refuel', { p_fleet: b.dataset.refuel }), (r) => `Баки полны${r?.market ? `: докуплено сырья на ${num(r.market)} ГС` : ''}.`);
+  }));
+  $$('[data-stance]', root).forEach((b) => (b.onclick = () => {
+    const f = fleetOf(b.dataset.stance), next = f.stance === 'defend' ? 'normal' : 'defend';
+    run(() => rpc('v1_fleet_stance', { p_fleet: f.id, p_stance: next }), next === 'defend' ? 'Флот встал в оборону: вражеские флоты на пролёте будут перехвачены.' : 'Флот снят с обороны.');
+  }));
+  $$('[data-base]', root).forEach((b) => (b.onclick = () => run(() => rpc('v1_fleet_base', { p_fleet: b.dataset.base }), 'Основная база перенесена.')));
+
+  // ── армии ──
+  $('#ar-new', root)?.addEventListener('click', () => {
+    const m = modal('Новая армия', html`<form class="fl-mform" id="mf">${raw(metaFields({}, 'армии'))}
+      <label><span>Колония сбора — станет основной базой</span><select name="colony">${colonies.map((c) => raw(html`<option value="${c.id}">${c.name} · ${c.system || ''}${c.capital ? ' · столица' : ''}</option>`))}</select></label>
+      <p class="fl-sub">Войска из резерва</p>
+      <ul class="fl-pool">${pool.map((p) => raw(html`<li><span class="fl-n"><b>${p.name}</b><small>${p.category === 'aviation' ? 'авиация' : 'наземные'} · в резерве ${num(p.qty)}</small></span>
+        <input type="number" min="0" max="${p.qty}" value="0" data-unit="${p.unit_id}" aria-label="Сколько взять"><button type="button" class="btn sm" data-all="${p.unit_id}">Все</button></li>`))}</ul>
+      <div class="acts"><button class="btn gold">Собрать армию</button></div></form>`, true);
+    const fm = $('#mf', m.box); wireMeta(fm); fm.name.focus();
+    $$('[data-all]', fm).forEach((x) => (x.onclick = () => { const i = $(`[data-unit="${x.dataset.all}"]`, fm); i.value = i.max; }));
+    fm.onsubmit = (e) => {
+      e.preventDefault();
+      const units = $$('[data-unit]', fm).map((i) => ({ unit_id: i.dataset.unit, qty: Math.max(0, Math.min(Number(i.max), Number(i.value) || 0)) })).filter((u) => u.qty > 0);
+      if (!units.length) { toast('Выберите хотя бы один отряд из резерва.', 'err'); return; }
+      const v = metaVals(fm); m.close();
+      run(() => rpc('v1_army_new', { p_colony: fm.colony.value, p_name: v.name, p_units: units, p_emblem: v.emblem, p_color: v.color, p_motto: v.motto }), 'Армия собрана.');
+    };
+  });
+  $$('[data-aedit]', root).forEach((b) => (b.onclick = () => {
+    const a = armyOf(b.dataset.aedit);
+    const m = modal('Герб и название армии', html`<form class="fl-mform" id="mf">${raw(metaFields(a, 'армии'))}<div class="acts"><button class="btn gold">Сохранить</button></div></form>`);
+    const fm = $('#mf', m.box); wireMeta(fm, a);
+    fm.onsubmit = (e) => { e.preventDefault(); const v = metaVals(fm); m.close(); run(() => rpc('v1_army_meta_save', { p_army: a.id, p_name: v.name, p_emblem: v.emblem, p_color: v.color, p_motto: v.motto }), 'Сохранено.'); };
+  }));
+  $$('[data-amove]', root).forEach((b) => (b.onclick = async () => {
+    const a = armyOf(b.dataset.amove);
+    let list;
+    try { list = await rpc('v1_army_targets', { p_army: a.id }); } catch (e) { toast(e.message, 'err'); return; }
+    const m = modal(`Переброска «${a.name}»`, html`<p class="hint">Не дальше ${num(cfg.army_jumps || 2)} систем по своей и оккупированной части региона. Можно встать на свою колонию или остаться на орбите — из оккупированной системы врага армия высаживается на планеты.</p>
+      <ul class="fl-targets">${list.map((t) => raw(html`<li><div class="fl-tg">
+        <b>${t.name}</b><small>${t.jumps ? `${t.jumps} пр. · ~${fmt(t.hours)} ч` : 'армия здесь'}${t.occupied ? raw(' · <span class="tag bad">оккупирована вами</span>') : ''}</small>
+        <div class="fl-tacts">${t.jumps ? raw(html`<button type="button" class="btn sm" data-go="${t.id}">На орбиту</button>`) : ''}
+          ${(t.colonies || []).filter((c) => c.own && c.id !== a.colony_id).map((c) => raw(html`<button type="button" class="btn sm" data-go="${t.id}" data-col="${c.id}">${c.name}${c.capital ? ' ★' : ''}</button>`))}</div></div></li>`))}</ul>`, true);
+    $$('[data-go]', m.box).forEach((x) => (x.onclick = () => {
+      m.close();
+      run(() => rpc('v1_army_move', { p_army: a.id, p_dest: x.dataset.go, p_colony: x.dataset.col || null }), (r) => r?.instant ? 'Армия заняла позицию.' : `Армия в пути: ~${fmt(r.hours)} ч.`);
+    }));
+  }));
+  $$('[data-aland]', root).forEach((b) => (b.onclick = () => {
+    const a = armyOf(b.dataset.aland), list = (a.enemy_here || []).filter((c) => c.war && !c.taken);
+    const m = modal(`Высадка: «${a.name}»`, html`<p class="hint">Каждую планету зачищают отдельно, в том числе столицу. Если на планете стоят войска защитника — начнётся наземный бой.</p>
+      <ul class="fl-targets">${list.map((c) => raw(html`<li><button type="button" data-col="${c.id}"><b>${c.name}${c.capital ? ' ★ столица' : ''}</b>
+        <small>${c.owner}${c.defended ? raw(' · <span class="tag bad">гарнизон</span>') : ' · без гарнизона'}</small>
+        <span class="fl-tm">${c.defended ? 'бой' : c.capital ? `зачистка ~${num(cfg.clear_capital_h || 8)} ч` : `зачистка ~${num(cfg.clear_h || 4)} ч`}</span></button></li>`))}</ul>`, true);
+    $$('[data-col]', m.box).forEach((x) => (x.onclick = async () => {
+      const c = list.find((y) => y.id === x.dataset.col);
+      if (!(await confirmBox(`Высадиться на «${c.name}»?${c.defended ? ' Защитники примут бой.' : ''}`, 'Высадиться'))) return;
+      m.close();
+      const r = await run(() => rpc('v1_army_land', { p_army: a.id, p_colony: c.id }), (r) => r?.battle ? 'Высадка: начался наземный бой.' : `Зачистка началась: ~${fmt(r.hours)} ч.`);
+      if (r?.battle) location.hash = `/battle?id=${r.battle}`;
+    }));
+  }));
+  $$('[data-acancel]', root).forEach((b) => (b.onclick = async () => {
+    if (!(await confirmBox('Прервать зачистку? Таймер сбросится, армия останется на орбите.', 'Прервать'))) return;
+    run(() => rpc('v1_army_cancel', { p_army: b.dataset.acancel }), 'Зачистка прервана.');
+  }));
+  $$('[data-abase]', root).forEach((b) => (b.onclick = () => run(() => rpc('v1_army_base', { p_army: b.dataset.abase }), 'Основная база перенесена.')));
+  $$('[data-adis]', root).forEach((b) => (b.onclick = async () => {
+    if (!(await confirmBox('Распустить армию? Войска вернутся в резерв державы.', 'Распустить'))) return;
+    run(() => rpc('v1_army_disband', { p_army: b.dataset.adis }), 'Армия распущена, войска в резерве.');
+  }));
 
   // ── производство ──
   $$('[data-cancel]', root).forEach((b) => (b.onclick = async () => {
@@ -187,7 +410,7 @@ function draw(root, s) {
     const d = okDesigns.find((x) => x.id === of.ship.value);
     const q = Math.max(1, Math.min(MAXQ, Number(of.qty.value) || 1));
     if (!d) return;
-    let market = 0, shortList = [];
+    let market = 0; const shortList = [];
     for (const [k, v] of Object.entries(d.bill || {})) {
       const need = Math.ceil(v * q), have = Math.max(0, Number(s.stock?.[k] || 0)), short = Math.max(0, need - have);
       if (short) { market += short * Number(s.prices?.[k] || 10) * K; shortList.push(k); }

@@ -94,6 +94,11 @@ export class Battle3D {
     loop();
     // наведение на клетку
     r.domElement.addEventListener('pointermove', (e) => this.onPointer(e));
+    r.domElement.addEventListener('pointerdown', (e) => { this.down = [e.clientX, e.clientY]; });
+    r.domElement.addEventListener('pointerup', (e) => {
+      if (!this.down || Math.hypot(e.clientX - this.down[0], e.clientY - this.down[1]) > 5) return;
+      this.onPointer(e); this.onPick?.(this.hoverCell || null);
+    });
     r.domElement.addEventListener('pointerleave', () => { this.setHover(null); this.onHover?.(null); });
   }
 
@@ -494,7 +499,7 @@ export class Battle3D {
     }
     this.vis = vis;
     for (const u of this.o.units) {
-      if (vis && u.side !== fog && !vis.has(`${u.x},${u.y}`)) continue; // необнаруженного врага нет в сцене вовсе
+      if (vis && u.side !== fog && !u.seen && !vis.has(`${u.x},${u.y}`)) continue; // необнаруженного врага нет в сцене вовсе
       this.addUnit(u, dyn);
     }
   }
@@ -588,6 +593,7 @@ export class Battle3D {
     this.onHover?.(best, e.clientX - rect.left, e.clientY - rect.top);
   }
   setHover(c) {
+    this.hoverCell = c;
     if (!this.hover) return;
     this.hover.visible = !!c;
     if (c) { const [px, pz] = this.pos(c[0], c[1]); this.hover.position.set(px, 0, pz); }

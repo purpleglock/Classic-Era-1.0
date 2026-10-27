@@ -66,6 +66,11 @@ export class Ground3D {
     };
     loop();
     r.domElement.addEventListener('pointermove', (e) => this.onPointer(e));
+    r.domElement.addEventListener('pointerdown', (e) => { this.down = [e.clientX, e.clientY]; });
+    r.domElement.addEventListener('pointerup', (e) => {
+      if (!this.down || Math.hypot(e.clientX - this.down[0], e.clientY - this.down[1]) > 5) return;
+      this.onPointer(e); this.onPick?.(this.hoverCell || null);
+    });
     r.domElement.addEventListener('pointerleave', () => { this.setHover(null); this.onHover?.(null); });
   }
   resize() {
@@ -383,7 +388,7 @@ export class Ground3D {
       }
     }
     for (const u of this.o.units) {
-      if (vis && u.side !== fog && !vis.has(`${u.x},${u.y}`)) continue; // необнаруженного нет в сцене
+      if (vis && u.side !== fog && !u.seen && !vis.has(`${u.x},${u.y}`)) continue; // необнаруженного нет в сцене
       this.addUnit(u, dyn);
     }
   }
@@ -472,6 +477,7 @@ export class Ground3D {
     this.setHover(best); this.onHover?.(best, e.clientX - rect.left, e.clientY - rect.top);
   }
   setHover(c) {
+    this.hoverCell = c;
     if (!this.hover) return;
     this.hover.visible = !!c;
     if (c) { const [px, pz] = this.pos(c[0], c[1]); this.hover.position.set(px, Math.max(this.hAt(c[0], c[1]), -0.1), pz); }

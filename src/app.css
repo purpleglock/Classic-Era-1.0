@@ -705,3 +705,71 @@ a.rx-fac{text-decoration:none;color:inherit}a.rx-fac:hover{filter:brightness(1.2
 .bm-kind{display:inline-flex;margin-left:auto;align-self:center}
 .bm-kind a{padding:9px 18px;font-weight:800;font-size:14px;color:var(--mute);text-decoration:none;background:var(--panel2)}
 .bm-kind a[aria-selected="true"]{background:var(--gold);color:#120e05}
+
+/* ── Флот и войска: гербы, полёт, приказы (миграция 40) ── */
+.fl-card{border-top:2px solid color-mix(in srgb,var(--c,#e9b949) 70%,transparent)}
+.fl-card.guard{box-shadow:inset 0 0 0 1px #7aa7d955}
+.fl-h{justify-content:flex-start}
+.fl-ht{display:grid;gap:3px;min-width:0;flex:1}
+.fl-motto{font-style:italic;color:var(--mute);font-size:13px;line-height:1.35}
+.fl-crest{flex:none;width:52px;height:52px;border-radius:14px;border:1.5px solid var(--c,#e9b949);background:radial-gradient(circle at 30% 25%,color-mix(in srgb,var(--c,#e9b949) 35%,#000),#0a0806 75%);display:grid;place-items:center;overflow:hidden;box-shadow:0 0 0 3px #0008,0 6px 18px #0008}
+.fl-crest img{width:100%;height:100%;object-fit:cover}
+.fl-crest.mono{font:800 18px/1 Manrope,system-ui,sans-serif;letter-spacing:.04em;color:var(--c,#e9b949)}
+.fl-crest.big{width:84px;height:84px;border-radius:20px}.fl-crest.big.mono{font-size:28px}
+.pill.guard{border-color:#7aa7d9;color:#9cc2ec}
+.fl-flight{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line2);border-radius:12px;background:linear-gradient(90deg,#e9b94910,transparent)}
+.fl-flight small{display:flex;align-items:center;gap:5px;color:var(--mute);font-size:12.5px}.fl-flight small .i{width:13px;height:13px}
+.fl-route{display:flex;flex-wrap:wrap;gap:4px;font-size:12px;color:var(--faint)}
+.fl-route span{padding:1px 8px;border-radius:999px;border:1px solid var(--line2)}
+.fl-route .past{color:var(--mute)}.fl-route .next{border-color:var(--gold-dim);color:var(--gold)}
+.fl-prog{height:6px;border-radius:99px;background:#ffffff14;overflow:hidden}
+.fl-prog i{display:block;height:100%;background:linear-gradient(90deg,#b58a2a,var(--gold));border-radius:inherit}
+.fl-prog.fuel i{background:linear-gradient(90deg,#3f7f9a,#7ac7e0)}
+.fl-fuel{display:grid;grid-template-columns:auto minmax(60px,1fr) auto;align-items:center;gap:10px;font-size:12.5px;color:var(--mute)}
+.fl-fuel span{display:flex;align-items:center;gap:5px}.fl-fuel .i{width:13px;height:13px}.fl-fuel b{font-variant-numeric:tabular-nums;color:var(--text)}
+.fl-orders,.fl-foot{display:flex;flex-wrap:wrap;gap:6px}
+.fl-foot{padding-top:6px;border-top:1px solid var(--line)}
+.fl-orders .btn[aria-pressed="true"]{border-color:#7aa7d9;color:#9cc2ec}
+.fl-tobattle{justify-self:start}
+.fl-eta{margin:0;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute)}.fl-eta .i{width:13px;height:13px}
+.fl-eta.hot{color:#ffb27a}
+.fl-battles{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 16px}
+.fl-battles>b{display:flex;align-items:center;gap:6px;margin-right:6px}.fl-battles .i{width:15px;height:15px;color:#ff8a7a}
+.fl-newbtn{margin-left:auto}
+.fl-modal h2{margin-bottom:12px}
+.fl-mform{display:grid;gap:12px}
+.fl-mform label>span{display:block;margin-bottom:5px}
+.fl-modal input:not([type=radio]):not([type=file]),.fl-modal select{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--text);padding:10px 12px;margin:0;font:inherit;font-size:14px}
+.fl-meta{display:grid;gap:12px}
+.fl-crest-pick{display:flex;align-items:center;gap:14px}
+.fl-cp{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.fl-cp small{flex-basis:100%;color:var(--faint);font-size:12px}
+.fl-cp label.btn{margin:0;display:inline-flex}
+.fl-colors{display:flex;gap:8px;flex-wrap:wrap}
+.fl-colors label{margin:0;cursor:pointer}
+.fl-colors input{position:absolute;opacity:0;width:1px;height:1px}
+.fl-colors i{display:block;width:26px;height:26px;border-radius:50%;border:2px solid #0008;box-shadow:0 0 0 1px var(--line2)}
+.fl-colors input:checked+i{box-shadow:0 0 0 2px var(--text)}
+.fl-colors input:focus-visible+i{outline:2px solid var(--gold);outline-offset:2px}
+.fl-search{margin-bottom:10px!important}
+.fl-targets,.fl-pool{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:min(56vh,520px);overflow:auto}
+.fl-targets button,.fl-tg{width:100%;text-align:left;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:9px 12px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);color:var(--text);font:inherit;cursor:pointer}
+.fl-tg{cursor:default}
+.fl-targets button:hover{border-color:var(--gold-dim)}
+.fl-targets small{color:var(--mute);font-size:12px;grid-column:1}
+.fl-targets em{grid-column:1/-1;font-style:normal;font-size:11.5px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl-tm{grid-column:2;grid-row:1/3;align-self:center;font-variant-numeric:tabular-nums;color:var(--gold);font-size:13px;white-space:nowrap}
+.fl-tacts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag.bad{color:#ff8a7a;border-color:#ff8a7a66}
+.fl-pool li{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2)}
+.fl-pool input{width:84px!important;flex:none}
+@media (max-width:640px){.fl-newbtn{margin-left:0}.fl-crest{width:44px;height:44px}}
+
+/* ── Поле боя на гекс-карте ── */
+.bt-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.bt-units{list-style:none;margin:0;padding:0;display:grid;gap:5px;max-height:260px;overflow:auto}
+.bt-units button{width:100%;text-align:left;display:grid;padding:7px 10px;border:1px solid var(--line2);border-radius:10px;background:var(--panel2);color:var(--text);font:inherit;cursor:pointer}
+.bt-units button.on{border-color:var(--gold)}
+.bt-units small{color:var(--faint);font-size:12px}
+.bt-sd small{color:var(--faint);font-size:12px}
+.bt-sd .tag{align-self:flex-start}
+a.bm-chip{text-decoration:none}a.bm-chip:hover{border-color:var(--gold-dim);color:var(--text)}

@@ -8,6 +8,7 @@
  * Центр клетки (x, y) в единицах радиуса: (1.5·x, √3·(y + ½·(x mod 2))).
  */
 
+import { drawMarks } from './battle-marks.js';
 import { SQ3, visibleCells } from '../lib/hexmap.js';
 
 export const STAR = {
@@ -125,6 +126,7 @@ export class BattleMap {
     ctx.drawImage(this.bg, 0, 0);
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     if (this.o.fog) this.drawFog(ctx);
+    drawMarks(this, ctx, this.o.marks);
     this.drawUnits(ctx);
     if (this.o.hover) {
       const [x, y] = this.o.hover;
@@ -437,7 +439,7 @@ export class BattleMap {
     const s = this.s, fog = this.o.fog;
     for (const u of this.o.units) {
       const mine = !fog || u.side === fog;
-      if (!mine && !this.vis?.has(`${u.x},${u.y}`)) continue; // необнаруженный враг не рисуется вовсе
+      if (!mine && !u.seen && !this.vis?.has(`${u.x},${u.y}`)) continue; // необнаруженный враг не рисуется вовсе
       const [cx, cy] = this.center(u.x, u.y), col = u.side === 'a' ? [233, 185, 73] : [232, 104, 88];
       const dir = u.side === 'a' ? 1 : -1, r = s * (u.size === 'S' ? 0.38 : u.size === 'XL' ? 0.62 : 0.5);
       ctx.fillStyle = rgba(col, 0.18); ctx.beginPath(); ctx.arc(cx, cy, r * 1.5, 0, 7); ctx.fill();
