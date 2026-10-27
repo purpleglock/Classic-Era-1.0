@@ -50,7 +50,7 @@ export class Ground3D {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1500);
     this.controls = new L.OrbitControls(this.camera, r.domElement);
-    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 5, maxDistance: 80, maxPolarAngle: Math.PI * 0.42, rotateSpeed: 0.7 });
+    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 5, maxDistance: 48, maxPolarAngle: Math.PI * 0.42, rotateSpeed: 0.7 });
     this.ray = new THREE.Raycaster(); this.clock = new THREE.Clock();
     this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(this.host); this.resize();
     const loop = () => {
@@ -161,9 +161,9 @@ export class Ground3D {
 
   // ── рельеф ──
   buildTerrain(rnd) {
-    const { THREE } = this, m = this.map, B = this.B, margin = 14;
+    const { THREE } = this, m = this.map, B = this.B, margin = 30;
     const Wd = 1.5 * (m.w - 1) + margin * 2, Dp = SQ3 * (m.h - 0.5) + margin * 2;
-    const geo = new THREE.PlaneGeometry(Wd, Dp, Math.round(Wd * 3.2), Math.round(Dp * 3.2));
+    const geo = new THREE.PlaneGeometry(Wd, Dp, Math.round(Wd * 2.4), Math.round(Dp * 2.4));
     geo.rotateX(-Math.PI / 2);
     const p = geo.attributes.position, col = new Float32Array(p.count * 3);
     const C = {
@@ -188,8 +188,8 @@ export class Ground3D {
     this.terrain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0.02 }));
     this.scene.add(this.terrain);
     // дальняя равнина под чашей — горизонт не просвечивает небом снизу
-    const far = new THREE.Mesh(new THREE.RingGeometry(30, 700, 64, 1), new THREE.MeshStandardMaterial({ color: new THREE.Color(B.ground[0]).multiplyScalar(0.7), roughness: 1 }));
-    far.rotation.x = -Math.PI / 2; far.position.y = 2.2; this.scene.add(far);
+    const far = new THREE.Mesh(new THREE.RingGeometry(50, 900, 72, 1), new THREE.MeshStandardMaterial({ color: new THREE.Color(B.ground[0]).multiplyScalar(0.7), roughness: 1 }));
+    far.rotation.x = -Math.PI / 2; far.position.y = 6; this.scene.add(far);
 
     // вода и лава — плоскости над впадинами
     const hexGeo = () => { const g = new THREE.CircleGeometry(1.08, 6); g.rotateX(-Math.PI / 2); return g; };
