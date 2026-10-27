@@ -191,7 +191,10 @@ const KIND = [
   [/флот|корабл|вооружени|верф/i, 'i-ship', 'Флот'],
   [/колонизац|колони[яи]\b|заселен|систем[аыу]\b/i, 'i-planet', 'Колонии'],
 ];
-const kindOf = (title) => { const k = KIND.find(([re]) => re.test(title)); return k ? [k[1], k[2]] : ['i-news', 'Хроника']; };
+const kindOf = (title, from = '') => {
+  if (/СЛУХИ/i.test(from)) return ['i-eye', 'Слухи'];
+  const k = KIND.find(([re]) => re.test(title)); return k ? [k[1], k[2]] : ['i-news', 'Хроника'];
+};
 // старое название «Бойцовский клуб» в сводках показываем как «Арена»
 const clean = (t) => plain(t || '').replace(/Бойцовский клуб/gi, 'Арена').replace(/клуба\b/gi, 'арены').replace(/^[^\p{L}\p{N}«]+/u, '');
 
@@ -212,9 +215,9 @@ async function loadFeed(root, fid) {
   const row = (key, i, title, at, [ic, label], gold = false) => html`<li><button type="button" class="ev-i${gold ? ' gold' : ''}" data-ev="${key}:${i}">
     <span class="ev-ic">${icon(ic)}</span><span class="ev-t"><small>${label}</small><b>${title}</b></span><time>${dateShort(at)}</time>${icon('i-down', 'i ev-go')}</button></li>`;
 
-  $('#p-sec', root).innerHTML = secRows.map((r, i) => row('sec', i, clean(r.title), r.published_at || r.created_at, kindOf(r.title))).join('') || '<li class="ev-none"><p>В секторе тихо.</p></li>';
+  $('#p-sec', root).innerHTML = secRows.map((r, i) => row('sec', i, clean(r.title), r.published_at || r.created_at, kindOf(r.title, r.faction_name))).join('') || '<li class="ev-none"><p>В секторе тихо.</p></li>';
   $('#p-you', root).innerHTML = youRows.map((r, i) => row('you', i, clean(r.title), r.published_at || r.created_at,
-    r.kind === 'news' ? ['i-news', r.faction_name || 'Вестник'] : kindOf(r.title), r.faction_id && r.faction_id !== fid)).join('') || '<li class="ev-none"><p>О вашей державе пока не писали.</p></li>';
+    r.kind === 'news' ? ['i-news', r.faction_name || 'Вестник'] : kindOf(r.title, r.faction_name), r.faction_id && r.faction_id !== fid)).join('') || '<li class="ev-none"><p>О вашей державе пока не писали.</p></li>';
   const banner = st === 'live' ? '' : html`<p class="note ach-note">${st === 'off' ? 'Достижения временно выключены.' : 'Система достижений на переработке: новые названия и награды скоро. Полученные достижения сохранены.'}</p>`;
   $('#p-ach', root).innerHTML = banner + (achRows.length
     ? html`<ol class="ev">${achRows.map((x, i) => raw(row('ach', i, `«${achName(x.ach_id)}»`, x.earned_at, ['i-crown', x.reward ? `+${num(x.reward)} ГС` : 'Достижение'], true)))}</ol>`
@@ -231,8 +234,8 @@ async function loadFeed(root, fid) {
       return;
     }
     const r = (key === 'sec' ? secRows : youRows)[i];
-    const [, label] = r.kind === 'news' ? [null, 'Вестник'] : kindOf(r.title);
-    readBox({ label: r.kind === 'news' ? (r.faction_name || 'Вестник') : 'Хроника сектора', tag: label, at: r.published_at || r.created_at,
+    const [, label] = r.kind === 'news' ? [null, 'Вестник'] : kindOf(r.title, r.faction_name);
+    readBox({ label: r.kind === 'news' ? (r.faction_name || 'Вестник') : label === 'Слухи' ? 'Слухи сектора' : 'Хроника сектора', tag: label, at: r.published_at || r.created_at,
       title: clean(r.title), body: clean(r.body || r.excerpt || ''), rich: r.kind === 'news', link: r.kind === 'news' ? `#/news?id=${r.id}` : '' });
   };
 }
