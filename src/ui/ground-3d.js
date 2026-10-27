@@ -59,7 +59,8 @@ export class Ground3D {
       const dt = Math.min(this.clock.getDelta(), 0.05), t = this.clock.elapsedTime;
       this.controls.autoRotate = this.o.autoRotate; this.controls.update();
       // камера не опускается под рельеф и за край чаши
-      const c = this.camera.position; if (c.y < 3.5) c.y = 3.5;
+      const c = this.camera.position, floor = this.map && !this.flat ? this.heightAt(c.x + this.cx0, c.z + this.cz0).h + 2.5 : 3.5;
+      if (c.y < Math.max(3.5, floor)) c.y = Math.max(3.5, floor);
       for (const f of this.anim) f(dt, t);
       r.render(this.scene, this.camera);
     };
@@ -102,7 +103,7 @@ export class Ground3D {
     // за краем поля — подъём рельефа: поле в чаше
     const ox = Math.max(0, -ux - 0.5, ux - 1.5 * (m.w - 1) - 0.5), oz = Math.max(0, -uz - 0.5, uz - SQ3 * (m.h - 0.5) - 0.5);
     const out = Math.hypot(ox, oz);
-    if (out > 0) hgt = Math.max(hgt, 0) + out * 0.28 + noise(ux * 0.5, uz * 0.5, 9) * out * 0.35;
+    if (out > 0) hgt = Math.max(hgt, 0) + Math.min(out, 14) * 0.22 + noise(ux * 0.5, uz * 0.5, 9) * Math.min(out, 14) * 0.25;
     return { h: hgt, near };
   }
   cellHeight(x, y) {
@@ -189,7 +190,7 @@ export class Ground3D {
     this.scene.add(this.terrain);
     // дальняя равнина под чашей — горизонт не просвечивает небом снизу
     const far = new THREE.Mesh(new THREE.RingGeometry(50, 900, 72, 1), new THREE.MeshStandardMaterial({ color: new THREE.Color(B.ground[0]).multiplyScalar(0.7), roughness: 1 }));
-    far.rotation.x = -Math.PI / 2; far.position.y = 6; this.scene.add(far);
+    far.rotation.x = -Math.PI / 2; far.position.y = 3; this.scene.add(far);
 
     // вода и лава — плоскости над впадинами
     const hexGeo = () => { const g = new THREE.CircleGeometry(1.08, 6); g.rotateX(-Math.PI / 2); return g; };
