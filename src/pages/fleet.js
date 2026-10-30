@@ -90,7 +90,7 @@ function metaFields(x = {}, what = 'флота') {
       <button type="button" class="btn sm" data-noimg ${raw(x.emblem ? '' : 'hidden')}>Убрать</button>
       <small>Квадратная картинка, до 15 МБ. Без картинки — монограмма.</small></div>
       <input type="hidden" name="emblem" value="${x.emblem || ''}"></div>
-    <label><span>Название ${what}</span><input name="name" value="${x.name || ''}" maxlength="48" required placeholder="${what === 'флота' ? '1-я ударная эскадра' : '7-й гвардейский легион'}"></label>
+    <label><span>Название ${what}</span><input name="name" value="${x.name || ''}" maxlength="48" required placeholder="${what === 'флота' ? '1-я ударная эскадра' : '7-я гвардейская армия'}"></label>
     <label><span>Девиз (необязательно)</span><input name="motto" value="${x.motto || ''}" maxlength="120" placeholder="Сквозь тьму — к победе"></label>
     <div class="fl-colors" role="radiogroup" aria-label="Цвет">${COLORS.map((c) => raw(html`<label><input type="radio" name="color" value="${c}" ${raw(c === col ? 'checked' : '')}><i style="background:${c}"></i></label>`))}</div>
   </div>`;

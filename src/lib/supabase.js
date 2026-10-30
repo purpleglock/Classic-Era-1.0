@@ -81,6 +81,17 @@ const MESSAGES = {
   bad_resolution: 'Неизвестная резолюция.',
   bad_side: 'Выберите сторону войны.',
   bad_target: 'Неверная цель.',
+  recruit_gone: 'Этот рекрут уже ушёл — рынок обновился.',
+  agent_not_found: 'Агент не найден.',
+  agent_busy: 'Агент занят: на задании, на охране или отдыхает.',
+  guard_own_system: 'Охранять можно только свою систему.',
+  unknown_op: 'Такой операции нет.',
+  op_need_colony: 'Выберите колонию цели.',
+  op_need_system: 'Выберите систему цели.',
+  op_not_found: 'Операция не найдена или уже закончилась.',
+  captive_not_found: 'Пленный не найден.',
+  bad_price: 'Неверная цена выкупа.',
+  ransom_gone: 'Предложение выкупа больше не действует.',
   colony_foreign: 'Это не ваша колония.',
   building_foreign: 'Это не ваша постройка.',
   building_unknown: 'Такой постройки нет.',
@@ -227,8 +238,8 @@ export function humanError(error) {
   const key = Object.keys(MESSAGES).find((k) => raw.includes(k));
   // причины с текстом из базы: «name_rejected: …», «name_cooldown: 31.10 00:59»
   const nr = raw.match(/name_rejected: (.+)/), nc = raw.match(/name_cooldown: (.+)/);
-  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/), cc2 = raw.match(/course_cooldown: (.+)/), cb = raw.match(/course_budget: (\d+)/), fiu = raw.match(/fuel_in_use: (\d+)/), aiu = raw.match(/alloy_in_use: (\d+)/), pis = raw.match(/part_in_ships: (\d+)/), shi = raw.match(/ship_invalid: (.+)/), pnm = raw.match(/prod_no_money: (\d+)/), nf = raw.match(/no_fuel: (\d+) (\d+)/), au = raw.match(/army_units: (.+) (\d+) (\d+)$/m);
-  const text = nf ? `Не хватает запаса хода: нужно ${nf[1]} пр., в баках ${nf[2]}. Заправьтесь на верфи.` : au ? `Не хватает войск «${au[1]}»: нужно ${au[2]}, в резерве ${au[3]}.` : pnm ? `Не хватает денег: заказ стоит ${Number(pnm[1]).toLocaleString('ru-RU')} ГС.` : nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
+  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/), cc2 = raw.match(/course_cooldown: (.+)/), cb = raw.match(/course_budget: (\d+)/), fiu = raw.match(/fuel_in_use: (\d+)/), aiu = raw.match(/alloy_in_use: (\d+)/), pis = raw.match(/part_in_ships: (\d+)/), shi = raw.match(/ship_invalid: (.+)/), pnm = raw.match(/prod_no_money: (\d+)/), nf = raw.match(/no_fuel: (\d+) (\d+)/), au = raw.match(/army_units: (.+) (\d+) (\d+)$/m), ac = raw.match(/agents_cap: (\d+)/), oa = raw.match(/op_agents: (\d+)/);
+  const text = ac ? `У державы уже предельное число агентов (${ac[1]}).` : oa ? `На задание идут от 1 до ${oa[1]} свободных агентов.` : nf ? `Не хватает запаса хода: нужно ${nf[1]} пр., в баках ${nf[2]}. Заправьтесь на верфи.` : au ? `Не хватает войск «${au[1]}»: нужно ${au[2]}, в резерве ${au[3]}.` : pnm ? `Не хватает денег: заказ стоит ${Number(pnm[1]).toLocaleString('ru-RU')} ГС.` : nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
     : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.` : bf ? `Строить нельзя: ${bf[1].toLowerCase()}.` : cc2 ? `Курс можно сменить ${new Date(cc2[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : cb ? `Не больше ${cb[1]} очков доктрины.` : pis ? `Это стоит на проектах кораблей (${pis[1]}) — сначала уберите оттуда.` : shi ? `Проект не готов: ${shi[1]}` : aiu ? `Из этого сплава сделаны орудия (${aiu[1]}) — сначала смените им материал ствола.` : fiu ? `На этой марке работают реакторы (${fiu[1]}) — сначала переведите их на другое топливо.` : cl ? `Капитуляцию можно потребовать, когда занято не меньше 80 % систем врага (сейчас ${cl[1]} %).`
     : key ? MESSAGES[key] : raw;
   const err = new Error(text);
