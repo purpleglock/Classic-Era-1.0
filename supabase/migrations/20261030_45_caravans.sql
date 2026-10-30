@@ -353,8 +353,9 @@ begin
       update v1_trade_deals set status = 'done', updated_at = now() where id = d.id;
       update v1_fleet_meta set cargo = null, deal_id = null where fleet_id = f.id;
       perform public._v1_tlog(d.buyer_fid, 'Груз доставлен', format('%s × %s от державы «%s» на складе.', d.res, d.qty, v1_fname(d.seller_fid)));
-      perform public._v1_tlog(d.seller_fid, 'Сделка закрыта', format('Груз %s × %s доставлен, получено %s ГС. Караван возвращается.', d.res, d.qty, d.price));
-      begin perform public._v1_fleet_go(f.id, f.home_sys); exception when others then null; end;
+      begin perform public._v1_fleet_go(f.id, f.home_sys); escort := true; exception when others then escort := false; end;
+      perform public._v1_tlog(d.seller_fid, 'Сделка закрыта', format('Груз %s × %s доставлен, получено %s ГС. %s', d.res, d.qty, d.price,
+        case when escort then 'Караван возвращается на базу.' else 'Караван стоит в системе доставки: на обратный путь не хватает запаса хода или пути нет.' end));
       return null;
     end if;
   end if;
