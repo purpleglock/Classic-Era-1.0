@@ -94,7 +94,7 @@ insert into public.v1_settings(key, value) values ('economy', '{
   "live": false,
   "store_base": 1000, "store_per_slot": 500, "infra": [0.8, 0.9, 1, 1.15, 1.3], "robot_store": 1.5,
   "dump_k": 0.4, "fee": 0.04, "buy_k": 1.08, "trade_max": 20000, "exchange_days": 7,
-  "income": {"factory": 200, "trade": 100, "temple": 150},
+  "income": {"factory": 340, "trade": 170, "temple": 185},
   "science": {"science": 1, "sci_giant": 3, "sci_anomaly": 5},
   "agent_pts": 0.1,
   "mine": {
