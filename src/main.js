@@ -33,12 +33,14 @@ import { renderOuter } from './pages/outer.js';
 import { renderInner } from './pages/inner.js';
 import { renderWar } from './pages/war.js';
 import { renderIntel } from './pages/intel.js';
+import { renderMining } from './pages/mining.js';
+import { renderTrade } from './pages/trade.js';
 import { checkConsent } from './ui/consent.js';
 
 const SOON = {
   wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', help: 'Помощь',
   fleet: 'Флот и войска',
-  designs: 'Конструкторы', techs: 'Конструктор технологий', mining: 'Добыча ресурсов', trade: 'Торговля',
+  designs: 'Конструкторы', techs: 'Конструктор технологий', corps: 'Корпорации',
   arena: 'Арена', bar: 'Ресторан-бар «Классикал»',
 };
 
@@ -91,11 +93,13 @@ route('/outer', () => renderOuter(view()));
 route('/inner', () => renderInner(view()));
 route('/war', () => renderWar(view()));
 route('/intel', () => renderIntel(view()));
+route('/mining', () => renderMining(view()));
+route('/trade', () => renderTrade(view()));
 route('/soon', () => {
   const key = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
   const title = SOON[key] || 'Раздел';
   view().innerHTML = html`<section class="panel gate"><span class="m-ic">${icon('i-clock')}</span>
-    <div><h1>${title}</h1><p>Раздел переносим на новый движок. Он появится здесь, как только будет готов.</p></div>
+    <div><h1>${title}</h1><p>${key === 'corps' ? 'Корпорации на переработке: их данные сохранены, действия временно закрыты. Раздел вернётся в обновлённом виде.' : 'Раздел переносим на новый движок. Он появится здесь, как только будет готов.'}</p></div>
     <a class="btn" href="${session.user ? '#/cabinet' : '#/'}">${session.user ? 'В кабинет' : 'На главную'}</a>
     <a class="btn" href="#/guide">Гайдбук</a></section>`;
 });

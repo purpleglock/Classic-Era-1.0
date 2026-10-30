@@ -36,8 +36,8 @@ export async function renderFleet(root) {
   const tabQ = new URLSearchParams(location.hash.split('?')[1] || '').get('tab');
   if (tabQ) tab = tabQ;
   if (!root.querySelector('.fl-wrap')) root.innerHTML = '<div class="skeleton">Собираю доклад адмиралтейства…</div>';
-  let s;
-  try { s = await rpc('v1_fleet_state'); } catch (e) {
+  let s, trade;
+  try { [s, trade] = await Promise.all([rpc('v1_fleet_state'), rpc('v1_trade_designs').catch(() => [])]); s.trade = trade || []; } catch (e) {
     root.innerHTML = html`<section class="panel gate"><div><h1>Адмиралтейство недоступно</h1><p>${e.missingSchema ? 'Новый движок флотов ещё не подключён в базе.' : e.message}</p></div><a class="btn" href="#/cabinet">В кабинет</a></section>`;
     return;
   }
@@ -204,7 +204,7 @@ function draw(root, s) {
   };
 
   const sysOpts = [...new Map([...yards.map((y) => [y.system_id, y.name]), ...fleets.filter((f) => f.system_id).map((f) => [f.system_id, f.system || f.system_id])]).entries()];
-  const okDesigns = designs.filter((d) => d.ok);
+  const okDesigns = [...designs.filter((d) => d.ok), ...(s.trade || []).map((t) => ({ id: t.id, name: t.name, class_name: `${t.stats?.class_name || t.class || 'торговый'} · торговый`, size: t.stats?.size, ok: true, cost: t.stats?.cost, bill: t.stats?.bill }))];
 
   root.innerHTML = html`<div class="fl-wrap rx-wrap">
     <section class="panel st-hero">

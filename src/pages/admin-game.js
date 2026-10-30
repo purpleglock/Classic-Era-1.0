@@ -256,3 +256,38 @@ export async function politics(sec) {
     if (r) politics(sec);
   };
 }
+
+// ═ Экономика: режим нового тика и торговые корабли ═
+export async function economy(sec) {
+  const { rpc } = await import('../lib/supabase.js');
+  const s = await settings(true);
+  const eco = s.economy || {}, trade = s.trade || { ships: [] };
+  let cand;
+  try { cand = await rpc('v1_trade_ship_candidates'); } catch (e) { sec.innerHTML = html`<p class="empty warn">${e.message}</p>`; return; }
+  const chosen = new Set((cand.chosen || []).map((x) => x.id));
+  const row = (x) => html`<li><label class="check"><input type="checkbox" data-ship="${x.id}" data-src="${x.src}" ${raw(chosen.has(x.id) ? 'checked' : '')}>
+    <span><b>${x.name}</b><small>${x.class || 'корабль'}${x.faction ? ` · ${x.faction}` : ' · общедоступный'} · груз ${x.cargo != null ? num(x.cargo) : 'по размеру'}${x.cost != null ? ` · ${num(x.cost)} ГС` : ''}${x.ok === false ? ' · проект с ошибками' : ''}</small></span></label></li>`;
+  sec.innerHTML = html`
+    <div class="sec-h"><h2>Экономика</h2></div>
+    <div class="grp"><h4>Суточный тик</h4>
+      <p class="hint">${eco.live ? 'Новый тик экономики начисляет по-настоящему.' : 'Новый тик в режиме просмотра: каждый день в 00:09 UTC он считает сутки держав и пишет итог, но не начисляет — начисляет старый тик. Включается в день переезда миграцией, которая выключает старый тик.'}</p></div>
+    <div class="grp"><h4>Торговые корабли</h4>
+      <p class="hint">Только эти проекты возят грузы: караван — флот, целиком собранный из них. Отмеченные проекты может строить любая держава на своих верфях. Выбор действует сразу.</p>
+      <input class="search" type="search" id="ts-q" placeholder="Поиск проекта" aria-label="Поиск проекта">
+      <h4 class="sub-h">Общедоступные проекты реестра</h4>
+      <ul class="op-list" id="ts-pub">${(cand.public || []).length ? cand.public.map((x) => raw(row(x))) : raw('<li class="hint">Общедоступных кораблей пока нет.</li>')}</ul>
+      <h4 class="sub-h">Проекты конструктора</h4>
+      <ul class="op-list" id="ts-v1">${(cand.designs || []).map((x) => raw(row(x)))}</ul>
+      <div class="acts"><button type="button" class="btn gold sm" id="ts-save">Сохранить список</button><span class="hint" id="ts-n">Выбрано: ${chosen.size}</span></div></div>`;
+  const boxes = () => [...sec.querySelectorAll('[data-ship]')];
+  sec.addEventListener('change', () => { $('#ts-n', sec).textContent = `Выбрано: ${boxes().filter((b) => b.checked).length}`; });
+  $('#ts-q', sec).oninput = (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    boxes().forEach((b) => { b.closest('li').hidden = q && !b.closest('li').textContent.toLowerCase().includes(q); });
+  };
+  $('#ts-save', sec).onclick = async () => {
+    const ships = boxes().filter((b) => b.checked).map((b) => ({ src: b.dataset.src, id: b.dataset.ship }));
+    const r = await act('settings.save', 'trade', { ...trade, ships }).catch(() => null);
+    if (r !== null) { dropSettings(); toast(`Торговых проектов: ${ships.length}.`); }
+  };
+}
