@@ -101,8 +101,8 @@ create or replace function public._v1_arena_bot_roster(p_kind text) returns json
 language plpgsql security definer set search_path = public as $$
 declare budget numeric := public._v1_av('budget', 4000000) * public._v1_av('bot_k', 1.25); out jsonb := '[]'::jsonb; r record; d jsonb; q int; n int := 0;
 begin
-  for r in (select id from v1_ships where p_kind = 'space' and coalesce((stats->>'registrable')::boolean, false) and coalesce((stats->>'damage')::numeric, 0) > 0
-            union all select id from faction_units where p_kind = 'ground' and category in ('ground', 'aviation') and coalesce((summary->>'dmg')::numeric, 0) > 0)
+  for r in select z.id from (select id from v1_ships where p_kind = 'space' and coalesce((stats->>'registrable')::boolean, false) and coalesce((stats->>'damage')::numeric, 0) > 0
+            union all select id from faction_units where p_kind = 'ground' and category in ('ground', 'aviation') and coalesce((summary->>'dmg')::numeric, 0) > 0) z
            order by random() limit 12 loop
     exit when n >= public._v1_av('max_units', 8) - 2 or budget <= 0;
     d := public._v1_arena_design(null, p_kind, r.id, true);
