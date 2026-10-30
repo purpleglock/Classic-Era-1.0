@@ -105,12 +105,12 @@ insert into public.v1_settings(key, value) values ('economy', '{
   },
   "order": {"unrest": 0.75, "rebellion": 0},
   "world": {
-    "std": [1, 1, 1], "ideal": [1.15, 1.15, 1.3], "terrestrial": [1, 1, 1], "oceanic": [0.9, 1.1, 1.1], "desert": [1, 0.9, 0.8],
-    "cryo": [0.9, 1, 0.7], "lava": [1.2, 0.8, 0.4], "volcanic": [1.15, 0.85, 0.5], "gasgiant": [1.1, 0.9, 0.3], "hotgiant": [1.2, 0.8, 0.2],
-    "icegiant": [1.05, 0.95, 0.3], "micro": [0.8, 1, 0.4], "exotic": [1, 1.2, 0.6], "anomaly": [0.9, 1.4, 0.5], "belt": [1.25, 0.8, 0.3]
+    "std": [1, 1, 1], "ideal": [1.15, 1.15, 1.3], "terrestrial": [1, 1, 1], "oceanic": [0.9, 1.1, 1.1], "desert": [1, 0.9, 0.9],
+    "cryo": [0.9, 1, 0.85], "lava": [1.2, 0.8, 0.6], "volcanic": [1.15, 0.85, 0.7], "gasgiant": [1.1, 0.9, 0.6], "hotgiant": [1.2, 0.8, 0.5],
+    "icegiant": [1.05, 0.95, 0.6], "micro": [0.8, 1, 0.7], "exotic": [1, 1.2, 0.8], "anomaly": [0.9, 1.4, 0.8], "belt": [1.25, 0.8, 0.6]
   },
   "goods": {"div": 600, "per_slot": 10, "water": 0.6, "raw": 0.4, "min": 0.9, "max": 1.1},
-  "pop": {"cap": 100, "floor": 10, "growth": [-0.01, 0, 0.01, 0.02, 0.03], "goods": 0.01},
+  "pop": {"cap": 100, "floor": 10, "growth": [-0.01, 0, 0.01, 0.02, 0.03], "goods": 0.01, "shrink": 0.02},
   "market": {"pull": 0.1, "min": 0.5, "max": 2, "k": 0.25, "npc": {"common": 3000, "uncommon": 1200, "rare": 400, "epic": 120, "legendary": 30}}
 }') on conflict (key) do nothing;
 
@@ -153,6 +153,16 @@ $$;
 create or replace function public._v1_order_k(p_colony uuid) returns numeric
 language sql stable security definer set search_path = public as $$
   select coalesce((public._v1_econ_cfg()->'order'->>(select stage from v1_colony_order where colony_id = p_colony))::numeric, 1)
+$$;
+
+/** Население колонии через d суток: рост к потолку (ячейки × 100 × мир); сверх потолка — убыль не быстрее 2 % в сутки. */
+create or replace function public._v1_pop_next(p_pop numeric, p_cells numeric, p_world numeric, p_growth numeric, p_days int) returns numeric
+language sql stable security definer set search_path = public as $$
+  with c as (select public._v1_econ_cfg()->'pop' v),
+       k as (select round(p_cells * coalesce((c.v->>'cap')::numeric, 100) * p_world) cap, p_cells * coalesce((c.v->>'floor')::numeric, 10) fl,
+                    coalesce((c.v->>'shrink')::numeric, 0.02) sh from c)
+  select greatest(k.fl, case when p_pop > k.cap then greatest(k.cap, round(p_pop * power(1 - k.sh, p_days)))
+                             else least(k.cap, round(p_pop * power(1 + p_growth, p_days))) end) from k
 $$;
 
 /** Шахты державы: что копает каждая постройка и сколько в сутки (без учёта склада и продаж). */
@@ -301,9 +311,7 @@ begin
   growth := coalesce((cfg->'pop'->'growth'->>(least(4, greatest(0, case when robot then bud.industry else bud.social end)))::int)::numeric, 0)
             + case when robot then 0 else coalesce((cfg->'pop'->>'goods')::numeric, 0.01) * cov end;
   select coalesce(sum(coalesce(pop, coalesce(cells, 0) * 50)), 0) into pop0 from colonies where faction_id = p_fid;
-  select coalesce(sum(least(round(coalesce(cells, 0) * coalesce((cfg->'pop'->>'cap')::numeric, 100) * public._v1_world(kinds->>id::text, 2)),
-                    greatest(coalesce(cells, 0) * coalesce((cfg->'pop'->>'floor')::numeric, 10),
-                             round(coalesce(pop, coalesce(cells, 0) * 50) * power(1 + growth, d))))), 0)
+  select coalesce(sum(public._v1_pop_next(coalesce(pop, coalesce(cells, 0) * 50), coalesce(cells, 0), public._v1_world(kinds->>id::text, 2), growth, d)), 0)
     into pop1 from colonies where faction_id = p_fid;
 
   ledger := jsonb_build_object('days', d, 'mode', p_mode,
@@ -312,7 +320,7 @@ begin
     'goods', jsonb_build_object('demand', round(demand), 'made', round(made), 'cov', round(cov, 3), 'slots', gf),
     'mined', mined, 'stored', (select coalesce(jsonb_object_agg(key, (value #>> '{}')::numeric - coalesce((dumped->>key)::numeric, 0)), '{}'::jsonb) from jsonb_each(to_store)),
     'sold', sold, 'dumped', dumped,
-    'store', jsonb_build_object('cap', cap, 'before', used, 'after', public._v1_stock_used(stock)),
+    'store', jsonb_build_object('cap', cap, 'before', round(used), 'after', round(public._v1_stock_used(stock))),
     'pop', jsonb_build_object('before', pop0, 'after', pop1, 'growth', round(growth, 4)),
     'gc_before', eco.gc);
 
@@ -327,9 +335,7 @@ begin
     update faction_economy set gc = greatest(0, gc + net), science = coalesce(science, 0) + sci, resources = stock,
            last_tick = coalesce(last_tick, now()) + make_interval(days => d)
      where faction_id = p_fid;
-    update colonies c set pop = least(round(coalesce(c.cells, 0) * coalesce((cfg->'pop'->>'cap')::numeric, 100) * public._v1_world(kinds->>c.id::text, 2)),
-                         greatest(coalesce(c.cells, 0) * coalesce((cfg->'pop'->>'floor')::numeric, 10),
-                                  round(coalesce(c.pop, coalesce(c.cells, 0) * 50) * power(1 + growth, d))))
+    update colonies c set pop = public._v1_pop_next(coalesce(c.pop, coalesce(c.cells, 0) * 50), coalesce(c.cells, 0), public._v1_world(kinds->>c.id::text, 2), growth, d)
      where c.faction_id = p_fid;
     -- агенты из бюро разведки
     insert into v1_agent_pts(faction_id, pts) values (p_fid, v_pts) on conflict (faction_id) do update set pts = v1_agent_pts.pts + excluded.pts;
@@ -595,7 +601,7 @@ begin
   for f in select p.oid::regprocedure sig from pg_proc p
             where p.pronamespace = 'public'::regnamespace
               and p.proname in ('_v1_econ_cfg', '_v1_econ_live', '_v1_rar', '_v1_price', '_v1_store_cap', '_v1_stock_used', '_v1_world', '_v1_order_k',
-                                '_v1_mines', '_v1_econ', 'v1_market_tick', '_v1_exchange_expire', 'v1_economy_tick', '_v1_econ_me', '_v1_stock_add', '_v1_exchange_refund') loop
+                                '_v1_mines', '_v1_pop_next', '_v1_econ', 'v1_market_tick', '_v1_exchange_expire', 'v1_economy_tick', '_v1_econ_me', '_v1_stock_add', '_v1_exchange_refund') loop
     execute format('revoke execute on function %s from public, anon, authenticated', f.sig);
     execute format('grant execute on function %s to service_role', f.sig);
   end loop;
