@@ -57,6 +57,18 @@ declare s v1_ships; u faction_units; cls text; ty text; ut text;
 begin
   if p_kind = 'space' then
     select * into s from v1_ships where id = p_id and (p_any or faction_id = p_fid) and coalesce((stats->>'registrable')::boolean, false);
+    if s.id is null and p_any then
+      -- боту годятся и проекты реестра старого образца
+      select * into u from faction_units where id = p_id and category = 'ship';
+      if u.id is null then return null; end if;
+      cls := coalesce(u.summary->>'className', 'Корабль');
+      return jsonb_build_object('id', u.id, 'name', u.name, 'class', cls, 'cost', greatest(1, coalesce((u.summary->>'cost')::numeric, 1)),
+        'utype', 'ship', 'size', public._v1_ship_size(cls), 'radar', greatest(2, least(7, round(coalesce((u.summary->>'radar')::numeric, 8) * 0.45)))::int,
+        'stats', jsonb_build_object('hp', coalesce((u.summary->>'hp')::numeric, 100), 'shield', coalesce((u.summary->>'shield')::numeric, 0),
+          'armor', coalesce((u.summary->>'armor')::numeric, 0), 'dmg', coalesce((u.summary->>'dmg')::numeric, 0),
+          'rng', greatest(1, least(8, round(coalesce((u.summary->>'rng')::numeric, 5) * 0.4))),
+          'speed', greatest(1, least(6, round(coalesce((u.summary->>'speed')::numeric, 4) * 0.5)))));
+    end if;
     if s.id is null then return null; end if;
     return jsonb_build_object('id', s.id, 'name', s.name, 'class', coalesce(s.stats->>'class_name', s.class), 'cost', greatest(1, coalesce((s.stats->>'cost')::numeric, 1)),
       'utype', 'ship', 'size', coalesce(s.stats->>'size', 'M'), 'radar', greatest(2, least(8, round(coalesce((s.stats->>'radar')::numeric, 4))))::int,
@@ -102,12 +114,15 @@ language plpgsql security definer set search_path = public as $$
 declare budget numeric := public._v1_av('budget', 4000000) * public._v1_av('bot_k', 1.25); out jsonb := '[]'::jsonb; r record; d jsonb; q int; n int := 0;
 begin
   for r in select z.id from (select id from v1_ships where p_kind = 'space' and coalesce((stats->>'registrable')::boolean, false) and coalesce((stats->>'damage')::numeric, 0) > 0
+            union all select id from faction_units where p_kind = 'space' and category = 'ship' and coalesce((summary->>'dmg')::numeric, 0) > 0
+              and coalesce((summary->>'className'), '') !~* 'станц'
             union all select id from faction_units where p_kind = 'ground' and category in ('ground', 'aviation') and coalesce((summary->>'dmg')::numeric, 0) > 0) z
-           order by random() limit 12 loop
+           order by random() limit 20 loop
     exit when n >= public._v1_av('max_units', 8) - 2 or budget <= 0;
     d := public._v1_arena_design(null, p_kind, r.id, true);
     if d is null then continue; end if;
-    q := floor(least(budget / 3, budget) / (d->>'cost')::numeric);
+    q := floor(budget * 0.35 / (d->>'cost')::numeric);
+    if q < 1 and (d->>'cost')::numeric <= budget then q := 1; end if;
     if q < 1 then continue; end if;
     q := least(q, 200);
     out := out || jsonb_build_array(d || jsonb_build_object('qty', q));
