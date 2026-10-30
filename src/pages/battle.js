@@ -141,8 +141,8 @@ export async function renderBattle(root) {
     const b = st.battle, ground = b.kind === 'ground';
     root.innerHTML = html`
       <section class="panel guide-head"><span class="m-ic">${icon(ground ? 'i-planet' : 'i-sword')}</span>
-        <div><h1>${ground ? 'Наземный бой' : 'Космическое сражение'}</h1><p id="bt-sub"></p></div>
-        <a class="btn sm" href="${st.staff && !st.me ? '#/admin?s=battles' : '#/fleet'}">${icon('i-back')}Назад</a></section>
+        <div><h1>${b.arena ? 'Арена · ' : ''}${ground ? 'Наземный бой' : 'Космическое сражение'}</h1><p id="bt-sub"></p></div>
+        <a class="btn sm" href="${b.arena ? '#/arena' : st.staff && !st.me ? '#/admin?s=battles' : '#/fleet'}">${icon('i-back')}Назад</a></section>
       <div class="bt-wrap">
         <div class="panel bt-board">
           <div class="bt-bar"><div class="bm-meta" id="bt-meta"></div>
@@ -191,7 +191,8 @@ export async function renderBattle(root) {
     if (!root.querySelector('.bt-wrap')) build();
     const mySide = st.sides.find((s) => s.side === me), myTurn = b.status === 'active' && b.side_to_move === me;
     const leftMin = b.turn_deadline ? Math.max(0, Math.round((new Date(b.turn_deadline) - Date.now()) / 60000)) : null;
-    const nameOf = (side) => st.sides.filter((s) => s.side === side).map((s) => s.name).join(', ');
+    const sname = (s) => (s.faction_id === 'arena_bot' ? '«Жнец» — бот арены' : s.name || s.faction_id);
+    const nameOf = (side) => st.sides.filter((s) => s.side === side).map(sname).join(', ');
     $('#bt-sub', root).textContent = `${st.system || ''}${st.colony ? ` · колония «${st.colony}»` : ''} · ход ${b.turn_no} · ${b.status === 'active'
       ? `${myTurn ? 'ваш ход' : `ходит ${nameOf(b.side_to_move)}`}${leftMin != null ? ` · осталось ~${leftMin} мин` : ''}`
       : `окончен: ${b.result?.why || ''}`}`;
@@ -201,7 +202,7 @@ export async function renderBattle(root) {
       <span class="bm-chip">Своих отрядов: ${mine.length}</span>
       <span class="bm-chip ${foesSeen.length ? 'hot' : ''}">Противник в обзоре: ${foesSeen.length}</span>
       ${(st.contacts || []).length ? raw(html`<span class="bm-chip">Последних контактов: ${st.contacts.length}</span>`) : ''}`;
-    $('#bt-sides', root).innerHTML = st.sides.map((s) => html`<div class="bt-sd ${s.side === me ? 'me' : ''}"><b>${s.name || s.faction_id}</b><small>${s.role === 'attacker' ? 'наступает' : 'обороняется'}</small><span class="tag ${s.status === 'retreating' ? 'new' : ''}">${ST[s.status] || s.status}${s.status === 'retreating' ? ` · уйдёт на ${s.retreat_at_turn}-м ходу` : ''}</span></div>`).join('');
+    $('#bt-sides', root).innerHTML = st.sides.map((s) => html`<div class="bt-sd ${s.side === me ? 'me' : ''}"><b>${sname(s)}</b><small>${b.arena ? 'арена' : s.role === 'attacker' ? 'наступает' : 'обороняется'}</small><span class="tag ${s.status === 'retreating' ? 'new' : ''}">${ST[s.status] || s.status}${s.status === 'retreating' ? ` · уйдёт на ${s.retreat_at_turn}-м ходу` : ''}</span></div>`).join('');
     const u = units.find((x) => x.id === sel && x.side === me);
     const pulseOk = u && !u.fired && (!ground || u.utype === 'air') && (u.pulse_turn ?? -99) <= b.turn_no - (st.pulse_every || 3);
     $('#bt-acts', root).innerHTML = b.status !== 'active' || !me ? '' : html`

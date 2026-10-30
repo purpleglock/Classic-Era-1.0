@@ -35,13 +35,14 @@ import { renderWar } from './pages/war.js';
 import { renderIntel } from './pages/intel.js';
 import { renderMining } from './pages/mining.js';
 import { renderTrade } from './pages/trade.js';
+import { renderArena } from './pages/arena.js';
+import { renderBar } from './pages/bar.js';
 import { checkConsent } from './ui/consent.js';
 
 const SOON = {
   wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', help: 'Помощь',
   fleet: 'Флот и войска',
   designs: 'Конструкторы', techs: 'Конструктор технологий', corps: 'Корпорации',
-  arena: 'Арена', bar: 'Ресторан-бар «Классикал»',
 };
 
 document.body.insertAdjacentHTML('afterbegin', SPRITE);
@@ -95,6 +96,8 @@ route('/war', () => renderWar(view()));
 route('/intel', () => renderIntel(view()));
 route('/mining', () => renderMining(view()));
 route('/trade', () => renderTrade(view()));
+route('/arena', () => renderArena(view()));
+route('/bar', () => renderBar(view()));
 route('/soon', () => {
   const key = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
   const title = SOON[key] || 'Раздел';

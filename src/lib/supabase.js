@@ -98,6 +98,21 @@ const MESSAGES = {
   caravan_loaded: 'Этот караван уже везёт груз.',
   escort_same_system: 'Сопровождение должно стоять в той же системе, что и караван.',
   escort_is_caravan: 'Караван не может сопровождать караван.',
+  arena_roster_empty: 'Наберите хотя бы один отряд.',
+  arena_bad_design: 'Этот проект недоступен для арены.',
+  arena_kind: 'Неизвестный вид боя.',
+  arena_busy: 'У державы уже идёт бой на арене — сначала доиграйте его.',
+  arena_dup: 'Вызов этой державе уже отправлен.',
+  arena_gone: 'Вызов или бой уже недоступен.',
+  arena_no_bot: '«Жнецу» не из чего собрать отряд — попробуйте позже.',
+  arena_bet_own: 'На свой бой ставить нельзя.',
+  arena_bet_closed: 'Ставки на этот бой уже не принимаются.',
+  arena_bet_dup: 'Вы уже сделали ставку на этот бой.',
+  bar_slow: 'Не так быстро — крупье ещё собирает фишки.',
+  bar_bad_value: 'Неверная ставка.',
+  bj_active: 'У вас уже идёт раздача «21» — доиграйте её.',
+  bj_gone: 'Раздача уже закончилась.',
+  bj_double_two: 'Удвоить можно только на двух картах.',
   recruit_gone: 'Этот рекрут уже ушёл — рынок обновился.',
   agent_not_found: 'Агент не найден.',
   agent_busy: 'Агент занят: на задании, на охране или отдыхает.',
@@ -255,8 +270,8 @@ export function humanError(error) {
   const key = Object.keys(MESSAGES).find((k) => raw.includes(k));
   // причины с текстом из базы: «name_rejected: …», «name_cooldown: 31.10 00:59»
   const nr = raw.match(/name_rejected: (.+)/), nc = raw.match(/name_cooldown: (.+)/);
-  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/), cc2 = raw.match(/course_cooldown: (.+)/), cb = raw.match(/course_budget: (\d+)/), fiu = raw.match(/fuel_in_use: (\d+)/), aiu = raw.match(/alloy_in_use: (\d+)/), pis = raw.match(/part_in_ships: (\d+)/), shi = raw.match(/ship_invalid: (.+)/), pnm = raw.match(/prod_no_money: (\d+)/), nf = raw.match(/no_fuel: (\d+) (\d+)/), au = raw.match(/army_units: (.+) (\d+) (\d+)$/m), ac = raw.match(/agents_cap: (\d+)/), bq = raw.match(/bad_qty: (\d+)/), cs = raw.match(/caravan_small: (\d+)/), mt = raw.match(/mine_bad_target: (.+)/), oa = raw.match(/op_agents: (\d+)/);
-  const text = bq ? `Количество — от 1 до ${Number(bq[1]).toLocaleString('ru-RU')}.` : cs ? `Каравану не хватает вместимости: влезет ${Number(cs[1]).toLocaleString('ru-RU')}.` : mt ? `Эта шахта не может копать «${mt[1]}».` : ac ? `У державы уже предельное число агентов (${ac[1]}).` : oa ? `На задание идут от 1 до ${oa[1]} свободных агентов.` : nf ? `Не хватает запаса хода: нужно ${nf[1]} пр., в баках ${nf[2]}. Заправьтесь на верфи.` : au ? `Не хватает войск «${au[1]}»: нужно ${au[2]}, в резерве ${au[3]}.` : pnm ? `Не хватает денег: заказ стоит ${Number(pnm[1]).toLocaleString('ru-RU')} ГС.` : nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
+  const cc = raw.match(/claim_cooldown: (.+)/), ns = raw.match(/need_station: (.+)/), tp = raw.match(/tech_prereq: (.+)/), bf = raw.match(/building_frozen: (.+)/), cl = raw.match(/capitulation_locked: (\d+)/), cc2 = raw.match(/course_cooldown: (.+)/), cb = raw.match(/course_budget: (\d+)/), fiu = raw.match(/fuel_in_use: (\d+)/), aiu = raw.match(/alloy_in_use: (\d+)/), pis = raw.match(/part_in_ships: (\d+)/), shi = raw.match(/ship_invalid: (.+)/), pnm = raw.match(/prod_no_money: (\d+)/), nf = raw.match(/no_fuel: (\d+) (\d+)/), au = raw.match(/army_units: (.+) (\d+) (\d+)$/m), ac = raw.match(/agents_cap: (\d+)/), bq = raw.match(/bad_qty: (\d+)/), br = raw.match(/bet_range: (\d+) (\d+)/), ab = raw.match(/arena_budget: (\d+) (\d+)/), ar = raw.match(/arena_roster_big: (\d+)/), ast = raw.match(/arena_stake: (\d+)/), cs = raw.match(/caravan_small: (\d+)/), mt = raw.match(/mine_bad_target: (.+)/), oa = raw.match(/op_agents: (\d+)/);
+  const text = br ? `Ставка — от ${Number(br[1]).toLocaleString('ru-RU')} до ${Number(br[2]).toLocaleString('ru-RU')} ГС.` : ab ? `Отряд стоит ${Number(ab[1]).toLocaleString('ru-RU')} ГС — дороже бюджета арены (${Number(ab[2]).toLocaleString('ru-RU')}).` : ar ? `На арену — не больше ${ar[1]} отрядов.` : ast ? `Ставка вызова — не больше ${Number(ast[1]).toLocaleString('ru-RU')} ГС.` : bq ? `Количество — от 1 до ${Number(bq[1]).toLocaleString('ru-RU')}.` : cs ? `Каравану не хватает вместимости: влезет ${Number(cs[1]).toLocaleString('ru-RU')}.` : mt ? `Эта шахта не может копать «${mt[1]}».` : ac ? `У державы уже предельное число агентов (${ac[1]}).` : oa ? `На задание идут от 1 до ${oa[1]} свободных агентов.` : nf ? `Не хватает запаса хода: нужно ${nf[1]} пр., в баках ${nf[2]}. Заправьтесь на верфи.` : au ? `Не хватает войск «${au[1]}»: нужно ${au[2]}, в резерве ${au[3]}.` : pnm ? `Не хватает денег: заказ стоит ${Number(pnm[1]).toLocaleString('ru-RU')} ГС.` : nr ? nr[1] : nc ? `Имя можно менять раз в 7 дней. Следующая смена — ${nc[1]}.`
     : cc ? `Захваты на перерыве до ${new Date(cc[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : ns ? `Нужна технология «${ns[1]}».` : tp ? `Сначала изучите: ${tp[1]}.` : bf ? `Строить нельзя: ${bf[1].toLowerCase()}.` : cc2 ? `Курс можно сменить ${new Date(cc2[1]).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}.` : cb ? `Не больше ${cb[1]} очков доктрины.` : pis ? `Это стоит на проектах кораблей (${pis[1]}) — сначала уберите оттуда.` : shi ? `Проект не готов: ${shi[1]}` : aiu ? `Из этого сплава сделаны орудия (${aiu[1]}) — сначала смените им материал ствола.` : fiu ? `На этой марке работают реакторы (${fiu[1]}) — сначала переведите их на другое топливо.` : cl ? `Капитуляцию можно потребовать, когда занято не меньше 80 % систем врага (сейчас ${cl[1]} %).`
     : key ? MESSAGES[key] : raw;
   const err = new Error(text);
