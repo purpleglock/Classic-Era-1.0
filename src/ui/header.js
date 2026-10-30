@@ -38,7 +38,7 @@ export function renderHeader() {
           <li><a href="#/wiki">Вики фракций</a></li>
           <li><a href="#/arsenal">Арсенал</a></li>
           <li><a href="#/history">История</a></li>
-          <li><a href="#/soon?s=characters">Персонажи</a></li>
+          <li><a href="#/characters">Персонажи</a></li>
         </ul>
       </li>
       <li><a href="#/" data-vestnik>${icon('i-news')}<span>Вестник</span></a></li>

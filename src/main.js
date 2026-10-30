@@ -37,10 +37,11 @@ import { renderMining } from './pages/mining.js';
 import { renderTrade } from './pages/trade.js';
 import { renderArena } from './pages/arena.js';
 import { renderBar } from './pages/bar.js';
+import { renderCharacters } from './pages/characters.js';
 import { checkConsent } from './ui/consent.js';
 
 const SOON = {
-  wiki: 'Вики фракций', history: 'История', characters: 'Персонажи', help: 'Помощь',
+  wiki: 'Вики фракций', history: 'История', help: 'Помощь',
   fleet: 'Флот и войска',
   designs: 'Конструкторы', techs: 'Конструктор технологий', corps: 'Корпорации',
 };
@@ -98,6 +99,7 @@ route('/mining', () => renderMining(view()));
 route('/trade', () => renderTrade(view()));
 route('/arena', () => renderArena(view()));
 route('/bar', () => renderBar(view()));
+route('/characters', () => renderCharacters(view()));
 route('/soon', () => {
   const key = new URLSearchParams(location.hash.split('?')[1] || '').get('s');
   const title = SOON[key] || 'Раздел';

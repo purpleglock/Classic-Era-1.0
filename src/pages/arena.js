@@ -46,7 +46,7 @@ function draw(root, s) {
   root.innerHTML = html`<div class="rx-wrap ar-wrap">
     <section class="panel st-hero">
       <div class="st-title"><a class="st-back" href="#/cabinet">${icon('i-back')}Кабинет</a><h1>Арена</h1>
-        <p>Космические и наземные поединки на настоящих картах сражений с туманом войны. Соберите отряды в пределах бюджета арены — это условные отряды, ваши флоты и армии не пострадают. «Жнец» — бот арены: ходит первым, видит всё поле, бьёт по самому уязвимому и держит дистанцию.</p></div>
+        <p>Космические и наземные поединки на настоящих картах сражений с туманом войны. Соберите отряды в пределах бюджета арены — это условные отряды, ваши флоты и армии не пострадают. «Жнец» — бот арены: ходит первым, видит всё поле, бьёт по самому уязвимому и держит дистанцию. Приз за победу над ним получает ваш активный персонаж, если он служит державе, иначе — казна.</p></div>
       <div class="fl-kpi">
         <div class="col-treasury"><small>Бюджет отряда</small><b>${num(budget)} ГС</b></div>
         <div class="col-treasury"><small>Приз за «Жнеца»</small><b class="${s.prize_ready ? '' : 'mute'}">${s.prize_ready ? `${num(cfg.prize)} ГС` : 'уже взят'}</b></div>
@@ -90,9 +90,9 @@ function draw(root, s) {
           <span class="tag">${m.kind === 'space' ? 'космос' : 'земля'}</span>
           <span class="fl-n"><b>${m.a} против ${m.b}</b><small>ход ${m.turn}${m.stake ? ` · ставка ${num(m.stake)} ГС` : ''} · на кону у зрителей: ${num(m.bets?.a)} / ${num(m.bets?.b)} ГС${m.my_bet ? ` · ваша ставка ${num(m.my_bet.amount)} на ${m.my_bet.side === 'a' ? m.a : m.b}` : ''}</small></span>
           <a class="btn sm" href="#/battle?id=${m.battle}">${m.mine ? 'К бою' : 'Смотреть'}</a>
-          ${!m.mine && !m.my_bet && m.turn <= (cfg.bet_turns || 2) && s.can ? raw(html`<form class="tr-q" data-bet="${m.id}"><select name="side" aria-label="На кого"><option value="a">${m.a}</option><option value="b">${m.b}</option></select>
+          ${!m.mine && !m.my_bet && m.turn <= (cfg.bet_turns || 2) && s.char ? raw(html`<form class="tr-q" data-bet="${m.id}"><select name="side" aria-label="На кого"><option value="a">${m.a}</option><option value="b">${m.b}</option></select>
             <input type="number" name="amount" min="${cfg.bet_min || 25000}" max="${cfg.bet_max || 500000}" step="1000" value="${cfg.bet_min || 25000}" aria-label="Ставка"><button class="btn sm gold">Поставить</button></form>`) : ''}</li>`))}</ul>
-          <p class="fl-note">Ставки принимаются первые ${cfg.bet_turns || 2} хода, от ${num(cfg.bet_min || 25000)} до ${num(cfg.bet_max || 500000)} ГС. Тотализатор: победившие делят ставки проигравших, ${Math.round((cfg.house || 0.05) * 100)} % — арене. Ничья — ставки назад.</p>`)
+          <p class="fl-note">Ставки принимаются первые ${cfg.bet_turns || 2} хода, от ${num(cfg.bet_min || 25000)} до ${num(cfg.bet_max || 500000)} ГС. Тотализатор: победившие делят ставки проигравших, ${Math.round((cfg.house || 0.05) * 100)} % — арене. Ничья — ставки назад. ${s.char ? `Ставит ваш персонаж ${s.char.name} со своего счёта (${num(s.char.gc)} ГС).` : raw('Ставят персонажи со своих счетов — <a href="#/characters">создайте персонажа</a>.')}</p>`)
           : raw('<p class="empty">Сейчас на арене тихо.</p>')}
       </div>
 

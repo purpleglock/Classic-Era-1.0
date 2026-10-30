@@ -5,7 +5,7 @@ import { openLogin } from '../ui/login.js';
 import { num } from '../lib/format.js';
 
 /**
- * #/bar — ресторан-бар «Классикал»: игры на казну державы.
+ * #/bar — ресторан-бар «Классикал»: игры на личный счёт активного персонажа.
  * Рулетка, колесо удачи с джекпотом бара, карты таро, «21» (блекджек), кости.
  * Ставка 25 000…500 000 ГС; 2 % проигранных ставок копятся в джекпот. Всё считает сервер:
  * v1_bar_state, v1_bar_roulette, v1_bar_wheel, v1_bar_tarot, v1_bar_dice, v1_bar_bj_start/act.
@@ -31,7 +31,6 @@ export async function renderBar(root) {
     $('#g-in', root).onclick = () => openLogin();
     return;
   }
-  if (!session.factionId) { root.innerHTML = html`<section class="panel gate"><div><h1>У вас пока нет державы</h1></div><a class="btn gold" href="#/apply">Подать заявку</a></section>`; return; }
   if (!root.querySelector('.br-wrap')) root.innerHTML = '<div class="skeleton">Провожаю к столику…</div>';
   let s;
   try { s = await rpc('v1_bar_state'); } catch (e) {
@@ -60,14 +59,15 @@ function draw(root, s) {
   root.innerHTML = html`<div class="rx-wrap br-wrap">
     <section class="panel st-hero br-hero">
       <div class="st-title"><a class="st-back" href="#/cabinet">${icon('i-back')}Кабинет</a><h1>Ресторан-бар «Классикал»</h1>
-        <p>Тихий свет, джаз из старого приёмника и столы, за которыми державы проигрывают казну с улыбкой. Ставка — от ${num(min)} до ${num(max)} ГС из казны. С каждой проигранной ставки 2 % уходят в джекпот бара — его можно сорвать на колесе удачи.</p></div>
+        <p>Тихий свет, джаз из старого приёмника и столы, за которыми проигрывают с улыбкой. Играет ваш персонаж на свои деньги: ставка — от ${num(min)} до ${num(max)} ГС с личного счёта, казна державы не участвует. С каждой проигранной ставки 2 % уходят в джекпот бара — его можно сорвать на колесе удачи.</p></div>
       <div class="fl-kpi">
         <div class="col-treasury"><small>Джекпот бара</small><b class="br-jp">${num(s.jackpot)} ГС</b></div>
-        <div class="col-treasury"><small>Казна</small><b>${num(s.gc)} ГС</b></div>
+        <div class="col-treasury"><small>${s.char ? s.char.name : 'Персонаж'}</small><b>${s.char ? `${num(s.gc)} ГС` : '—'}</b></div>
         <div class="col-treasury"><small>Сегодня</small><b class="${net < 0 ? 'bad' : ''}">${net > 0 ? '+' : ''}${num(net)} ГС</b></div>
       </div>
     </section>
-    ${can ? '' : raw('<p class="panel note-bar">Играть на казну могут правитель и члены державы с правом «Торговля» или «Производство».</p>')}
+    ${can ? ((s.chars || []).length > 1 ? raw(html`<p class="panel note-bar br-who">За столом: <select id="br-char" aria-label="Персонаж">${s.chars.map((c) => raw(html`<option value="${c.id}" ${c.id === s.char.id ? 'selected' : ''}>${c.name}</option>`))}</select> <a href="#/characters">Личный счёт</a></p>`) : '')
+      : raw('<p class="panel note-bar">В баре играют персонажи на свои деньги. <a href="#/characters">Создайте персонажа</a> — и столик ваш.</p>')}
     <div class="br-grid">
       <section class="panel fl-body">
         <div class="tabs" role="tablist">${Object.entries(GAMES).map(([k, t]) => raw(html`<button type="button" role="tab" data-tab="${k}" aria-selected="${tab === k}">${t}</button>`))}</div>
@@ -138,10 +138,11 @@ function draw(root, s) {
   </div>`;
 
   const play = async (game, fn) => {
-    if (!can) { toast('Нет права играть на казну.', 'err'); return; }
+    if (!can) { toast('Сначала создайте персонажа.', 'err'); return; }
     try { const r = await fn(); last = { game, r }; const st = await rpc('v1_bar_state'); if (game === 'blackjack' && r.status === 'done') st.bj = null; draw(root, st); return r; }
     catch (e) { toast(e.message, 'err'); }
   };
+  $('#br-char', root)?.addEventListener('change', async (e) => { try { await rpc('v1_char_use', { p_char: e.target.value }); last = null; draw(root, await rpc('v1_bar_state')); } catch (er) { toast(er.message, 'err'); } });
   $$('[data-tab]', root).forEach((b) => (b.onclick = () => { tab = b.dataset.tab; draw(root, s); }));
   $('#br-bet', root).onchange = (e) => { bet = Math.max(min, Math.min(max, Number(e.target.value) || min)); draw(root, s); };
   $$('[data-chip]', root).forEach((b) => (b.onclick = () => { bet = Number(b.dataset.chip); draw(root, s); }));
@@ -149,7 +150,7 @@ function draw(root, s) {
   $('#br-spin', root)?.addEventListener('click', async (e) => {
     e.currentTarget.disabled = true;
     try {
-      if (!can) throw new Error('Нет права играть на казну.');
+      if (!can) throw new Error('Сначала создайте персонажа.');
       const r = await rpc('v1_bar_wheel', { p_bet: bet });
       // докрутить колесо так, чтобы выпавший сектор встал под стрелку
       const pos = WORDER.indexOf(r.segment);
